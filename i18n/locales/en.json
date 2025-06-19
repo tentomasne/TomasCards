@@ -1,0 +1,283 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "close": "Close",
+      "back": "Back",
+      "confirm": "Confirm",
+      "logout": "Logout",
+      "ok": "OK",
+      "apply": "Apply"
+    },
+    "labels": {
+      "name": "Name",
+      "code": "Code",
+      "notes": "Notes",
+      "optional": "Optional",
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success"
+    },
+    "validation": {
+      "required": "This field is required",
+      "invalid": "Invalid value"
+    },
+    "offline": {
+      "banner": "Offline Mode Active - Using local data"
+    }
+  },
+  "welcome": {
+    "title": "Welcome to TomasCards",
+    "subtitle": "Your digital loyalty card wallet. Choose how you'd like to store your cards.",
+    "recommended": "Recommended",
+    "cloudOption": {
+      "title": "Cloud Storage",
+      "description": "Sign in to sync your cards across all your devices with automatic backup.",
+      "feature1": "Sync across devices",
+      "feature2": "Automatic backup",
+      "feature3": "Secure cloud storage",
+      "action": "Sign In or Create Account"
+    },
+    "localOption": {
+      "title": "Local Storage",
+      "description": "Store your cards only on this device for complete privacy.",
+      "feature1": "Complete privacy",
+      "feature2": "Works offline",
+      "limitation": "No sync across devices",
+      "action": "Continue Without Account"
+    },
+    "localWarning": {
+      "title": "Local Storage Only",
+      "message": "Your cards will only be stored on this device and won't sync to other devices. You can always switch to cloud storage later in settings.",
+      "continue": "Continue"
+    },
+    "note": "You can change your storage preference anytime in the settings.",
+    "settingUp": "Setting up your storage..."
+  },
+  "auth": {
+    "login": {
+      "welcome": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "signIn": "Sign In",
+      "forgotPassword": "Forgot Password?",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign Up"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join TomasCards today",
+      "createAccount": "Create Account",
+      "haveAccount": "Already have an account?",
+      "signIn": "Sign In"
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email to receive reset instructions",
+      "sendResetLink": "Send Reset Link",
+      "emailSent": "Email Sent!",
+      "checkEmail": "Check your email for reset instructions",
+      "backToLogin": "Back to Login"
+    },
+    "resetPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your new password",
+      "resetPassword": "Reset Password",
+      "success": "Password Reset!",
+      "successMessage": "Your password has been successfully reset",
+      "backToLogin": "Back to Login"
+    },
+    "verification": {
+      "title": "Check Your Email",
+      "subtitle": "We've sent a verification link to your email address",
+      "resend": "Resend Email",
+      "verified": "Email Verified!",
+      "verifiedMessage": "Your email has been successfully verified",
+      "failed": "Verification Failed",
+      "expired": "The verification link has expired or is invalid"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "newPassword": "New Password"
+    },
+    "validation": {
+      "allFieldsRequired": "All fields are required",
+      "emailRequired": "Email is required",
+      "passwordRequirements": "Password must be at least 8 characters with uppercase, lowercase, number and special character",
+      "passwordRequirementsText": "Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters",
+      "passwordsDoNotMatch": "Passwords do not match"
+    }
+  },
+  "tabs": {
+    "cards": "Cards",
+    "add": "Add",
+    "settings": "Settings"
+  },
+  "cards": {
+    "title": "Card Collection",
+    "empty": "No loyalty cards yet. Tap the \"+\" button to add your first card.",
+    "sections": {
+      "favorites": "Favorites",
+      "other": "Other Cards",
+      "all": "All Cards"
+    },
+    "sort": {
+      "title": "Sort by",
+      "name": "Name",
+      "date": "Date Added",
+      "lastUsed": "Last Used"
+    }
+  },
+  "addCard": {
+    "title": "Add Card",
+    "searchPlaceholder": "Search for stores...",
+    "popularStores": "Popular Stores",
+    "scan": {
+      "title": "Scan Card",
+      "instruction": "Scan your card's barcode or QR code",
+      "manual": "Can't scan your card?",
+      "enterManually": "Enter Manually"
+    },
+    "manual": {
+      "title": "Enter Card Details",
+      "cardNumber": "Card Number",
+      "cardNumberPlaceholder": "Enter card number",
+      "notesPlaceholder": "Add any additional information"
+    },
+    "custom": {
+      "title": "Create Custom Card",
+      "createCustom": "Create Custom Card",
+      "createCustomDescription": "Design your own loyalty card with custom name and color",
+      "preview": "Preview",
+      "cardName": "Card Name",
+      "cardNamePlaceholder": "Enter card name",
+      "cardColor": "Card Color",
+      "codeType": "Code Type",
+      "cardCode": "Card Code",
+      "cardCodePlaceholder": "Enter card code or scan",
+      "codeRequired": "Card code is required",
+      "scan": "Scan",
+      "barcode": "Barcode",
+      "qrcode": "QR Code",
+      "note": "Note: Images cannot be uploaded. The card will display the first letter of the name in uppercase against your chosen background color.",
+      "selectColor": "Select Color",
+      "presetColors": "Preset Colors",
+      "customColor": "Custom Color",
+      "colorHelp": "Enter a hex color code (e.g., #FF6B6B) or choose from the preset colors above."
+    }
+  },
+  "cardDetail": {
+    "added": "Added: {{date}}",
+    "lastUsed": "Last used: {{date}}",
+    "deleteConfirm": "Are you sure you want to delete this card? This action cannot be undone.",
+    "deleteSuccess": "Card deleted successfully"
+  },
+  "settings": {
+    "title": "Settings",
+    "login": "Sign in to sync your cards",
+    "logout": {
+      "description": "You are currently signed in. Sign out to stop syncing your cards. Your local cards will remain.",
+      "title": "Sign Out",
+      "confirm": "Are you sure you want to sign out?"
+    },
+    "sections": {
+      "account": "My Account",
+      "appearance": "Appearance",
+      "data": "Data Management",
+      "about": "About"
+    },
+    "language": {
+      "title": "Language",
+      "system": "System Language",
+      "available": "Available Languages"
+    },
+    "theme": {
+      "title": "Change Theme",
+      "light": "Light Mode",
+      "dark": "Dark Mode",
+      "system": "System",
+      "systemDescription": "Follow system appearance",
+      "available": "Choose Theme",
+      "confirmChange": "Changing the theme requires a restart to apply properly. Do you want to continue?"
+    },
+    "haptic": {
+      "title": "Haptic Feedback",
+      "description": "Feel vibrations for interactions"
+    },
+    "csupport": {
+      "title": "Support",
+      "contact": "Contact Support",
+      "description": "If you have any questions or need help, please contact us at help@tomascards.eu.",
+      "faq": "FAQ",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfService": "Terms of Service"
+    },
+    "version": "Version {{version}}"
+  },
+  "storage": {
+    "mode": {
+      "title": "Storage Mode",
+      "subtitle": "Choose how your cards are stored and synchronized",
+      "recommended": "Recommended",
+      "warning": {
+        "title": "Switch to Cloud Storage?",
+        "message": "Switching to cloud storage will delete all your local cards. Your cards will be synced from the cloud instead. This action cannot be undone.",
+        "confirm": "Switch to Cloud"
+      },
+      "local": {
+        "title": "Local Storage",
+        "description": "Store cards only on this device",
+        "feature1": "Works offline",
+        "feature2": "Complete privacy",
+        "limitation": "No sync across devices"
+      },
+      "cloud": {
+        "title": "Cloud Storage",
+        "description": "Store cards in the cloud with sync across devices",
+        "feature1": "Sync across devices",
+        "feature2": "Automatic backup",
+        "feature3": "Works offline too"
+      }
+    },
+    "offline": {
+      "title": "Internet Required",
+      "message": "Cloud storage features require an internet connection. Please connect to the internet or switch to local storage mode.",
+      "banner": "Internet connection required for cloud features"
+    },
+    "cloud": {
+      "loginRequired": "Login Required",
+      "loginRequiredMessage": "You need to sign in to use cloud storage. Would you like to sign in now?"
+    }
+  },
+  "sync": {
+    "status": {
+      "synced": "Synced",
+      "syncing": "Syncing...",
+      "offline": "Offline",
+      "error": "Sync Error",
+      "pending": "{{count}} pending",
+      "tapToRetry": "Tap to retry"
+    },
+    "conflict": {
+      "title": "Sync Conflict",
+      "subtitle": "We found different data on your device and in the cloud. How would you like to resolve this?",
+      "localData": "Local Data",
+      "cloudData": "Cloud Data",
+      "cardCount": "{{count}} cards",
+      "replaceWithCloud": "Use Cloud Data",
+      "replaceWithCloudDesc": "Replace local cards with cloud data",
+      "merge": "Merge Data",
+      "mergeDesc": "Combine local and cloud cards",
+      "keepLocal": "Use Local Data",
+      "keepLocalDesc": "Upload local cards to cloud",
+      "resolving": "Resolving conflict...",
+      "error": "Sync Error",
+      "errorMessage": "Failed to resolve sync conflict. Please try again.",
+      "recommended": "Recommended"
+    }
+  }
+}

@@ -1,0 +1,288 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Uložiť",
+      "cancel": "Zrušiť",
+      "delete": "Vymazať",
+      "edit": "Upraviť",
+      "close": "Zavrieť",
+      "back": "Späť",
+      "confirm": "Potvrdiť",
+      "logout": "Odhlásiť sa",
+      "ok": "OK",
+      "apply": "Použiť"
+    },
+    "labels": {
+      "name": "Názov",
+      "code": "Kód",
+      "notes": "Poznámky",
+      "optional": "Voliteľné",
+      "loading": "Načítava sa...",
+      "error": "Chyba",
+      "success": "Úspech"
+    },
+    "validation": {
+      "required": "Toto pole je povinné",
+      "invalid": "Neplatná hodnota"
+    },
+    "offline": {
+      "banner": "Offline režim aktívny - Používajú sa lokálne údaje"
+    }
+  },
+  "welcome": {
+    "title": "Vitajte v TomasCards",
+    "subtitle": "Vaša digitálna peňaženka vernostných kariet. Vyberte si, ako chcete ukladať svoje karty.",
+    "recommended": "Odporúčané",
+    "cloudOption": {
+      "title": "Cloudové úložisko",
+      "description": "Prihláste sa pre synchronizáciu kariet medzi všetkými zariadeniami s automatickým zálohovaním.",
+      "feature1": "Synchronizácia medzi zariadeniami",
+      "feature2": "Automatické zálohovanie",
+      "feature3": "Bezpečné cloudové úložisko",
+      "action": "Prihlásiť sa alebo vytvoriť účet"
+    },
+    "localOption": {
+      "title": "Lokálne úložisko",
+      "description": "Ukladajte karty len na tomto zariadení pre úplné súkromie.",
+      "feature1": "Úplné súkromie",
+      "feature2": "Funguje offline",
+      "limitation": "Bez synchronizácie medzi zariadeniami",
+      "action": "Pokračovať bez účtu"
+    },
+    "localWarning": {
+      "title": "Len lokálne úložisko",
+      "message": "Vaše karty budú uložené len na tomto zariadení a nebudú sa synchronizovať s inými zariadeniami. Neskôr môžete prepnúť na cloudové úložisko v nastaveniach.",
+      "continue": "Pokračovať"
+    },
+    "note": "Nastavenie úložiska môžete kedykoľvek zmeniť v nastaveniach.",
+    "settingUp": "Nastavuje sa úložisko..."
+  },
+  "auth": {
+    "login": {
+      "welcome": "Vitajte späť",
+      "subtitle": "Prihláste sa do svojho účtu",
+      "signIn": "Prihlásiť sa",
+      "forgotPassword": "Zabudli ste heslo?",
+      "noAccount": "Nemáte účet?",
+      "signUp": "Registrovať sa"
+    },
+    "register": {
+      "title": "Vytvoriť účet",
+      "subtitle": "Pripojte sa k TomasCards dnes",
+      "createAccount": "Vytvoriť účet",
+      "haveAccount": "Už máte účet?",
+      "signIn": "Prihlásiť sa"
+    },
+    "forgotPassword": {
+      "title": "Obnoviť heslo",
+      "subtitle": "Zadajte svoj email pre obnovenie hesla",
+      "sendResetLink": "Poslať odkaz na obnovenie",
+      "emailSent": "Email odoslaný!",
+      "checkEmail": "Skontrolujte si email pre pokyny na obnovenie",
+      "backToLogin": "Späť na prihlásenie"
+    },
+    "resetPassword": {
+      "title": "Obnoviť heslo",
+      "subtitle": "Zadajte svoje nové heslo",
+      "resetPassword": "Obnoviť heslo",
+      "success": "Heslo obnovené!",
+      "successMessage": "Vaše heslo bolo úspešne obnovené",
+      "backToLogin": "Späť na prihlásenie"
+    },
+    "verification": {
+      "title": "Skontrolujte si email",
+      "subtitle": "Poslali sme vám overovací odkaz na vašu emailovú adresu",
+      "resend": "Poslať znova",
+      "verified": "Email overený!",
+      "verifiedMessage": "Váš email bol úspešne overený",
+      "failed": "Overenie zlyhalo",
+      "expired": "Overovací odkaz vypršal alebo je neplatný"
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Heslo",
+      "confirmPassword": "Potvrdiť heslo",
+      "newPassword": "Nové heslo"
+    },
+    "validation": {
+      "allFieldsRequired": "Všetky polia sú povinné",
+      "emailRequired": "Email je povinný",
+      "passwordRequirements": "Heslo musí mať aspoň 8 znakov s veľkým písmenom, malým písmenom, číslom a špeciálnym znakom",
+      "passwordRequirementsText": "Heslo musí obsahovať aspoň 8 znakov, vrátane veľkých a malých písmen, čísiel a špeciálnych znakov",
+      "passwordsDoNotMatch": "Heslá sa nezhodujú"
+    }
+  },
+  "tabs": {
+    "cards": "Karty",
+    "add": "Pridať",
+    "settings": "Nastavenia"
+  },
+  "cards": {
+    "title": "Zbierka kariet",
+    "empty": "Zatiaľ nemáte žiadne vernostné karty. Klepnite na tlačidlo \"+\" a pridajte svoju prvú kartu.",
+    "sections": {
+      "favorites": "Obľúbené",
+      "other": "Ostatné karty",
+      "all": "Všetky karty"
+    },
+    "sort": {
+      "title": "Zoradiť podľa",
+      "name": "Názvu",
+      "date": "Dátumu pridania",
+      "lastUsed": "Naposledy použité"
+    }
+  },
+  "addCard": {
+    "title": "Pridať kartu",
+    "searchPlaceholder": "Hľadať obchody...",
+    "popularStores": "Populárne obchody",
+    "scan": {
+      "title": "Skenovať kartu",
+      "instruction": "Naskenujte čiarový kód alebo QR kód karty",
+      "manual": "Nedarí sa naskenovať kartu?",
+      "enterManually": "Zadať ručne"
+    },
+    "manual": {
+      "title": "Zadajte údaje o karte",
+      "cardNumber": "Číslo karty",
+      "cardNumberPlaceholder": "Zadajte číslo karty",
+      "notesPlaceholder": "Pridajte doplňujúce informácie"
+    },
+    "custom": {
+      "title": "Vytvoriť vlastnú kartu",
+      "createCustom": "Vytvoriť vlastnú kartu",
+      "createCustomDescription": "Navrhni si vlastnú vernostnú kartu s vlastným názvom a farbou",
+      "preview": "Náhľad",
+      "cardName": "Názov karty",
+      "cardNamePlaceholder": "Zadajte názov karty",
+      "cardColor": "Farba karty",
+      "codeType": "Typ kódu",
+      "cardCode": "Kód karty",
+      "cardCodePlaceholder": "Zadajte kód karty alebo naskenujte",
+      "codeRequired": "Kód karty je povinný",
+      "scan": "Skenovať",
+      "barcode": "Čiarový kód",
+      "qrcode": "QR kód",
+      "note": "Poznámka: Obrázky nie je možné nahrať. Karta zobrazí prvé písmeno názvu veľkým písmenom na pozadí vašej vybranej farby.",
+      "selectColor": "Vybrať farbu",
+      "presetColors": "Prednastavené farby",
+      "customColor": "Vlastná farba",
+      "colorHelp": "Zadajte hex kód farby (napr. #FF6B6B) alebo vyberte z prednastavených farieb vyššie."
+    }
+  },
+  "cardDetail": {
+    "added": "Pridané: {{date}}",
+    "lastUsed": "Naposledy použité: {{date}}",
+    "deleteConfirm": "Naozaj chcete túto kartu vymazať? Táto akcia je nevratná.",
+    "deleteSuccess": "Karta bola úspešne vymazaná"
+  },
+  "settings": {
+    "title": "Nastavenia",
+    "login": "Prihláste sa pre synchronizáciu kariet",
+    "logout": {
+      "description": "Odhlásiť sa z vášho účtu a zastaviť synchronizáciu kariet s cloudom. Vaše lokálne karty zostanú nedotknuté.",
+      "title": "Odhlásiť sa",
+      "confirm": "Naozaj sa chcete odhlásiť?"
+    },
+    "sections": {
+      "account": "Môj účet",
+      "appearance": "Vzhľad",
+      "data": "Správa údajov",
+      "about": "O aplikácii"
+    },
+    "language": {
+      "title": "Jazyk",
+      "system": "Systémový jazyk",
+      "available": "Dostupné jazyky"
+    },
+    "theme": {
+      "title": "Zmena témy",
+      "light": "Svetlý režim",
+      "dark": "Tmavý režim",
+      "system": "Systémová",
+      "systemDescription": "Podľa systémového nastavenia",
+      "available": "Vybrať tému",
+      "confirmChange": "Zmena témy vyžaduje reštart aplikácie pre správne použitie. Chcete pokračovať?"
+    },
+    "haptic": {
+      "title": "Hmatová odozva",
+      "description": "Pocíťte vibrácie pri interakciách"
+    },
+    "deleteAll": {
+      "title": "Vymazať všetky karty",
+      "description": "Natrvalo odstrániť všetky vernostné karty",
+      "confirm": "Naozaj chcete vymazať všetky karty?"
+    },
+    "csupport": {
+      "title": "Podpora",
+      "contact": "Kontaktovať podporu",
+      "description": "Ak máte otázky alebo potrebujete pomoc, kontaktujte nás na help@tomascards.eu.",
+      "faq": "FAQ",
+      "privacyPolicy": "Zásady ochrany súkromia",
+      "termsOfService": "Podmienky služby"
+    },
+    "version": "Verzia {{version}}"
+  },
+  "storage": {
+    "mode": {
+      "title": "Režim úložiska",
+      "subtitle": "Vyberte si, ako sa vaše karty ukladajú a synchronizujú",
+      "recommended": "Odporúčané",
+      "warning": {
+        "title": "Prepnúť na cloudové úložisko?",
+        "message": "Prepnutie na cloudové úložisko vymaže všetky vaše lokálne karty. Vaše karty sa budú synchronizovať z cloudu. Táto akcia je nevratná.",
+        "confirm": "Prepnúť na cloud"
+      },
+      "local": {
+        "title": "Lokálne úložisko",
+        "description": "Ukladať karty len na tomto zariadení",
+        "feature1": "Funguje offline",
+        "feature2": "Úplné súkromie",
+        "limitation": "Bez synchronizácie medzi zariadeniami"
+      },
+      "cloud": {
+        "title": "Cloudové úložisko",
+        "description": "Ukladať karty v cloude so synchronizáciou medzi zariadeniami",
+        "feature1": "Synchronizácia medzi zariadeniami",
+        "feature2": "Automatické zálohovanie",
+        "feature3": "Funguje aj offline"
+      }
+    },
+    "offline": {
+      "title": "Vyžaduje sa internet",
+      "message": "Cloudové funkcie vyžadujú internetové pripojenie. Pripojte sa na internet alebo prepnite na lokálny režim úložiska.",
+      "banner": "Pre cloudové funkcie je potrebné internetové pripojenie"
+    },
+    "cloud": {
+      "loginRequired": "Vyžaduje sa prihlásenie",
+      "loginRequiredMessage": "Pre používanie cloudového úložiska sa musíte prihlásiť. Chcete sa prihlásiť teraz?"
+    }
+  },
+  "sync": {
+    "status": {
+      "synced": "Synchronizované",
+      "syncing": "Synchronizuje sa...",
+      "offline": "Offline",
+      "error": "Chyba synchronizácie",
+      "pending": "{{count}} čakajúcich",
+      "tapToRetry": "Klepnite pre opakovaný pokus"
+    },
+    "conflict": {
+      "title": "Konflikt synchronizácie",
+      "subtitle": "Našli sme rôzne údaje na vašom zariadení a v cloude. Ako chcete tento problém vyriešiť?",
+      "localData": "Lokálne údaje",
+      "cloudData": "Cloudové údaje",
+      "cardCount": "{{count}} kariet",
+      "replaceWithCloud": "Použiť cloudové údaje",
+      "replaceWithCloudDesc": "Nahradiť lokálne karty cloudovými údajmi",
+      "merge": "Spojiť údaje",
+      "mergeDesc": "Spojiť lokálne a cloudové karty",
+      "keepLocal": "Použiť lokálne údaje",
+      "keepLocalDesc": "Nahrať lokálne karty do cloudu",
+      "resolving": "Rieši sa konflikt...",
+      "error": "Chyba synchronizácie",
+      "errorMessage": "Nepodarilo sa vyriešiť konflikt synchronizácie. Skúste to znova.",
+      "recommended": "Odporúčané"
+    }
+  }
+}

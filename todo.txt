@@ -1,0 +1,19 @@
+when i log out switch to local and it will save into local last time
+
+aby to chechklo ci som logout a potom tym padom preplo na local storage
+
+translations po prvom zapnuti
+
+------------------------
+FINAL:
+more cards
+
+------------------------
+UPDATE LATER:
+widget
+translations
+the add button move
+apple watch
+export import
+
+cloud - icloud /googledrive

@@ -1,0 +1,51 @@
+{
+  "expo": {
+    "name": "TomasCards",
+    "slug": "tomas-cards",
+    "version": "0.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "icon": "./assets/images/icon.png",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs camera access to scan barcodes and QR codes.",
+        "NSLocationWhenInUseUsageDescription": "We need your location for the internal React Native libraries, even if we don't use it directly."
+      },
+      "bundleIdentifier": "com.tentomasne.tomas-cards"
+    },
+    "android": {
+      "versionCode": 2,
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA"
+      ],
+      "package": "com.tentomasne.tomascards"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "recordAudioAndroid": false
+        }
+      ],
+      "react-native-vision-camera",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
