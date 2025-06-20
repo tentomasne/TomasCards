@@ -5,11 +5,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider } from '@/hooks/useTheme';
-import { AuthProvider } from '@/hooks/useAuth';
 import { initializeLanguage } from '@/utils/i18n';
 import { loadSettings } from '@/utils/storage';
 import SplashScreen from '@/components/SplashScreen';
-import AuthGuard from '@/components/AuthGuard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
@@ -42,21 +40,17 @@ export default function RootLayout() {
   return (
     <SafeAreaView style={styles.container}>
       <ThemeProvider>
-      <AuthProvider>
         {isLoading ? (
           <SplashScreen message={loadingMessage} />
         ) : (
           <GestureHandlerRootView style={styles.container}>
-            <AuthGuard>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="+not-found" options={{headerShown: false}}/>
-              </Stack>
-              <StatusBar style="auto"/>
-            </AuthGuard>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+            </Stack>
+            <StatusBar style="auto" />
           </GestureHandlerRootView>
         )}
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
     </SafeAreaView>
   );
 }

@@ -57,61 +57,6 @@
     "note": "Nastavenie úložiska môžete kedykoľvek zmeniť v nastaveniach.",
     "settingUp": "Nastavuje sa úložisko..."
   },
-  "auth": {
-    "login": {
-      "welcome": "Vitajte späť",
-      "subtitle": "Prihláste sa do svojho účtu",
-      "signIn": "Prihlásiť sa",
-      "forgotPassword": "Zabudli ste heslo?",
-      "noAccount": "Nemáte účet?",
-      "signUp": "Registrovať sa"
-    },
-    "register": {
-      "title": "Vytvoriť účet",
-      "subtitle": "Pripojte sa k TomasCards dnes",
-      "createAccount": "Vytvoriť účet",
-      "haveAccount": "Už máte účet?",
-      "signIn": "Prihlásiť sa"
-    },
-    "forgotPassword": {
-      "title": "Obnoviť heslo",
-      "subtitle": "Zadajte svoj email pre obnovenie hesla",
-      "sendResetLink": "Poslať odkaz na obnovenie",
-      "emailSent": "Email odoslaný!",
-      "checkEmail": "Skontrolujte si email pre pokyny na obnovenie",
-      "backToLogin": "Späť na prihlásenie"
-    },
-    "resetPassword": {
-      "title": "Obnoviť heslo",
-      "subtitle": "Zadajte svoje nové heslo",
-      "resetPassword": "Obnoviť heslo",
-      "success": "Heslo obnovené!",
-      "successMessage": "Vaše heslo bolo úspešne obnovené",
-      "backToLogin": "Späť na prihlásenie"
-    },
-    "verification": {
-      "title": "Skontrolujte si email",
-      "subtitle": "Poslali sme vám overovací odkaz na vašu emailovú adresu",
-      "resend": "Poslať znova",
-      "verified": "Email overený!",
-      "verifiedMessage": "Váš email bol úspešne overený",
-      "failed": "Overenie zlyhalo",
-      "expired": "Overovací odkaz vypršal alebo je neplatný"
-    },
-    "fields": {
-      "email": "Email",
-      "password": "Heslo",
-      "confirmPassword": "Potvrdiť heslo",
-      "newPassword": "Nové heslo"
-    },
-    "validation": {
-      "allFieldsRequired": "Všetky polia sú povinné",
-      "emailRequired": "Email je povinný",
-      "passwordRequirements": "Heslo musí mať aspoň 8 znakov s veľkým písmenom, malým písmenom, číslom a špeciálnym znakom",
-      "passwordRequirementsText": "Heslo musí obsahovať aspoň 8 znakov, vrátane veľkých a malých písmen, čísiel a špeciálnych znakov",
-      "passwordsDoNotMatch": "Heslá sa nezhodujú"
-    }
-  },
   "tabs": {
     "cards": "Karty",
     "add": "Pridať",
@@ -253,10 +198,7 @@
       "message": "Cloudové funkcie vyžadujú internetové pripojenie. Pripojte sa na internet alebo prepnite na lokálny režim úložiska.",
       "banner": "Pre cloudové funkcie je potrebné internetové pripojenie"
     },
-    "cloud": {
-      "loginRequired": "Vyžaduje sa prihlásenie",
-      "loginRequiredMessage": "Pre používanie cloudového úložiska sa musíte prihlásiť. Chcete sa prihlásiť teraz?"
-    }
+    "cloud": {}
   },
   "sync": {
     "status": {
