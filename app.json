@@ -41,8 +41,7 @@
           "recordAudioAndroid": false
         }
       ],
-      "react-native-vision-camera",
-      "expo-secure-store"
+      "react-native-vision-camera"
     ],
     "experiments": {
       "typedRoutes": true

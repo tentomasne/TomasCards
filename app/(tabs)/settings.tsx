@@ -10,12 +10,11 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { Trash2, Coffee, Info, User, Moon, Sun, Monitor, HelpCircle, HandPlatterIcon, HeartPulseIcon, Database } from 'lucide-react-native';
+import { Info, HelpCircle, HeartPulseIcon, Database } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { AppSettings, ThemeMode } from '@/utils/types';
 import { loadSettings, saveSettings, saveCards } from '@/utils/storage';
 import { useTheme } from '@/hooks/useTheme';
-import { useAuth } from '@/hooks/useAuth';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import LanguageSelector from '@/components/LanguageSelector';
 import { lightHaptic } from '@/utils/feedback';
@@ -23,7 +22,6 @@ import ThemeSelector from '@/components/ThemeSelector';
 import StorageModeSelector from '@/components/StorageModeSelector';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
 import { storageManager } from '@/utils/storageManager';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -32,11 +30,8 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors, themeMode, setThemeMode } = useTheme();
-  const { logout, isAuthenticated } = useAuth();
   const { isOnline } = useNetworkStatus();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
-  const [email, setEmail] = useState('');
   const [showStorageSelector, setShowStorageSelector] = useState(false);
   const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
   const [storageModeLoaded, setStorageModeLoaded] = useState(false);
@@ -48,21 +43,6 @@ export default function SettingsScreen() {
     themeMode: 'system',
   });
 
-  // Check if user is logged in
-  useEffect(() => {
-    const checkLoginStatus = async () => {
-      setLoadingStatus(true);
-      const token = await SecureStore.getItemAsync('authToken');
-      if (token) {
-        setIsLoggedIn(true);
-        if (isOnline) {
-          await fetchUserData();
-        }
-      }
-      setLoadingStatus(false);
-    };
-    checkLoginStatus();
-  }, [isOnline]);
 
   // Initialize storage mode
   useEffect(() => {
@@ -80,37 +60,6 @@ export default function SettingsScreen() {
     initializeStorageMode();
   }, []);
 
-  // Fetch user data from API when online
-  async function fetchUserData() {
-    if (!isOnline) return;
-    
-    setLoadingStatus(true);
-    const token = (await SecureStore.getItemAsync('authToken')) || '';
-    
-    try {
-      const response = await fetch(`${API_URL}/me`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        method: 'GET',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setEmail(data.email || '');
-        if (data.token) {
-          await SecureStore.setItemAsync('authToken', data.token);
-        }
-      } else {
-        console.error('Failed to fetch user data:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Network error fetching user data:', error);
-    }
-    
-    setLoadingStatus(false);
-  }
 
   // Load settings once
   useEffect(() => {
@@ -127,33 +76,6 @@ export default function SettingsScreen() {
   };
 
   const handleStorageModeChange = async (mode: 'local' | 'cloud') => {
-    if (mode === 'cloud' && !isAuthenticated) {
-      // Show login prompt and redirect to login
-      if (Platform.OS === 'web') {
-        const confirmed = window.confirm(
-          `${t('storage.cloud.loginRequired')}\n${t('storage.cloud.loginRequiredMessage')}`
-        );
-        if (confirmed) {
-          router.push('/auth/login');
-        }
-      } else {
-        Alert.alert(
-          t('storage.cloud.loginRequired'),
-          t('storage.cloud.loginRequiredMessage'),
-          [
-            { text: t('common.buttons.cancel') },
-            { 
-              text: t('auth.login.signIn'), 
-              onPress: () => {
-                setShowStorageSelector(false);
-                router.push('/auth/login');
-              }
-            },
-          ]
-        );
-      }
-      return;
-    }
 
     setStorageModeChanging(true);
     try {
@@ -178,96 +100,12 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    if (Platform.OS === 'web') {
-      const confirmed = window.confirm(
-        `${t('settings.logout.title')}\n${t('settings.logout.confirm')}`
-      );
-      if (confirmed) {
-        if (storageMode === 'cloud') {
-          if (Platform.OS === 'web') {
-            window.alert(t('settings.logout.cloudStorageWarning'));
-            return;
-          } else {
-            Alert.alert(
-              t('settings.logout.title'),
-              t('settings.logout.cloudStorageWarning'),
-              [{ text: t('common.buttons.ok') }]
-            );
-            return;
-          }
-        }
-        await logout();
-        setIsLoggedIn(false);
-        setEmail('');
-      }
-    } else {
-      Alert.alert(
-        t('settings.logout.title'),
-        t('settings.logout.confirm'),
-        [
-          {
-            text: t('common.buttons.cancel'),
-            style: 'cancel',
-          },
-          {
-            text: t('common.buttons.logout'),
-            style: 'destructive',
-            onPress: async () => {
-              await logout();
-              setIsLoggedIn(false);
-              setEmail('');
-            },
-          },
-        ]
-      );
-    }
-  };
-
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.backgroundDark }]}
       contentContainerStyle={styles.content}
     >
-      {/* Account Section */}
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-        {t('settings.sections.account')}
-      </Text>
-      
-      {isLoggedIn ? (
-        <TouchableOpacity style={styles.section} onPress={handleLogout}>
-          <View style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}>
-            <View style={styles.settingLeft}>
-              <User size={24} color={colors.textSecondary} />
-              <View style={styles.settingTextContainer}>
-                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
-                  {email ? `Hi ${email.split('@')[0].toUpperCase()}!` : 'Account'}
-                  {!isOnline && ' (Offline)'}
-                </Text>
-                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-                  {t('settings.logout.description')}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ) : (
-        <TouchableOpacity style={styles.section} onPress={() => router.push('/auth/login')}>
-          <View style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}>
-            <View style={styles.settingLeft}>
-              <User size={24} color={colors.textSecondary} />
-              <View style={styles.settingTextContainer}>
-                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
-                  {t('settings.sections.account')}
-                </Text>
-                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
-                  {t('settings.login')}
-                </Text>
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      )}
+
 
       {/* Data Management Section */}
       <View style={styles.section}>

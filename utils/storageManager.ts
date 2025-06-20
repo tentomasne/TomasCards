@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
+import { CloudStorage } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const CARDS_FILE = '/loyalty_cards.json';
 
 export type StorageMode = 'local' | 'cloud';
 export type SyncAction = 'replace_with_cloud' | 'merge' | 'keep_local';
@@ -76,9 +76,6 @@ export class StorageManager {
     return this.storageMode;
   }
 
-  async getAuthToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync('authToken');
-  }
 
   // Local storage operations - always available
   async loadLocalCards(): Promise<LoyaltyCard[]> {
@@ -92,13 +89,15 @@ export class StorageManager {
   }
 
   async getCardsFromCloud() {
-    const token = await SecureStore.getItemAsync('authToken');
-    const response = await fetch(`${API_URL}/cards`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    return response.json();
+    try {
+      const exists = await CloudStorage.exists(CARDS_FILE);
+      if (!exists) return [];
+      const data = await CloudStorage.readFile(CARDS_FILE);
+      return JSON.parse(data) as LoyaltyCard[];
+    } catch (error) {
+      console.error('Failed to read cards from cloud:', error);
+      return [];
+    }
   }
 
   async saveLocalCards(cards: LoyaltyCard[]): Promise<void> {
@@ -117,136 +116,87 @@ export class StorageManager {
     }
   }
 
-  // Cloud storage operations
+  // Cloud storage operations using react-native-cloud-storage
   async loadCloudCards(): Promise<LoyaltyCard[]> {
-    const token = await this.getAuthToken();
-    if (!token) throw new Error('No auth token available');
-
-    const response = await fetch(`${API_URL}/cards`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to load cloud cards: ${response.statusText}`);
+    try {
+      const exists = await CloudStorage.exists(CARDS_FILE);
+      if (!exists) return [];
+      const content = await CloudStorage.readFile(CARDS_FILE);
+      const cards = JSON.parse(content) as LoyaltyCard[];
+      return this.transformCloudCards(cards);
+    } catch (error) {
+      console.error('Failed to load cloud cards:', error);
+      throw error;
     }
-
-    const cloudCards = await response.json();
-    return this.transformCloudCards(cloudCards);
   }
 
   async saveCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
-    const token = await this.getAuthToken();
-    if (!token) throw new Error('No auth token available');
-
-    const response = await fetch(`${API_URL}/cards`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name: card.name,
-        brand: card.brand,
-        code: card.code,
-        codeType: card.codeType,
-        color: card.color,
-        notes: card.notes,
-        isFavorite: card.isFavorite || false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to save cloud card: ${response.statusText}`);
+    try {
+      const cards = await this.getCardsFromCloud();
+      cards.push(card);
+      await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+      return card;
+    } catch (error) {
+      console.error('Failed to save cloud card:', error);
+      throw error;
     }
-
-    const savedCard = await response.json();
-    return this.transformCloudCard(savedCard);
   }
 
   async updateCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
-    const token = await this.getAuthToken();
-    if (!token) throw new Error('No auth token available');
-
-    const response = await fetch(`${API_URL}/cards/${card.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        name: card.name,
-        brand: card.brand,
-        code: card.code,
-        codeType: card.codeType,
-        color: card.color,
-        notes: card.notes,
-        isFavorite: card.isFavorite || false,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to update cloud card: ${response.statusText}`);
+    try {
+      const cards = await this.getCardsFromCloud();
+      const index = cards.findIndex(c => c.id === card.id);
+      if (index !== -1) {
+        cards[index] = card;
+        await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+      }
+      return card;
+    } catch (error) {
+      console.error('Failed to update cloud card:', error);
+      throw error;
     }
-
-    const updatedCard = await response.json();
-    return this.transformCloudCard(updatedCard);
   }
 
   async toggleCloudCardFavorite(cardId: string, isFavorite: boolean): Promise<LoyaltyCard> {
-    const token = await this.getAuthToken();
-    if (!token) throw new Error('No auth token available');
-
-    const response = await fetch(`${API_URL}/cards/${cardId}/favorite`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        isFavorite: isFavorite,
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to toggle favorite: ${response.statusText}`);
+    try {
+      const cards = await this.getCardsFromCloud();
+      const index = cards.findIndex(c => c.id === cardId);
+      if (index !== -1) {
+        cards[index].isFavorite = isFavorite;
+        await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+        return cards[index];
+      }
+      throw new Error('Card not found');
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      throw error;
     }
-
-    const updatedCard = await response.json();
-    return this.transformCloudCard(updatedCard);
   }
 
   async deleteCloudCard(cardId: string): Promise<void> {
-    const token = await this.getAuthToken();
-    if (!token) throw new Error('No auth token available');
-
-    const response = await fetch(`${API_URL}/cards/${cardId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to delete cloud card: ${response.statusText}`);
+    try {
+      const cards = await this.getCardsFromCloud();
+      const filtered = cards.filter(c => c.id !== cardId);
+      await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(filtered));
+    } catch (error) {
+      console.error('Failed to delete cloud card:', error);
+      throw error;
     }
   }
 
-  // Transform cloud card format to local format
+  // Transform cloud card format to local format (currently data is stored in the same shape)
   private transformCloudCard(cloudCard: any): LoyaltyCard {
     return {
-      id: cloudCard._id || cloudCard.id,
-      name: cloudCard.name || 'Unknown Card',
+      id: cloudCard.id,
+      name: cloudCard.name,
       brand: cloudCard.brand,
-      code: cloudCard.code || cloudCard.barcode || '',
-      codeType: cloudCard.codeType || 'barcode',
-      color: cloudCard.color || '#4F6BFF',
-      dateAdded: cloudCard.createdAt ? new Date(cloudCard.createdAt).getTime() : Date.now(),
-      lastUsed: cloudCard.lastUsed ? new Date(cloudCard.lastUsed).getTime() : undefined,
+      code: cloudCard.code,
+      codeType: cloudCard.codeType,
+      color: cloudCard.color,
+      dateAdded: cloudCard.dateAdded,
+      lastUsed: cloudCard.lastUsed,
       notes: cloudCard.notes,
-      isFavorite: cloudCard.isFavorite || false,
+      isFavorite: cloudCard.isFavorite,
     };
   }
 
@@ -268,9 +218,6 @@ export class StorageManager {
 
   async processQueuedOperations(): Promise<void> {
     if (this.queuedOperations.length === 0) return;
-
-    const token = await this.getAuthToken();
-    if (!token) return;
 
     const processedOperations: string[] = [];
 
@@ -333,16 +280,13 @@ export class StorageManager {
     // Always load from local storage first
     const localCards = await this.loadLocalCards();
     
-    // If cloud mode and we have auth token, try to sync from cloud
+    // If cloud mode, try to sync from cloud
     if (this.storageMode === 'cloud') {
       try {
-        const token = await this.getAuthToken();
-        if (token) {
-          const cloudCards = await this.loadCloudCards();
-          // Update local cache with cloud data
-          await this.saveLocalCards(cloudCards);
-          return cloudCards;
-        }
+        const cloudCards = await this.loadCloudCards();
+        // Update local cache with cloud data
+        await this.saveLocalCards(cloudCards);
+        return cloudCards;
       } catch (error) {
         console.error('Failed to load cloud cards, using local cache:', error);
       }
@@ -361,18 +305,15 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const token = await this.getAuthToken();
-          if (token) {
-            const savedCard = await this.saveCloudCard(card);
-            // Update local cache with cloud response
-            const updatedLocalCards = await this.loadLocalCards();
-            const index = updatedLocalCards.findIndex(c => c.id === card.id);
-            if (index !== -1) {
-              updatedLocalCards[index] = savedCard;
-              await this.saveLocalCards(updatedLocalCards);
-            }
-            return savedCard;
+          const savedCard = await this.saveCloudCard(card);
+          // Update local cache with cloud response
+          const updatedLocalCards = await this.loadLocalCards();
+          const index = updatedLocalCards.findIndex(c => c.id === card.id);
+          if (index !== -1) {
+            updatedLocalCards[index] = savedCard;
+            await this.saveLocalCards(updatedLocalCards);
           }
+          return savedCard;
         } catch (error) {
           console.error('Failed to save to cloud, queuing operation:', error);
           await this.queueOperation({ type: 'create', card });
@@ -399,18 +340,15 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const token = await this.getAuthToken();
-          if (token) {
-            const updatedCard = await this.updateCloudCard(card);
-            // Update local cache with cloud response
-            const updatedLocalCards = await this.loadLocalCards();
-            const localIndex = updatedLocalCards.findIndex(c => c.id === card.id);
-            if (localIndex !== -1) {
-              updatedLocalCards[localIndex] = updatedCard;
-              await this.saveLocalCards(updatedLocalCards);
-            }
-            return updatedCard;
+          const updatedCard = await this.updateCloudCard(card);
+          // Update local cache with cloud response
+          const updatedLocalCards = await this.loadLocalCards();
+          const localIndex = updatedLocalCards.findIndex(c => c.id === card.id);
+          if (localIndex !== -1) {
+            updatedLocalCards[localIndex] = updatedCard;
+            await this.saveLocalCards(updatedLocalCards);
           }
+          return updatedCard;
         } catch (error) {
           console.error('Failed to update cloud card, queuing operation:', error);
           await this.queueOperation({ type: 'update', card });
@@ -437,18 +375,15 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const token = await this.getAuthToken();
-          if (token) {
-            const updatedCard = await this.toggleCloudCardFavorite(cardId, isFavorite);
-            // Update local cache with cloud response
-            const updatedLocalCards = await this.loadLocalCards();
-            const localIndex = updatedLocalCards.findIndex(c => c.id === cardId);
-            if (localIndex !== -1) {
-              updatedLocalCards[localIndex] = updatedCard;
-              await this.saveLocalCards(updatedLocalCards);
-            }
-            return updatedCard;
+          const updatedCard = await this.toggleCloudCardFavorite(cardId, isFavorite);
+          // Update local cache with cloud response
+          const updatedLocalCards = await this.loadLocalCards();
+          const localIndex = updatedLocalCards.findIndex(c => c.id === cardId);
+          if (localIndex !== -1) {
+            updatedLocalCards[localIndex] = updatedCard;
+            await this.saveLocalCards(updatedLocalCards);
           }
+          return updatedCard;
         } catch (error) {
           console.error('Failed to toggle favorite in cloud, queuing operation:', error);
           await this.queueOperation({ type: 'favorite', cardId, isFavorite });
@@ -472,10 +407,7 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const token = await this.getAuthToken();
-          if (token) {
-            await this.deleteCloudCard(cardId);
-          }
+          await this.deleteCloudCard(cardId);
         } catch (error) {
           console.error('Failed to delete cloud card, queuing operation:', error);
           await this.queueOperation({ type: 'delete', cardId });

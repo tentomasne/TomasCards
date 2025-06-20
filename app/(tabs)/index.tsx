@@ -16,7 +16,6 @@ import { useTranslation } from 'react-i18next';
 import type { LoyaltyCard } from '@/utils/types';
 import { useTheme } from '@/hooks/useTheme';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
-import { useAuth } from '@/hooks/useAuth';
 import { storageManager, SyncConflictData } from '@/utils/storageManager';
 import { hasCompletedWelcome, markWelcomeCompleted } from '@/utils/storage';
 import LoyaltyCardComponent from '@/components/LoyaltyCard';
@@ -33,7 +32,6 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
   const { isOnline } = useNetworkStatus();
-  const { isAuthenticated } = useAuth();
   const [cards, setCards] = useState<LoyaltyCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -72,7 +70,7 @@ export default function HomeScreen() {
       
       try {
         const completed = await hasCompletedWelcome();
-        if (!completed && !isAuthenticated) {
+        if (!completed) {
           // Only show welcome if user hasn't completed it and isn't authenticated
           const currentCards = await storageManager.loadCards();
           if (currentCards.length === 0) {
@@ -90,7 +88,7 @@ export default function HomeScreen() {
     };
 
     checkWelcomeStatus();
-  }, [isInitialized, isAuthenticated]);
+  }, [isInitialized]);
 
   // Update sync status based on network and auth state
   useEffect(() => {
@@ -98,8 +96,6 @@ export default function HomeScreen() {
     
     if (storageMode === 'local') {
       setSyncStatus('synced');
-    } else if (!isAuthenticated) {
-      setSyncStatus('offline');
     } else if (!isOnline) {
       setSyncStatus('offline');
     } else {
@@ -107,7 +103,7 @@ export default function HomeScreen() {
     }
     
     setPendingOperations(storageManager.getQueuedOperationsCount());
-  }, [isOnline, isAuthenticated, storageMode, isInitialized]);
+  }, [isOnline, storageMode, isInitialized]);
 
   // Load card data - optimized to prevent multiple calls
   const loadCardData = useCallback(async () => {
@@ -121,19 +117,19 @@ export default function HomeScreen() {
       setCards(data);
       
       // Process queued operations if online and using cloud storage
-      if (isOnline && isAuthenticated && storageMode === 'cloud') {
+      if (isOnline && storageMode === 'cloud') {
         await storageManager.processQueuedOperations();
         setPendingOperations(storageManager.getQueuedOperationsCount());
       }
       
-      setSyncStatus(storageMode === 'cloud' && isOnline && isAuthenticated ? 'synced' : 'offline');
+      setSyncStatus(storageMode === 'cloud' && isOnline ? 'synced' : storageMode === 'local' ? 'synced' : 'offline');
     } catch (e) {
       console.error('Error loading cards', e);
       setSyncStatus('error');
     } finally {
       setLoading(false);
     }
-  }, [isOnline, isAuthenticated, storageMode, isInitialized, welcomeCheckCompleted, showWelcome]);
+  }, [isOnline, storageMode, isInitialized, welcomeCheckCompleted, showWelcome]);
 
   // Load data when dependencies are ready
   useEffect(() => {
@@ -145,7 +141,7 @@ export default function HomeScreen() {
   // Check for sync conflicts when switching to cloud mode
   useEffect(() => {
     const checkSyncConflicts = async () => {
-      if (!isInitialized || !isAuthenticated || !isOnline || storageMode !== 'cloud') {
+      if (!isInitialized || !isOnline || storageMode !== 'cloud') {
         return;
       }
 
@@ -164,7 +160,7 @@ export default function HomeScreen() {
     if (!loading && cards.length >= 0) {
       checkSyncConflicts();
     }
-  }, [isInitialized, isAuthenticated, isOnline, storageMode, loading]);
+  }, [isInitialized, isOnline, storageMode, loading]);
 
   // Focus effect for when returning to screen
   useFocusEffect(

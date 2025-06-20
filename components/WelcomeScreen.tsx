@@ -9,7 +9,6 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Cloud, Smartphone, ArrowRight, Shield, Database } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
@@ -22,16 +21,14 @@ interface WelcomeScreenProps {
 
 export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
   const { t } = useTranslation();
-  const router = useRouter();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
 
   const handleCloudStorage = async () => {
     await lightHaptic();
-    // Set cloud mode and redirect to login
+    // Set cloud mode and continue to app
     await storageManager.setStorageMode('cloud');
-    router.push('/auth/login');
-    // Don't call onComplete here - it will be called when user returns from auth
+    onComplete('cloud');
   };
 
   const handleLocalStorage = async () => {
