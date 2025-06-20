@@ -28,7 +28,6 @@
     "expo-localization": "^16.1.5",
     "expo-modules-core": "^2.4.0",
     "expo-router": "~5.1.0",
-    "expo-secure-store": "~14.2.3",
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.2",
     "expo-symbols": "~0.4.5",

@@ -57,61 +57,6 @@
     "note": "You can change your storage preference anytime in the settings.",
     "settingUp": "Setting up your storage..."
   },
-  "auth": {
-    "login": {
-      "welcome": "Welcome Back",
-      "subtitle": "Sign in to your account",
-      "signIn": "Sign In",
-      "forgotPassword": "Forgot Password?",
-      "noAccount": "Don't have an account?",
-      "signUp": "Sign Up"
-    },
-    "register": {
-      "title": "Create Account",
-      "subtitle": "Join TomasCards today",
-      "createAccount": "Create Account",
-      "haveAccount": "Already have an account?",
-      "signIn": "Sign In"
-    },
-    "forgotPassword": {
-      "title": "Reset Password",
-      "subtitle": "Enter your email to receive reset instructions",
-      "sendResetLink": "Send Reset Link",
-      "emailSent": "Email Sent!",
-      "checkEmail": "Check your email for reset instructions",
-      "backToLogin": "Back to Login"
-    },
-    "resetPassword": {
-      "title": "Reset Password",
-      "subtitle": "Enter your new password",
-      "resetPassword": "Reset Password",
-      "success": "Password Reset!",
-      "successMessage": "Your password has been successfully reset",
-      "backToLogin": "Back to Login"
-    },
-    "verification": {
-      "title": "Check Your Email",
-      "subtitle": "We've sent a verification link to your email address",
-      "resend": "Resend Email",
-      "verified": "Email Verified!",
-      "verifiedMessage": "Your email has been successfully verified",
-      "failed": "Verification Failed",
-      "expired": "The verification link has expired or is invalid"
-    },
-    "fields": {
-      "email": "Email",
-      "password": "Password",
-      "confirmPassword": "Confirm Password",
-      "newPassword": "New Password"
-    },
-    "validation": {
-      "allFieldsRequired": "All fields are required",
-      "emailRequired": "Email is required",
-      "passwordRequirements": "Password must be at least 8 characters with uppercase, lowercase, number and special character",
-      "passwordRequirementsText": "Password must contain at least 8 characters, including uppercase, lowercase, numbers, and special characters",
-      "passwordsDoNotMatch": "Passwords do not match"
-    }
-  },
   "tabs": {
     "cards": "Cards",
     "add": "Add",
@@ -248,10 +193,7 @@
       "message": "Cloud storage features require an internet connection. Please connect to the internet or switch to local storage mode.",
       "banner": "Internet connection required for cloud features"
     },
-    "cloud": {
-      "loginRequired": "Login Required",
-      "loginRequiredMessage": "You need to sign in to use cloud storage. Would you like to sign in now?"
-    }
+    "cloud": {}
   },
   "sync": {
     "status": {

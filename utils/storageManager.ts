@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
 import { CloudStorage } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 
@@ -77,9 +76,6 @@ export class StorageManager {
     return this.storageMode;
   }
 
-  async getAuthToken(): Promise<string | null> {
-    return await SecureStore.getItemAsync('authToken');
-  }
 
   // Local storage operations - always available
   async loadLocalCards(): Promise<LoyaltyCard[]> {
