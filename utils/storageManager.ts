@@ -90,8 +90,12 @@ export class StorageManager {
 
   async getCardsFromCloud() {
     try {
+      const available = await CloudStorage.isCloudAvailable();
+      if (!available) return [];
+
       const exists = await CloudStorage.exists(CARDS_FILE);
       if (!exists) return [];
+
       const data = await CloudStorage.readFile(CARDS_FILE);
       return JSON.parse(data) as LoyaltyCard[];
     } catch (error) {
@@ -119,8 +123,12 @@ export class StorageManager {
   // Cloud storage operations using react-native-cloud-storage
   async loadCloudCards(): Promise<LoyaltyCard[]> {
     try {
+      const available = await CloudStorage.isCloudAvailable();
+      if (!available) return [];
+
       const exists = await CloudStorage.exists(CARDS_FILE);
       if (!exists) return [];
+
       const content = await CloudStorage.readFile(CARDS_FILE);
       const cards = JSON.parse(content) as LoyaltyCard[];
       return this.transformCloudCards(cards);
