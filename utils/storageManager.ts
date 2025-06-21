@@ -2,7 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CloudStorage } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 
-const CARDS_FILE = 'loyalty_cards.json';
+// Directory in iCloud where the loyalty cards file is stored
+const CLOUD_DIR = 'cards';
+const CARDS_FILE = `${CLOUD_DIR}/loyalty_cards.json`;
 
 export type StorageMode = 'local' | 'cloud';
 export type SyncAction = 'replace_with_cloud' | 'merge' | 'keep_local';
@@ -33,6 +35,21 @@ export class StorageManager {
   private queuedOperations: QueuedOperation[] = [];
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
+
+  /**
+   * Ensures that the cloud directory used to store cards exists.
+   */
+  private async ensureCloudDirectory(): Promise<void> {
+    try {
+      if (!(await this.cloudAccessible())) return;
+      const dirExists = await CloudStorage.exists(CLOUD_DIR);
+      if (!dirExists) {
+        await CloudStorage.mkdir(CLOUD_DIR);
+      }
+    } catch (error) {
+      console.error('Failed to ensure cloud directory:', error);
+    }
+  }
 
   private async cloudAccessible(): Promise<boolean> {
     try {
@@ -101,6 +118,8 @@ export class StorageManager {
     try {
       if (!(await this.cloudAccessible())) return [];
 
+      await this.ensureCloudDirectory();
+
       const exists = await CloudStorage.exists(CARDS_FILE);
       if (!exists) return [];
 
@@ -136,6 +155,8 @@ export class StorageManager {
     try {
       if (!(await this.cloudAccessible())) return [];
 
+      await this.ensureCloudDirectory();
+
       const exists = await CloudStorage.exists(CARDS_FILE);
       if (!exists) return [];
 
@@ -154,6 +175,7 @@ export class StorageManager {
   async saveCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
     try {
       if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
+      await this.ensureCloudDirectory();
       const cards = await this.getCardsFromCloud();
       cards.push(card);
       await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
@@ -167,6 +189,7 @@ export class StorageManager {
   async updateCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
     try {
       if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
+      await this.ensureCloudDirectory();
       const cards = await this.getCardsFromCloud();
       const index = cards.findIndex(c => c.id === card.id);
       if (index !== -1) {
@@ -183,6 +206,7 @@ export class StorageManager {
   async toggleCloudCardFavorite(cardId: string, isFavorite: boolean): Promise<LoyaltyCard> {
     try {
       if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
+      await this.ensureCloudDirectory();
       const cards = await this.getCardsFromCloud();
       const index = cards.findIndex(c => c.id === cardId);
       if (index !== -1) {
@@ -200,6 +224,7 @@ export class StorageManager {
   async deleteCloudCard(cardId: string): Promise<void> {
     try {
       if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
+      await this.ensureCloudDirectory();
       const cards = await this.getCardsFromCloud();
       const filtered = cards.filter(c => c.id !== cardId);
       await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(filtered));
