@@ -31,7 +31,7 @@ const LAST_SYNC_KEY = 'last_sync_timestamp';
 
 export class StorageManager {
   private static instance: StorageManager;
-  private storageMode: StorageMode = 'cloud'; // Default to cloud
+  private storageMode: StorageMode = 'local'; // Default to cloud
   private queuedOperations: QueuedOperation[] = [];
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
@@ -299,7 +299,7 @@ export class StorageManager {
         processedOperations.push(operation.id);
       } catch (error) {
         console.error(`Failed to process queued operation ${operation.id}:`, error);
-        // Keep failed operations in queue for retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
