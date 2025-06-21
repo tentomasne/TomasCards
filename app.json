@@ -41,7 +41,13 @@
           "recordAudioAndroid": false
         }
       ],
-      "react-native-vision-camera"
+      "react-native-vision-camera",
+      [
+        "react-native-cloud-storage",
+        {
+          "iCloudContainerEnvironment": "Development"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
