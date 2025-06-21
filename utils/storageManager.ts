@@ -3,8 +3,7 @@ import { CloudStorage } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 
 // Directory in iCloud where the loyalty cards file is stored
-// Prefix with '/' so the path is resolved from the container root
-const CLOUD_DIR = '/cards';
+const CLOUD_DIR = 'cards';
 const CARDS_FILE = `${CLOUD_DIR}/loyalty_cards.json`;
 
 export type StorageMode = 'local' | 'cloud';
@@ -43,22 +42,9 @@ export class StorageManager {
   private async ensureCloudDirectory(): Promise<void> {
     try {
       if (!(await this.cloudAccessible())) return;
-
-      const segments = CLOUD_DIR.replace(/^\//, '').split('/');
-      let currentPath = '';
-
-      for (const segment of segments) {
-        currentPath += `/${segment}`;
-        try {
-          const exists = await CloudStorage.exists(currentPath);
-          if (!exists) {
-            await CloudStorage.mkdir(currentPath);
-          }
-        } catch (error: any) {
-          if (error.code !== 'ERR_FILE_EXISTS') {
-            throw error;
-          }
-        }
+      const dirExists = await CloudStorage.exists(CLOUD_DIR);
+      if (!dirExists) {
+        await CloudStorage.mkdir(CLOUD_DIR);
       }
     } catch (error) {
       console.error('Failed to ensure cloud directory:', error);
