@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CloudStorage } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 
-const CARDS_FILE = '/loyalty_cards.json';
+const CARDS_FILE = 'loyalty_cards.json';
 
 export type StorageMode = 'local' | 'cloud';
 export type SyncAction = 'replace_with_cloud' | 'merge' | 'keep_local';
@@ -33,6 +33,15 @@ export class StorageManager {
   private queuedOperations: QueuedOperation[] = [];
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
+
+  private async cloudAccessible(): Promise<boolean> {
+    try {
+      return await CloudStorage.isCloudAvailable();
+    } catch (error) {
+      console.error('Failed to check cloud availability:', error);
+      return false;
+    }
+  }
 
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
@@ -90,8 +99,7 @@ export class StorageManager {
 
   async getCardsFromCloud() {
     try {
-      const available = await CloudStorage.isCloudAvailable();
-      if (!available) return [];
+      if (!(await this.cloudAccessible())) return [];
 
       const exists = await CloudStorage.exists(CARDS_FILE);
       if (!exists) return [];
@@ -99,6 +107,9 @@ export class StorageManager {
       const data = await CloudStorage.readFile(CARDS_FILE);
       return JSON.parse(data) as LoyaltyCard[];
     } catch (error) {
+      if ((error as any)?.code === 'ERR_DIRECTORY_NOT_FOUND') {
+        return [];
+      }
       console.error('Failed to read cards from cloud:', error);
       return [];
     }
@@ -123,8 +134,7 @@ export class StorageManager {
   // Cloud storage operations using react-native-cloud-storage
   async loadCloudCards(): Promise<LoyaltyCard[]> {
     try {
-      const available = await CloudStorage.isCloudAvailable();
-      if (!available) return [];
+      if (!(await this.cloudAccessible())) return [];
 
       const exists = await CloudStorage.exists(CARDS_FILE);
       if (!exists) return [];
@@ -133,6 +143,9 @@ export class StorageManager {
       const cards = JSON.parse(content) as LoyaltyCard[];
       return this.transformCloudCards(cards);
     } catch (error) {
+      if ((error as any)?.code === 'ERR_DIRECTORY_NOT_FOUND') {
+        return [];
+      }
       console.error('Failed to load cloud cards:', error);
       throw error;
     }
@@ -140,6 +153,7 @@ export class StorageManager {
 
   async saveCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
     try {
+      if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
       const cards = await this.getCardsFromCloud();
       cards.push(card);
       await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
@@ -152,6 +166,7 @@ export class StorageManager {
 
   async updateCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
     try {
+      if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
       const cards = await this.getCardsFromCloud();
       const index = cards.findIndex(c => c.id === card.id);
       if (index !== -1) {
@@ -167,6 +182,7 @@ export class StorageManager {
 
   async toggleCloudCardFavorite(cardId: string, isFavorite: boolean): Promise<LoyaltyCard> {
     try {
+      if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
       const cards = await this.getCardsFromCloud();
       const index = cards.findIndex(c => c.id === cardId);
       if (index !== -1) {
@@ -183,6 +199,7 @@ export class StorageManager {
 
   async deleteCloudCard(cardId: string): Promise<void> {
     try {
+      if (!(await this.cloudAccessible())) throw new Error('cloud_unavailable');
       const cards = await this.getCardsFromCloud();
       const filtered = cards.filter(c => c.id !== cardId);
       await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(filtered));
@@ -226,6 +243,7 @@ export class StorageManager {
 
   async processQueuedOperations(): Promise<void> {
     if (this.queuedOperations.length === 0) return;
+    if (!(await this.cloudAccessible())) return;
 
     const processedOperations: string[] = [];
 
