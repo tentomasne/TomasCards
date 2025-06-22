@@ -198,7 +198,19 @@
       "message": "Cloudové funkcie vyžadujú internetové pripojenie. Pripojte sa na internet alebo prepnite na lokálny režim úložiska.",
       "banner": "Pre cloudové funkcie je potrebné internetové pripojenie"
     },
-    "cloud": {}
+    "provider": {
+      "title": "Cloud poskytovateľ",
+      "subtitle": "Zvoľte si službu pre uloženie dát",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Synchronizácia cez Apple ID"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Synchronizácia cez Google účet",
+        "login": "Prihlásiť sa cez Google"
+      }
+    }
   },
   "sync": {
     "status": {

@@ -20,6 +20,8 @@ import LanguageSelector from '@/components/LanguageSelector';
 import { lightHaptic } from '@/utils/feedback';
 import ThemeSelector from '@/components/ThemeSelector';
 import StorageModeSelector from '@/components/StorageModeSelector';
+import CloudProviderSelector from '@/components/CloudProviderSelector';
+import { CloudStorageProvider } from 'react-native-cloud-storage';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { storageManager } from '@/utils/storageManager';
@@ -36,6 +38,8 @@ export default function SettingsScreen() {
   const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
   const [storageModeLoaded, setStorageModeLoaded] = useState(false);
   const [storageModeChanging, setStorageModeChanging] = useState(false);
+  const [showProviderSelector, setShowProviderSelector] = useState(false);
+  const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
   const [settings, setSettings] = useState<AppSettings>({
     sortOption: 'alphabetical',
     hapticFeedback: true,
@@ -50,7 +54,9 @@ export default function SettingsScreen() {
       try {
         await storageManager.initialize();
         const currentMode = storageManager.getStorageMode();
+        const currentProvider = storageManager.getProvider();
         setStorageMode(currentMode);
+        setProvider(currentProvider);
         setStorageModeLoaded(true);
       } catch (error) {
         console.error('Failed to initialize storage mode:', error);
@@ -82,6 +88,9 @@ export default function SettingsScreen() {
       await storageManager.setStorageMode(mode);
       setStorageMode(mode);
       setShowStorageSelector(false);
+      if (mode === 'cloud') {
+        setShowProviderSelector(true);
+      }
     } catch (error) {
       console.error('Failed to change storage mode:', error);
       
@@ -98,6 +107,12 @@ export default function SettingsScreen() {
     } finally {
       setStorageModeChanging(false);
     }
+  };
+
+  const handleProviderSelect = async (prov: CloudStorageProvider) => {
+    setProvider(prov);
+    await storageManager.setProvider(prov);
+    setShowProviderSelector(false);
   };
 
   return (
@@ -136,6 +151,25 @@ export default function SettingsScreen() {
             </View>
           </View>
         </TouchableOpacity>
+
+        {storageMode === 'cloud' && (
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+            onPress={() => setShowProviderSelector(true)}
+          >
+            <View style={styles.settingLeft}>
+              <Database size={24} color={colors.textSecondary} />
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}> 
+                  {t('storage.provider.title')}
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}> 
+                  {t(`storage.provider.${provider}.title`)}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Appearance Section */}
@@ -221,6 +255,15 @@ export default function SettingsScreen() {
           onSelect={handleStorageModeChange}
           onClose={() => setShowStorageSelector(false)}
           loading={storageModeChanging}
+        />
+      )}
+
+      {storageModeLoaded && (
+        <CloudProviderSelector
+          visible={showProviderSelector}
+          currentProvider={provider}
+          onSelect={handleProviderSelect}
+          onClose={() => setShowProviderSelector(false)}
         />
       )}
     </ScrollView>

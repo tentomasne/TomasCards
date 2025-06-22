@@ -193,7 +193,19 @@
       "message": "Cloud storage features require an internet connection. Please connect to the internet or switch to local storage mode.",
       "banner": "Internet connection required for cloud features"
     },
-    "cloud": {}
+    "provider": {
+      "title": "Cloud Provider",
+      "subtitle": "Select where your data should be stored",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Sync using your Apple ID"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Sync using your Google account",
+        "login": "Sign in with Google"
+      }
+    }
   },
   "sync": {
     "status": {
