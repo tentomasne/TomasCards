@@ -14,6 +14,8 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 import { storageManager } from '@/utils/storageManager';
 import { lightHaptic } from '@/utils/feedback';
+import CloudProviderSelector from '@/components/CloudProviderSelector';
+import { CloudStorageProvider } from 'react-native-cloud-storage';
 
 interface WelcomeScreenProps {
   onComplete: (selectedMode?: 'local' | 'cloud') => void;
@@ -23,11 +25,19 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
+  const [showProviderSelector, setShowProviderSelector] = useState(false);
+  const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
 
   const handleCloudStorage = async () => {
     await lightHaptic();
-    // Set cloud mode and continue to app
     await storageManager.setStorageMode('cloud');
+    setShowProviderSelector(true);
+  };
+
+  const handleProviderSelect = async (prov: CloudStorageProvider) => {
+    setProvider(prov);
+    await storageManager.setProvider(prov);
+    setShowProviderSelector(false);
     onComplete('cloud');
   };
 
@@ -199,6 +209,14 @@ export default function WelcomeScreen({ onComplete }: WelcomeScreenProps) {
           </View>
         )}
       </ScrollView>
+      {showProviderSelector && (
+        <CloudProviderSelector
+          visible={showProviderSelector}
+          currentProvider={provider}
+          onSelect={handleProviderSelect}
+          onClose={() => setShowProviderSelector(false)}
+        />
+      )}
     </View>
   );
 }

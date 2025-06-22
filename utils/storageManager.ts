@@ -28,6 +28,8 @@ export interface QueuedOperation {
 const STORAGE_MODE_KEY = 'storage_mode';
 const QUEUED_OPERATIONS_KEY = 'queued_operations';
 const LAST_SYNC_KEY = 'last_sync_timestamp';
+const STORAGE_PROVIDER_KEY = 'cloud_storage_provider';
+const GOOGLE_TOKEN_KEY = 'google_drive_token';
 
 export class StorageManager {
   private static instance: StorageManager;
@@ -36,7 +38,11 @@ export class StorageManager {
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
   private provider = CloudStorage.getDefaultProvider();
-  public cloudStorageConstructor = new CloudStorage(this.provider, this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined);
+  private accessToken: string | null = null;
+  public cloudStorageConstructor = new CloudStorage(
+    this.provider,
+    this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
+  );
 
   /**
    * Ensures that the cloud directory used to store cards exists.
@@ -79,8 +85,20 @@ export class StorageManager {
       const queuedOps = await AsyncStorage.getItem(QUEUED_OPERATIONS_KEY);
       this.queuedOperations = queuedOps ? JSON.parse(queuedOps) : [];
 
-      
-      
+      const storedProvider = await AsyncStorage.getItem(STORAGE_PROVIDER_KEY);
+      if (storedProvider === CloudStorageProvider.ICloud || storedProvider === CloudStorageProvider.GoogleDrive) {
+        this.provider = storedProvider;
+      }
+      const token = await AsyncStorage.getItem(GOOGLE_TOKEN_KEY);
+      if (token) {
+        this.accessToken = token;
+      }
+
+      this.cloudStorageConstructor.setProvider(this.provider);
+      if (this.provider === CloudStorageProvider.GoogleDrive) {
+        this.cloudStorageConstructor.setProviderOptions({ strictFilenames: true, accessToken: this.accessToken || undefined });
+      }
+
       this.isInitialized = true;
     } catch (error) {
       console.error('Failed to initialize storage manager:', error);
@@ -104,6 +122,27 @@ export class StorageManager {
 
   getStorageMode(): StorageMode {
     return this.storageMode;
+  }
+
+  getProvider(): CloudStorageProvider {
+    return this.provider;
+  }
+
+  async setProvider(provider: CloudStorageProvider): Promise<void> {
+    this.provider = provider;
+    await AsyncStorage.setItem(STORAGE_PROVIDER_KEY, provider);
+    this.cloudStorageConstructor.setProvider(provider);
+    if (provider === CloudStorageProvider.GoogleDrive) {
+      this.cloudStorageConstructor.setProviderOptions({ strictFilenames: true, accessToken: this.accessToken || undefined });
+    }
+  }
+
+  async setAccessToken(token: string): Promise<void> {
+    this.accessToken = token;
+    await AsyncStorage.setItem(GOOGLE_TOKEN_KEY, token);
+    if (this.provider === CloudStorageProvider.GoogleDrive) {
+      this.cloudStorageConstructor.setProviderOptions({ accessToken: token });
+    }
   }
 
 
