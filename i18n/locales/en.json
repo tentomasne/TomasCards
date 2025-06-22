@@ -193,7 +193,19 @@
       "message": "Cloud storage features require an internet connection. Please connect to the internet or switch to local storage mode.",
       "banner": "Internet connection required for cloud features"
     },
-    "cloud": {}
+    "provider": {
+      "title": "Cloud Provider",
+      "subtitle": "Select where your data should be stored",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Sync using your Apple ID"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Sync using your Google account",
+        "login": "Sign in with Google"
+      }
+    }
   },
   "sync": {
     "status": {
@@ -220,6 +232,42 @@
       "error": "Sync Error",
       "errorMessage": "Failed to resolve sync conflict. Please try again.",
       "recommended": "Recommended"
+    }
+  },
+  "debug": {
+    "title": "Debug",
+    "mode": {
+      "enabled": "Debug mode enabled"
+    },
+    "modal": {
+      "error": "Debug Error",
+      "warning": "Debug Warning",
+      "info": "Debug Info",
+      "message": "Message",
+      "details": "Details",
+      "stack": "Stack Trace",
+      "extra": "Additional Data",
+      "copyTitle": "Copy Debug Info",
+      "copyMessage": "Copy debug information to share with support?",
+      "copy": "Copy",
+      "copyDetails": "Copy Details"
+    },
+    "logs": {
+      "title": "Debug Logs",
+      "description": "{{total}} total logs ({{errors}} errors)",
+      "total": "{{count}} total",
+      "errors": "{{count}} errors",
+      "warnings": "{{count}} warnings",
+      "info": "{{count}} info",
+      "all": "All",
+      "errorsOnly": "Errors",
+      "warningsOnly": "Warnings",
+      "infoOnly": "Info",
+      "empty": "No debug logs found",
+      "clearTitle": "Clear Logs",
+      "clearConfirm": "Are you sure you want to clear all debug logs? This action cannot be undone.",
+      "clear": "Clear",
+      "copied": "Log Copied"
     }
   }
 }

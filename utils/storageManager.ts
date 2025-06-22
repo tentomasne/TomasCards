@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
+import { logError, logWarning, logInfo } from '@/utils/debugManager';
 
 // Directory in iCloud where the loyalty cards file is stored
 const CLOUD_DIR = '/cards';
@@ -28,6 +29,8 @@ export interface QueuedOperation {
 const STORAGE_MODE_KEY = 'storage_mode';
 const QUEUED_OPERATIONS_KEY = 'queued_operations';
 const LAST_SYNC_KEY = 'last_sync_timestamp';
+const STORAGE_PROVIDER_KEY = 'cloud_storage_provider';
+const GOOGLE_TOKEN_KEY = 'google_drive_token';
 
 export class StorageManager {
   private static instance: StorageManager;
@@ -36,7 +39,11 @@ export class StorageManager {
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
   private provider = CloudStorage.getDefaultProvider();
-  public cloudStorageConstructor = new CloudStorage(this.provider, this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined);
+  private accessToken: string | null = null;
+  public cloudStorageConstructor = new CloudStorage(
+    this.provider,
+    this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
+  );
 
   /**
    * Ensures that the cloud directory used to store cards exists.
@@ -44,12 +51,14 @@ export class StorageManager {
   private async ensureCloudDirectory(): Promise<void> {
     try {
       if (!(await this.cloudAccessible())) return;
+      logInfo('Ensuring cloud directory exists:', CLOUD_DIR);
       const dirExists = await this.cloudStorageConstructor.exists(CLOUD_DIR);
       if (!dirExists) {
         await this.cloudStorageConstructor.mkdir(CLOUD_DIR);
       }
     } catch (error) {
       console.error('Failed to ensure cloud directory:', error);
+      logError('Failed to ensure cloud directory', error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -58,6 +67,7 @@ export class StorageManager {
       return await this.cloudStorageConstructor.isCloudAvailable();
     } catch (error) {
       console.error('Failed to check cloud availability:', error);
+      logError('Failed to check cloud availability', error instanceof Error ? error.message : String(error));
       return false;
     }
   }
@@ -79,11 +89,24 @@ export class StorageManager {
       const queuedOps = await AsyncStorage.getItem(QUEUED_OPERATIONS_KEY);
       this.queuedOperations = queuedOps ? JSON.parse(queuedOps) : [];
 
-      
-      
+      const storedProvider = await AsyncStorage.getItem(STORAGE_PROVIDER_KEY);
+      if (storedProvider === CloudStorageProvider.ICloud || storedProvider === CloudStorageProvider.GoogleDrive) {
+        this.provider = storedProvider;
+      }
+      const token = await AsyncStorage.getItem(GOOGLE_TOKEN_KEY);
+      if (token) {
+        this.accessToken = token;
+      }
+
+      this.cloudStorageConstructor.setProvider(this.provider);
+      if (this.provider === CloudStorageProvider.GoogleDrive) {
+        this.cloudStorageConstructor.setProviderOptions({ strictFilenames: true, accessToken: this.accessToken || undefined });
+      }
+
       this.isInitialized = true;
     } catch (error) {
       console.error('Failed to initialize storage manager:', error);
+      logError('Failed to initialize storage manager', error instanceof Error ? error.message : String(error));
       this.isInitialized = true;
     }
   }
@@ -106,6 +129,27 @@ export class StorageManager {
     return this.storageMode;
   }
 
+  getProvider(): CloudStorageProvider {
+    return this.provider;
+  }
+
+  async setProvider(provider: CloudStorageProvider): Promise<void> {
+    this.provider = provider;
+    await AsyncStorage.setItem(STORAGE_PROVIDER_KEY, provider);
+    this.cloudStorageConstructor.setProvider(provider);
+    if (provider === CloudStorageProvider.GoogleDrive) {
+      this.cloudStorageConstructor.setProviderOptions({ strictFilenames: true, accessToken: this.accessToken || undefined });
+    }
+  }
+
+  async setAccessToken(token: string): Promise<void> {
+    this.accessToken = token;
+    await AsyncStorage.setItem(GOOGLE_TOKEN_KEY, token);
+    if (this.provider === CloudStorageProvider.GoogleDrive) {
+      this.cloudStorageConstructor.setProviderOptions({ accessToken: token });
+    }
+  }
+
 
   // Local storage operations - always available
   async loadLocalCards(): Promise<LoyaltyCard[]> {
@@ -114,6 +158,7 @@ export class StorageManager {
       return jsonValue ? JSON.parse(jsonValue) : [];
     } catch (error) {
       console.error('Failed to load local cards:', error);
+      logError('Failed to load local cards', error instanceof Error ? error.message : String(error));
       return [];
     }
   }
@@ -134,6 +179,7 @@ export class StorageManager {
         return [];
       }
       console.error('Failed to read cards from cloud:', error);
+      logError('Failed to read cards from cloud', error instanceof Error ? error.message : String(error));
       return [];
     }
   }
@@ -143,6 +189,7 @@ export class StorageManager {
       await AsyncStorage.setItem('loyalty_cards', JSON.stringify(cards));
     } catch (error) {
       console.error('Failed to save local cards:', error);
+      logError('Failed to save local cards', error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -151,6 +198,7 @@ export class StorageManager {
       await AsyncStorage.removeItem('loyalty_cards');
     } catch (error) {
       console.error('Failed to clear local cards:', error);
+      logError('Failed to clear local cards', error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -172,6 +220,7 @@ export class StorageManager {
         return [];
       }
       console.error('Failed to load cloud cards:', error);
+      logError('Failed to load cloud cards', error instanceof Error ? error.message : String(error));
       throw error;
     }
   }
@@ -186,6 +235,7 @@ export class StorageManager {
       return card;
     } catch (error) {
       console.error('Failed to save cloud card:', error);
+      logError('Failed to save cloud card', error instanceof Error ? error.message : String(error));
       throw error;
     }
   }
@@ -203,6 +253,7 @@ export class StorageManager {
       return card;
     } catch (error) {
       console.error('Failed to update cloud card:', error);
+      logError('Failed to update cloud card', error instanceof Error ? error.message : String(error));
       throw error;
     }
   }
@@ -221,6 +272,7 @@ export class StorageManager {
       throw new Error('Card not found');
     } catch (error) {
       console.error('Failed to toggle favorite:', error);
+      logError('Failed to toggle favorite', error instanceof Error ? error.message : String(error));
       throw error;
     }
   }
@@ -234,6 +286,7 @@ export class StorageManager {
       await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(filtered));
     } catch (error) {
       console.error('Failed to delete cloud card:', error);
+      logError('Failed to delete cloud card', error instanceof Error ? error.message : String(error));
       throw error;
     }
   }
@@ -303,6 +356,7 @@ export class StorageManager {
         processedOperations.push(operation.id);
       } catch (error) {
         console.error(`Failed to process queued operation ${operation.id}:`, error);
+        logError(`Failed to process queued operation ${operation.id}`, error instanceof Error ? error.message : String(error));
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -344,6 +398,7 @@ export class StorageManager {
         return cloudCards;
       } catch (error) {
         console.error('Failed to load cloud cards, using local cache:', error);
+        logError('Failed to load cloud cards', error instanceof Error ? error.message : String(error));
       }
     }
     
@@ -371,6 +426,7 @@ export class StorageManager {
           return savedCard;
         } catch (error) {
           console.error('Failed to save to cloud, queuing operation:', error);
+          logError('Failed to save to cloud', error instanceof Error ? error.message : String(error));
           await this.queueOperation({ type: 'create', card });
         }
       } else {
@@ -406,6 +462,7 @@ export class StorageManager {
           return updatedCard;
         } catch (error) {
           console.error('Failed to update cloud card, queuing operation:', error);
+          logError('Failed to update cloud card', error instanceof Error ? error.message : String(error));
           await this.queueOperation({ type: 'update', card });
         }
       } else {
@@ -441,6 +498,7 @@ export class StorageManager {
           return updatedCard;
         } catch (error) {
           console.error('Failed to toggle favorite in cloud, queuing operation:', error);
+          logError('Failed to toggle favorite in cloud', error instanceof Error ? error.message : String(error));
           await this.queueOperation({ type: 'favorite', cardId, isFavorite });
         }
       } else {
@@ -465,6 +523,7 @@ export class StorageManager {
           await this.deleteCloudCard(cardId);
         } catch (error) {
           console.error('Failed to delete cloud card, queuing operation:', error);
+          logError('Failed to delete cloud card', error instanceof Error ? error.message : String(error));
           await this.queueOperation({ type: 'delete', cardId });
         }
       } else {
@@ -502,6 +561,7 @@ export class StorageManager {
       };
     } catch (error) {
       console.error('Failed to check sync conflicts:', error);
+      logError('Failed to check sync conflicts', error instanceof Error ? error.message : String(error));
       return null;
     }
   }
@@ -532,6 +592,7 @@ export class StorageManager {
               await this.saveCloudCard(card);
             } catch (error) {
               console.error('Failed to upload merged card to cloud:', error);
+              logError('Failed to upload merged card to cloud', error instanceof Error ? error.message : String(error));
             }
           }
         }
@@ -544,6 +605,7 @@ export class StorageManager {
             await this.saveCloudCard(card);
           } catch (error) {
             console.error('Failed to upload local card to cloud:', error);
+            logError('Failed to upload local card to cloud', error instanceof Error ? error.message : String(error));
           }
         }
         break;

@@ -198,7 +198,19 @@
       "message": "Cloudové funkcie vyžadujú internetové pripojenie. Pripojte sa na internet alebo prepnite na lokálny režim úložiska.",
       "banner": "Pre cloudové funkcie je potrebné internetové pripojenie"
     },
-    "cloud": {}
+    "provider": {
+      "title": "Cloud poskytovateľ",
+      "subtitle": "Zvoľte si službu pre uloženie dát",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Synchronizácia cez Apple ID"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Synchronizácia cez Google účet",
+        "login": "Prihlásiť sa cez Google"
+      }
+    }
   },
   "sync": {
     "status": {
@@ -225,6 +237,42 @@
       "error": "Chyba synchronizácie",
       "errorMessage": "Nepodarilo sa vyriešiť konflikt synchronizácie. Skúste to znova.",
       "recommended": "Odporúčané"
+    }
+  },
+  "debug": {
+    "title": "Ladenie",
+    "mode": {
+      "enabled": "Režim ladenia zapnutý"
+    },
+    "modal": {
+      "error": "Chyba ladenia",
+      "warning": "Upozornenie ladenia",
+      "info": "Info ladenia",
+      "message": "Správa",
+      "details": "Detaily",
+      "stack": "Stack Trace",
+      "extra": "Dodatočné údaje",
+      "copyTitle": "Kopírovať debug info",
+      "copyMessage": "Kopírovať informácie o ladení pre zdieľanie s podporou?",
+      "copy": "Kopírovať",
+      "copyDetails": "Kopírovať detaily"
+    },
+    "logs": {
+      "title": "Debug logy",
+      "description": "{{total}} celkovo logov ({{errors}} chýb)",
+      "total": "{{count}} celkovo",
+      "errors": "{{count}} chýb",
+      "warnings": "{{count}} upozornení",
+      "info": "{{count}} info",
+      "all": "Všetky",
+      "errorsOnly": "Chyby",
+      "warningsOnly": "Upozornenia",
+      "infoOnly": "Info",
+      "empty": "Žiadne debug logy nenájdené",
+      "clearTitle": "Vymazať logy",
+      "clearConfirm": "Naozaj chcete vymazať všetky debug logy? Táto akcia je nevratná.",
+      "clear": "Vymazať",
+      "copied": "Log skopírovaný"
     }
   }
 }

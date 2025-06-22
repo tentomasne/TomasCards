@@ -10,8 +10,9 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { Info, HelpCircle, HeartPulseIcon, Database } from 'lucide-react-native';
+import { Info, Circle as HelpCircle, HeartPulse as HeartPulseIcon, Database, Bug } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 import { AppSettings, ThemeMode } from '@/utils/types';
 import { loadSettings, saveSettings, saveCards } from '@/utils/storage';
 import { useTheme } from '@/hooks/useTheme';
@@ -20,9 +21,11 @@ import LanguageSelector from '@/components/LanguageSelector';
 import { lightHaptic } from '@/utils/feedback';
 import ThemeSelector from '@/components/ThemeSelector';
 import StorageModeSelector from '@/components/StorageModeSelector';
-import { useRouter } from 'expo-router';
+import CloudProviderSelector from '@/components/CloudProviderSelector';
+import { CloudStorageProvider } from 'react-native-cloud-storage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { storageManager } from '@/utils/storageManager';
+import { debugManager } from '@/utils/debugManager';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -36,6 +39,8 @@ export default function SettingsScreen() {
   const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
   const [storageModeLoaded, setStorageModeLoaded] = useState(false);
   const [storageModeChanging, setStorageModeChanging] = useState(false);
+  const [showProviderSelector, setShowProviderSelector] = useState(false);
+  const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
   const [settings, setSettings] = useState<AppSettings>({
     sortOption: 'alphabetical',
     hapticFeedback: true,
@@ -43,14 +48,15 @@ export default function SettingsScreen() {
     themeMode: 'system',
   });
 
-
   // Initialize storage mode
   useEffect(() => {
     const initializeStorageMode = async () => {
       try {
         await storageManager.initialize();
         const currentMode = storageManager.getStorageMode();
+        const currentProvider = storageManager.getProvider();
         setStorageMode(currentMode);
+        setProvider(currentProvider);
         setStorageModeLoaded(true);
       } catch (error) {
         console.error('Failed to initialize storage mode:', error);
@@ -59,7 +65,6 @@ export default function SettingsScreen() {
     };
     initializeStorageMode();
   }, []);
-
 
   // Load settings once
   useEffect(() => {
@@ -76,12 +81,14 @@ export default function SettingsScreen() {
   };
 
   const handleStorageModeChange = async (mode: 'local' | 'cloud') => {
-
     setStorageModeChanging(true);
     try {
       await storageManager.setStorageMode(mode);
       setStorageMode(mode);
       setShowStorageSelector(false);
+      if (mode === 'cloud') {
+        setShowProviderSelector(true);
+      }
     } catch (error) {
       console.error('Failed to change storage mode:', error);
       
@@ -100,13 +107,24 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleProviderSelect = async (prov: CloudStorageProvider) => {
+    setProvider(prov);
+    await storageManager.setProvider(prov);
+    setShowProviderSelector(false);
+  };
+
+  const handleDebugLogs = () => {
+    router.push('/debug-logs' as any);
+  };
+
+  const isDebugEnabled = debugManager.isDebugEnabled();
+  const logCounts = debugManager.getLogCount();
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.backgroundDark }]}
       contentContainerStyle={styles.content}
     >
-
-
       {/* Data Management Section */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -136,6 +154,25 @@ export default function SettingsScreen() {
             </View>
           </View>
         </TouchableOpacity>
+
+        {storageMode === 'cloud' && (
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+            onPress={() => setShowProviderSelector(true)}
+          >
+            <View style={styles.settingLeft}>
+              <Database size={24} color={colors.textSecondary} />
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}> 
+                  {t('storage.provider.title')}
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}> 
+                  {t(`storage.provider.${provider}.title`)}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Appearance Section */}
@@ -179,6 +216,35 @@ export default function SettingsScreen() {
         <ThemeSelector />
       </View>
 
+      {/* Debug Section - Only show if debug mode is enabled */}
+      {isDebugEnabled && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            {t('debug.title')}
+          </Text>
+
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+            onPress={handleDebugLogs}
+          >
+            <View style={styles.settingLeft}>
+              <Bug size={24} color={colors.textSecondary} />
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                  {t('debug.logs.title')}
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  {t('debug.logs.description', { 
+                    total: logCounts.total,
+                    errors: logCounts.errors 
+                  })}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* About Section */}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
@@ -209,6 +275,11 @@ export default function SettingsScreen() {
               <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
                 {t('settings.version', { version: '1.0.0 ALPHA' })}
               </Text>
+              {isDebugEnabled && (
+                <Text style={[styles.settingDescription, { color: colors.warning }]}>
+                  {t('debug.mode.enabled')}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -221,6 +292,15 @@ export default function SettingsScreen() {
           onSelect={handleStorageModeChange}
           onClose={() => setShowStorageSelector(false)}
           loading={storageModeChanging}
+        />
+      )}
+
+      {storageModeLoaded && (
+        <CloudProviderSelector
+          visible={showProviderSelector}
+          currentProvider={provider}
+          onSelect={handleProviderSelect}
+          onClose={() => setShowProviderSelector(false)}
         />
       )}
     </ScrollView>
