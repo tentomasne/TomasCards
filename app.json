@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TomasCards",
-    "slug": "tomas-cards",
+    "slug": "tomascards",
     "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -52,6 +52,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "2f98ca16-1cd1-44d2-8e4b-fa63d3e71a4f"
+      }
+    },
+    "owner": "tomasovucet"
   }
 }
