@@ -98,7 +98,7 @@ export default function CloudProviderSelector({
                     ]}
                   >
                     <Text
-                      style={[styles.recommendedText, { color: colors.onAccent }]}
+                      style={[styles.recommendedText, { color: colors.textPrimary }]}
                     >
                       {t('storage.mode.recommended')}\
                     </Text>
