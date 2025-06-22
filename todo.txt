@@ -1,9 +1,7 @@
-when i log out switch to local and it will save into local last time
-
-aby to chechklo ci som logout a potom tym padom preplo na local storage
-
 translations po prvom zapnuti
 
+google drive
+popup to choose which google drive or icloud
 ------------------------
 FINAL:
 more cards
@@ -15,5 +13,3 @@ translations
 the add button move
 apple watch
 export import
-
-cloud - icloud /googledrive

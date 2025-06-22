@@ -45,7 +45,7 @@
       [
         "react-native-cloud-storage",
         {
-          "iCloudContainerEnvironment": "Development",
+          "iCloudContainerEnvironment": "Production",
           "iCloudContainerIdentifier": "iCloud.tomascards.icloud"
         }
       ]

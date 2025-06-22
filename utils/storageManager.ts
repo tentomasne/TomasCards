@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CloudStorage } from 'react-native-cloud-storage';
+import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 
 // Directory in iCloud where the loyalty cards file is stored
-const CLOUD_DIR = 'cards';
+const CLOUD_DIR = '/cards';
 const CARDS_FILE = `${CLOUD_DIR}/loyalty_cards.json`;
 
 export type StorageMode = 'local' | 'cloud';
@@ -35,6 +35,8 @@ export class StorageManager {
   private queuedOperations: QueuedOperation[] = [];
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
+  private provider = CloudStorage.getDefaultProvider();
+  public cloudStorageConstructor = new CloudStorage(this.provider, this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined);
 
   /**
    * Ensures that the cloud directory used to store cards exists.
@@ -42,9 +44,9 @@ export class StorageManager {
   private async ensureCloudDirectory(): Promise<void> {
     try {
       if (!(await this.cloudAccessible())) return;
-      const dirExists = await CloudStorage.exists(CLOUD_DIR);
+      const dirExists = await this.cloudStorageConstructor.exists(CLOUD_DIR);
       if (!dirExists) {
-        await CloudStorage.mkdir(CLOUD_DIR);
+        await this.cloudStorageConstructor.mkdir(CLOUD_DIR);
       }
     } catch (error) {
       console.error('Failed to ensure cloud directory:', error);
@@ -53,7 +55,7 @@ export class StorageManager {
 
   private async cloudAccessible(): Promise<boolean> {
     try {
-      return await CloudStorage.isCloudAvailable();
+      return await this.cloudStorageConstructor.isCloudAvailable();
     } catch (error) {
       console.error('Failed to check cloud availability:', error);
       return false;
@@ -76,6 +78,8 @@ export class StorageManager {
       
       const queuedOps = await AsyncStorage.getItem(QUEUED_OPERATIONS_KEY);
       this.queuedOperations = queuedOps ? JSON.parse(queuedOps) : [];
+
+      
       
       this.isInitialized = true;
     } catch (error) {
@@ -120,10 +124,10 @@ export class StorageManager {
 
       await this.ensureCloudDirectory();
 
-      const exists = await CloudStorage.exists(CARDS_FILE);
+      const exists = await this.cloudStorageConstructor.exists(CARDS_FILE);
       if (!exists) return [];
 
-      const data = await CloudStorage.readFile(CARDS_FILE);
+      const data = await this.cloudStorageConstructor.readFile(CARDS_FILE);
       return JSON.parse(data) as LoyaltyCard[];
     } catch (error) {
       if ((error as any)?.code === 'ERR_DIRECTORY_NOT_FOUND') {
@@ -157,10 +161,10 @@ export class StorageManager {
 
       await this.ensureCloudDirectory();
 
-      const exists = await CloudStorage.exists(CARDS_FILE);
+      const exists = await this.cloudStorageConstructor.exists(CARDS_FILE);
       if (!exists) return [];
 
-      const content = await CloudStorage.readFile(CARDS_FILE);
+      const content = await this.cloudStorageConstructor.readFile(CARDS_FILE);
       const cards = JSON.parse(content) as LoyaltyCard[];
       return this.transformCloudCards(cards);
     } catch (error) {
@@ -178,7 +182,7 @@ export class StorageManager {
       await this.ensureCloudDirectory();
       const cards = await this.getCardsFromCloud();
       cards.push(card);
-      await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+      await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(cards));
       return card;
     } catch (error) {
       console.error('Failed to save cloud card:', error);
@@ -194,7 +198,7 @@ export class StorageManager {
       const index = cards.findIndex(c => c.id === card.id);
       if (index !== -1) {
         cards[index] = card;
-        await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+        await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(cards));
       }
       return card;
     } catch (error) {
@@ -211,7 +215,7 @@ export class StorageManager {
       const index = cards.findIndex(c => c.id === cardId);
       if (index !== -1) {
         cards[index].isFavorite = isFavorite;
-        await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+        await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(cards));
         return cards[index];
       }
       throw new Error('Card not found');
@@ -227,7 +231,7 @@ export class StorageManager {
       await this.ensureCloudDirectory();
       const cards = await this.getCardsFromCloud();
       const filtered = cards.filter(c => c.id !== cardId);
-      await CloudStorage.writeFile(CARDS_FILE, JSON.stringify(filtered));
+      await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(filtered));
     } catch (error) {
       console.error('Failed to delete cloud card:', error);
       throw error;
