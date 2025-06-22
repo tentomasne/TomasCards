@@ -100,7 +100,7 @@ export default function CloudProviderSelector({
                     <Text
                       style={[styles.recommendedText, { color: colors.textPrimary }]}
                     >
-                      {t('storage.mode.recommended')}
+                      {t('storage.mode.recommended')}\
                     </Text>
                   </View>
                   {selected === CloudStorageProvider.ICloud && (
@@ -111,7 +111,7 @@ export default function CloudProviderSelector({
               <Text
                 style={[styles.optionDescription, { color: colors.textSecondary }]}
               >
-                {t('storage.provider.icloud.description')}
+                {t('storage.provider.icloud.description')}\
               </Text>
             </TouchableOpacity>
           )}
@@ -129,8 +129,8 @@ export default function CloudProviderSelector({
           >
             <View style={styles.optionHeader}>
               <Cloud size={24} color={colors.textPrimary} />
-              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>
-                {t('storage.provider.googledrive.title')}
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>\
+                {t('storage.provider.googledrive.title')}\
               </Text>
               {selected === CloudStorageProvider.GoogleDrive && (
                 <Check size={20} color={colors.accent} />
@@ -139,7 +139,7 @@ export default function CloudProviderSelector({
             <Text
               style={[styles.optionDescription, { color: colors.textSecondary }]}
             >
-              {t('storage.provider.googledrive.description')}
+              {t('storage.provider.googledrive.description')}\
             </Text>
             {selected === CloudStorageProvider.GoogleDrive && !accessToken && (
               <Button
@@ -163,8 +163,8 @@ export default function CloudProviderSelector({
             style={[styles.closeButton, { backgroundColor: colors.backgroundMedium }]}
             onPress={onClose}
           >
-            <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
-              {t('common.buttons.close')}
+            <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>\
+              {t('common.buttons.close')}\
             </Text>
           </TouchableOpacity>
         </View>

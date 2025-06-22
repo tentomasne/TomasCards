@@ -23,7 +23,6 @@ import ThemeSelector from '@/components/ThemeSelector';
 import StorageModeSelector from '@/components/StorageModeSelector';
 import CloudProviderSelector from '@/components/CloudProviderSelector';
 import { CloudStorageProvider } from 'react-native-cloud-storage';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { storageManager } from '@/utils/storageManager';
 import { debugManager } from '@/utils/debugManager';
 
