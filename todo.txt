@@ -2,12 +2,12 @@ translations po prvom zapnuti
 qr kody nefunguju
 aby sa list kariet aktualizoval z API
 google drive
+
 more cards
 
 ------------------------
 UPDATE LATER:
 widget
 translations
-the add button move
 apple watch
 export import
