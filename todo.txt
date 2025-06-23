@@ -1,7 +1,7 @@
 translations po prvom zapnuti
-
+qr kody nefunguju
+aby sa list kariet aktualizoval z API
 google drive
-accesibility settings 200% etc..
 ------------------------
 FINAL:
 more cards
