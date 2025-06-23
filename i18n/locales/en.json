@@ -237,7 +237,8 @@
   "debug": {
     "title": "Debug",
     "mode": {
-      "enabled": "Debug mode enabled"
+      "enabled": "Debug mode enabled",
+      "disabled": "Debug mode disabled"
     },
     "modal": {
       "error": "Debug Error",

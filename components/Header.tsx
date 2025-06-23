@@ -8,11 +8,12 @@ import { useTheme } from '@/hooks/useTheme';
 interface HeaderProps {
   title: string;
   showBack?: boolean;
+  leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
   onBack?: () => void;
 }
 
-export default function Header({ title, showBack = true, rightElement, onBack }: HeaderProps) {
+export default function Header({ title, showBack = true, rightElement, leftElement, onBack }: HeaderProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors } = useTheme();
@@ -23,6 +24,12 @@ export default function Header({ title, showBack = true, rightElement, onBack }:
       borderBottomColor: colors.backgroundMedium 
     }]}>
       <View style={styles.leftSection}>
+        {leftElement && (
+          <View style={{ paddingRight: 8 }}>
+            {leftElement}
+            </View>
+            )}
+        
         {showBack && (
           <TouchableOpacity 
             onPress={onBack || (() => router.back())} 
@@ -54,6 +61,7 @@ const styles = StyleSheet.create({
   },
   leftSection: {
     width: 60,
+    alignItems: 'flex-start',
   },
   rightSection: {
     width: 60,

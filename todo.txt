@@ -1,7 +1,6 @@
 translations po prvom zapnuti
 
 google drive
-5x times to enable debug
 accesibility settings 200% etc..
 ------------------------
 FINAL:

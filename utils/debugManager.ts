@@ -12,6 +12,7 @@ export interface DebugLog {
 }
 
 const DEBUG_LOGS_KEY = 'debug_logs';
+const DEBUG_MODE_KEY = 'debug_mode_enabled';
 const MAX_LOGS = 1000; // Keep only the last 1000 logs
 
 class DebugManager {
@@ -28,8 +29,9 @@ class DebugManager {
   }
 
   async initialize(): Promise<void> {
-    // Check if debug mode is enabled
-    this.isDebugMode = process.env.EXPO_PUBLIC_DEBUG === 'true';
+    // Check if debug mode is enabled from storage (runtime toggle)
+    const storedDebugMode = await AsyncStorage.getItem(DEBUG_MODE_KEY);
+    this.isDebugMode = storedDebugMode === 'true';
     
     // Load existing logs
     await this.loadLogs();
@@ -38,6 +40,20 @@ class DebugManager {
     if (this.isDebugMode) {
       this.setupGlobalErrorHandlers();
     }
+  }
+
+  async toggleDebugMode(): Promise<boolean> {
+    this.isDebugMode = !this.isDebugMode;
+    await AsyncStorage.setItem(DEBUG_MODE_KEY, this.isDebugMode.toString());
+    
+    if (this.isDebugMode) {
+      this.setupGlobalErrorHandlers();
+      this.logInfo('Debug mode enabled', 'Debug mode activated via settings', 'DebugManager');
+    } else {
+      this.logInfo('Debug mode disabled', 'Debug mode deactivated via settings', 'DebugManager');
+    }
+    
+    return this.isDebugMode;
   }
 
   private async loadLogs(): Promise<void> {

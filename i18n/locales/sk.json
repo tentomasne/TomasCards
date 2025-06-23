@@ -242,7 +242,8 @@
   "debug": {
     "title": "Ladenie",
     "mode": {
-      "enabled": "Režim ladenia zapnutý"
+      "enabled": "Režim ladenia zapnutý",
+      "disabled": "Režim ladenia vypnutý"
     },
     "modal": {
       "error": "Chyba ladenia",

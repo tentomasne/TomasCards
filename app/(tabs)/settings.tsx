@@ -40,6 +40,8 @@ export default function SettingsScreen() {
   const [storageModeChanging, setStorageModeChanging] = useState(false);
   const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
+  const [isDebugEnabled, setIsDebugEnabled] = useState(false);
+  const [versionTapCount, setVersionTapCount] = useState(0);
   const [settings, setSettings] = useState<AppSettings>({
     sortOption: 'alphabetical',
     hapticFeedback: true,
@@ -65,13 +67,24 @@ export default function SettingsScreen() {
     initializeStorageMode();
   }, []);
 
-  // Load settings once
+  // Load settings and debug status once
   useEffect(() => {
     (async () => {
       const userSettings = await loadSettings();
       setSettings(userSettings);
+      setIsDebugEnabled(debugManager.isDebugEnabled());
     })();
   }, []);
+
+  // Reset tap count after 2 seconds of inactivity
+  useEffect(() => {
+    if (versionTapCount > 0) {
+      const timer = setTimeout(() => {
+        setVersionTapCount(0);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [versionTapCount]);
 
   // Helper to update both local state and persistent storage
   const updateSettings = async (newSettings: AppSettings) => {
@@ -116,7 +129,36 @@ export default function SettingsScreen() {
     router.push('/debug-logs' as any);
   };
 
-  const isDebugEnabled = debugManager.isDebugEnabled();
+  const handleVersionTap = async () => {
+    const newTapCount = versionTapCount + 1;
+    setVersionTapCount(newTapCount);
+
+    if (newTapCount === 5) {
+      // Toggle debug mode
+      const newDebugState = await debugManager.toggleDebugMode();
+      setIsDebugEnabled(newDebugState);
+      setVersionTapCount(0);
+
+      // Provide haptic feedback
+      await lightHaptic();
+
+      // Show confirmation message
+      const message = newDebugState 
+        ? t('debug.mode.enabled') 
+        : t('debug.mode.disabled');
+
+      if (Platform.OS === 'web') {
+        alert(message);
+      } else {
+        Alert.alert(
+          t('debug.title'),
+          message,
+          [{ text: t('common.buttons.ok') }]
+        );
+      }
+    }
+  };
+
   const logCounts = debugManager.getLogCount();
 
   return (
@@ -267,7 +309,10 @@ export default function SettingsScreen() {
           </View>
         </TouchableOpacity>
 
-        <View style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}>
+        <TouchableOpacity
+          style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+          onPress={handleVersionTap}
+        >
           <View style={styles.settingLeft}>
             <Info size={24} color={colors.textSecondary} />
             <View style={styles.settingTextContainer}>
@@ -279,9 +324,14 @@ export default function SettingsScreen() {
                   {t('debug.mode.enabled')}
                 </Text>
               )}
+              {versionTapCount > 0 && versionTapCount < 5 && (
+                <Text style={[styles.settingDescription, { color: colors.accent }]}>
+                  {5 - versionTapCount} more taps to toggle debug mode
+                </Text>
+              )}
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {storageModeLoaded && (

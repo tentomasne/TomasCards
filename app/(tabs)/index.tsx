@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ArrowUpDown, Plus, WifiOff } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { LoyaltyCard } from '@/utils/types';
 import { useTheme } from '@/hooks/useTheme';
@@ -335,14 +334,16 @@ export default function HomeScreen() {
       <Header 
         title={t('cards.title')}
         showBack={false}
-        rightElement={
-          <View style={styles.headerButtons}>
-            <SyncStatusIndicator
+        leftElement={
+                      <SyncStatusIndicator
               status={syncStatus}
               pendingCount={pendingOperations}
               onRetry={loadCardData}
               compact
             />
+        }
+        rightElement={
+          <View style={styles.headerButtons}>
             <TouchableOpacity 
               style={[styles.headerButton, { backgroundColor: colors.backgroundMedium }]}
               onPress={() => setShowSortMenu(!showSortMenu)}
