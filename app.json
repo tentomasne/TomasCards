@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "icon": "./assets/images/icon.png",
+      "usesNonExemptEncryption": false,
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to scan barcodes and QR codes.",
         "NSLocationWhenInUseUsageDescription": "We need your location for the internal React Native libraries, even if we don't use it directly."
@@ -18,7 +19,7 @@
       "bundleIdentifier": "com.tentomasne.tomas-cards"
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA"

@@ -1,7 +1,8 @@
 translations po prvom zapnuti
 
 google drive
-popup to choose which google drive or icloud
+5x times to enable debug
+accesibility settings 200% etc..
 ------------------------
 FINAL:
 more cards
