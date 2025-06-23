@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Button,
   Platform,
+  Alert,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
@@ -14,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Check, Cloud } from 'lucide-react-native';
 import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
 import { useTheme } from '@/hooks/useTheme';
+import { logError, logInfo, logWarning } from '@/utils/debugManager';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -34,28 +36,166 @@ export default function CloudProviderSelector({
   const { colors } = useTheme();
   const [selected, setSelected] = useState<CloudStorageProvider>(currentProvider);
   const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
     scopes: ['https://www.googleapis.com/auth/drive.appdata'],
   });
 
   useEffect(() => {
+    logInfo('Google auth response received', JSON.stringify(response), 'CloudProviderSelector');
+    
     if (response?.type === 'success') {
-      setAccessToken(response.authentication?.accessToken ?? null);
+      const token = response.authentication?.accessToken;
+      logInfo('Google auth successful, token received', token ? 'Token present' : 'No token', 'CloudProviderSelector');
+      
+      if (token) {
+        setAccessToken(token);
+        setIsAuthenticating(false);
+        
+        // Show success message
+        if (Platform.OS === 'web') {
+          alert('Successfully authenticated with Google Drive!');
+        } else {
+          Alert.alert(
+            'Success',
+            'Successfully authenticated with Google Drive!',
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        logError('Google auth success but no access token', 'Authentication succeeded but no access token was provided', 'CloudProviderSelector');
+        setIsAuthenticating(false);
+        
+        if (Platform.OS === 'web') {
+          alert('Authentication failed: No access token received');
+        } else {
+          Alert.alert(
+            'Authentication Failed',
+            'No access token received from Google',
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    } else if (response?.type === 'error') {
+      logError('Google auth error', response.error?.message || 'Unknown error', 'CloudProviderSelector', response);
+      setIsAuthenticating(false);
+      
+      if (Platform.OS === 'web') {
+        alert(`Authentication failed: ${response.error?.message || 'Unknown error'}`);
+      } else {
+        Alert.alert(
+          'Authentication Failed',
+          response.error?.message || 'Unknown error occurred',
+          [{ text: 'OK' }]
+        );
+      }
+    } else if (response?.type === 'cancel') {
+      logInfo('Google auth cancelled by user', '', 'CloudProviderSelector');
+      setIsAuthenticating(false);
     }
   }, [response]);
 
   useEffect(() => {
     if (selected === CloudStorageProvider.GoogleDrive && accessToken) {
-      CloudStorage.setProviderOptions({ accessToken });
+      logInfo('Setting Google Drive provider options with token', '', 'CloudProviderSelector');
+      try {
+        CloudStorage.setProviderOptions({ accessToken });
+      } catch (error) {
+        logError('Failed to set Google Drive provider options', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+      }
     }
   }, [accessToken, selected]);
 
-  const handleConfirm = async () => {
-    await onSelect(selected);
+  const handleGoogleLogin = async () => {
+    logInfo('Starting Google authentication', '', 'CloudProviderSelector');
+    
+    if (!request) {
+      logError('Google auth request not ready', 'Auth request is null', 'CloudProviderSelector');
+      
+      if (Platform.OS === 'web') {
+        alert('Authentication not ready. Please try again.');
+      } else {
+        Alert.alert(
+          'Error',
+          'Authentication not ready. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+      return;
+    }
+
+    try {
+      setIsAuthenticating(true);
+      logInfo('Prompting Google auth', '', 'CloudProviderSelector');
+      
+      const result = await promptAsync();
+      logInfo('Google auth prompt result', JSON.stringify(result), 'CloudProviderSelector');
+      
+      // The useEffect will handle the response
+    } catch (error) {
+      logError('Google auth prompt failed', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+      setIsAuthenticating(false);
+      
+      if (Platform.OS === 'web') {
+        alert(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } else {
+        Alert.alert(
+          'Authentication Failed',
+          error instanceof Error ? error.message : 'Unknown error occurred',
+          [{ text: 'OK' }]
+        );
+      }
+    }
   };
+
+  const handleConfirm = async () => {
+    logInfo('Confirming provider selection', `Provider: ${selected}, Has token: ${!!accessToken}`, 'CloudProviderSelector');
+    
+    // Check if Google Drive is selected but not authenticated
+    if (selected === CloudStorageProvider.GoogleDrive && !accessToken) {
+      logWarning('Google Drive selected but not authenticated', '', 'CloudProviderSelector');
+      
+      if (Platform.OS === 'web') {
+        alert('Please authenticate with Google Drive first.');
+      } else {
+        Alert.alert(
+          'Authentication Required',
+          'Please authenticate with Google Drive first.',
+          [{ text: 'OK' }]
+        );
+      }
+      return;
+    }
+
+    try {
+      await onSelect(selected);
+      logInfo('Provider selection confirmed successfully', `Provider: ${selected}`, 'CloudProviderSelector');
+    } catch (error) {
+      logError('Failed to confirm provider selection', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+      
+      if (Platform.OS === 'web') {
+        alert('Failed to set provider. Please try again.');
+      } else {
+        Alert.alert(
+          'Error',
+          'Failed to set provider. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    }
+  };
+
+  // Debug: Log environment variables (without exposing sensitive data)
+  useEffect(() => {
+    logInfo('Google Client IDs configured', 
+      `Android: ${!!process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID}, iOS: ${!!process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS}, Web: ${!!process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB}`, 
+      'CloudProviderSelector'
+    );
+  }, []);
 
   return (
     <Modal
@@ -100,7 +240,7 @@ export default function CloudProviderSelector({
                     <Text
                       style={[styles.recommendedText, { color: colors.textPrimary }]}
                     >
-                      {t('storage.mode.recommended')}\
+                      {t('storage.mode.recommended')}
                     </Text>
                   </View>
                   {selected === CloudStorageProvider.ICloud && (
@@ -111,7 +251,7 @@ export default function CloudProviderSelector({
               <Text
                 style={[styles.optionDescription, { color: colors.textSecondary }]}
               >
-                {t('storage.provider.icloud.description')}\
+                {t('storage.provider.icloud.description')}
               </Text>
             </TouchableOpacity>
           )}
@@ -129,42 +269,78 @@ export default function CloudProviderSelector({
           >
             <View style={styles.optionHeader}>
               <Cloud size={24} color={colors.textPrimary} />
-              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>\
-                {t('storage.provider.googledrive.title')}\
+              <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>
+                {t('storage.provider.googledrive.title')}
               </Text>
-              {selected === CloudStorageProvider.GoogleDrive && (
-                <Check size={20} color={colors.accent} />
-              )}
+              <View style={styles.badges}>
+                {accessToken && (
+                  <View
+                    style={[
+                      styles.authenticatedBadge,
+                      { backgroundColor: colors.success },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.authenticatedText, { color: colors.textPrimary }]}
+                    >
+                      Authenticated
+                    </Text>
+                  </View>
+                )}
+                {selected === CloudStorageProvider.GoogleDrive && (
+                  <Check size={20} color={colors.accent} />
+                )}
+              </View>
             </View>
             <Text
               style={[styles.optionDescription, { color: colors.textSecondary }]}
             >
-              {t('storage.provider.googledrive.description')}\
+              {t('storage.provider.googledrive.description')}
             </Text>
             {selected === CloudStorageProvider.GoogleDrive && !accessToken && (
-              <Button
-                title={t('storage.provider.googledrive.login')}
-                onPress={() => promptAsync()}
-                disabled={!request}
-              />
+              <TouchableOpacity
+                style={[
+                  styles.loginButton,
+                  { backgroundColor: colors.accent },
+                  isAuthenticating && styles.loginButtonDisabled
+                ]}
+                onPress={handleGoogleLogin}
+                disabled={!request || isAuthenticating}
+              >
+                <Text style={[styles.loginButtonText, { color: colors.textPrimary }]}>
+                  {isAuthenticating 
+                    ? 'Authenticating...' 
+                    : t('storage.provider.googledrive.login')
+                  }
+                </Text>
+              </TouchableOpacity>
             )}
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.closeButton, { backgroundColor: colors.backgroundMedium }]}
+            style={[
+              styles.closeButton, 
+              { backgroundColor: colors.backgroundMedium },
+              (selected === CloudStorageProvider.GoogleDrive && !accessToken) && styles.closeButtonDisabled
+            ]}
             onPress={handleConfirm}
             disabled={selected === CloudStorageProvider.GoogleDrive && !accessToken}
           >
-            <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
+            <Text style={[
+              styles.closeButtonText, 
+              { color: colors.textPrimary },
+              (selected === CloudStorageProvider.GoogleDrive && !accessToken) && { opacity: 0.5 }
+            ]}>
               {t('common.buttons.confirm')}
             </Text>
           </TouchableOpacity>
+          
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: colors.backgroundMedium }]}
             onPress={onClose}
           >
-            <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>\
-              {t('common.buttons.close')}\
+            <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
+              {t('common.buttons.close')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -230,15 +406,42 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  authenticatedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  authenticatedText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
   optionDescription: {
     fontSize: 14,
     lineHeight: 20,
+    marginBottom: 12,
+  },
+  loginButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
+  },
+  loginButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   closeButton: {
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 8,
+  },
+  closeButtonDisabled: {
+    opacity: 0.6,
   },
   closeButtonText: {
     fontSize: 16,
