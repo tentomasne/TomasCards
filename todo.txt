@@ -2,8 +2,6 @@ translations po prvom zapnuti
 qr kody nefunguju
 aby sa list kariet aktualizoval z API
 google drive
-------------------------
-FINAL:
 more cards
 
 ------------------------
