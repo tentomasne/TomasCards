@@ -4,7 +4,6 @@ google drive
 
 more cards
 
-react-native-boost
 optimalizovat 2829839283requestov pri zapnuti
 opravenie crashovania appky
 ------------------------
