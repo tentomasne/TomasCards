@@ -1,10 +1,12 @@
 translations po prvom zapnuti
-qr kody nefunguju
-aby sa list kariet aktualizoval z API
+popular cards
 google drive
 
 more cards
 
+react-native-boost
+optimalizovat 2829839283requestov pri zapnuti
+opravenie crashovania appky
 ------------------------
 UPDATE LATER:
 widget

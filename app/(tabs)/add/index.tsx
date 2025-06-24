@@ -27,6 +27,10 @@ export default function AddCardScreen() {
     c.name.toLowerCase().includes(query.toLowerCase())
   );
 
+  const popularCards = POPULAR_CARDS.filter((c) => c.popular);
+  const unPopularCards = POPULAR_CARDS.filter((c) => !c.popular);
+
+
   const handleSelect = (storeId: string) => {
     router.push({ pathname: '/add/scan', params: { store: storeId } });
   };
@@ -75,7 +79,7 @@ export default function AddCardScreen() {
       </Text>
 
       <FlatList
-        data={filtered}
+        data={popularCards}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={() => (
           <View style={[styles.separator, { backgroundColor: colors.backgroundMedium }]} />
@@ -97,6 +101,35 @@ export default function AddCardScreen() {
         }}
         keyboardShouldPersistTaps="handled"
       />
+
+      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+        {t('addCard.otherStores')}
+      </Text>
+
+      <FlatList
+        data={unPopularCards}
+        keyExtractor={(item) => item.id}
+        ItemSeparatorComponent={() => (
+          <View style={[styles.separator, { backgroundColor: colors.backgroundMedium }]} />
+        )}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.itemRow}
+            onPress={() => handleSelect(item.id)}
+            activeOpacity={0.7}
+          >
+            <Image source={item.logo} style={styles.logo} />
+            <Text style={[styles.itemText, { color: colors.textPrimary }]}>
+              {item.name}
+            </Text>
+          </TouchableOpacity>
+        )}
+        contentContainerStyle={{
+          paddingBottom: Platform.OS === 'android' ? 16 : 0,
+        }}
+        keyboardShouldPersistTaps="handled"
+      />
+      
     </SafeAreaView>
   );
 }

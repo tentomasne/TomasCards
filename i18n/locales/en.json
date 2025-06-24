@@ -81,6 +81,7 @@
     "title": "Add Card",
     "searchPlaceholder": "Search for stores...",
     "popularStores": "Popular Stores",
+    "otherStores": "Other Stores",
     "scan": {
       "title": "Scan Card",
       "instruction": "Scan your card's barcode or QR code",
