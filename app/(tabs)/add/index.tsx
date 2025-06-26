@@ -27,9 +27,8 @@ export default function AddCardScreen() {
     c.name.toLowerCase().includes(query.toLowerCase())
   );
 
-  const popularCards = POPULAR_CARDS.filter((c) => c.popular);
-  const unPopularCards = POPULAR_CARDS.filter((c) => !c.popular);
-
+  const popularCards = filtered.filter((c) => c.popular);
+  const unPopularCards = filtered.filter((c) => !c.popular);
 
   const handleSelect = (storeId: string) => {
     router.push({ pathname: '/add/scan', params: { store: storeId } });
@@ -37,6 +36,116 @@ export default function AddCardScreen() {
 
   const handleCreateCustom = () => {
     router.push('/add/custom');
+  };
+
+  // Create sections data for the FlatList
+  const sections = [
+    {
+      id: 'custom',
+      type: 'custom',
+      data: null,
+    },
+    {
+      id: 'popular-header',
+      type: 'header',
+      title: t('addCard.popularStores'),
+      data: null,
+    },
+    ...popularCards.map(card => ({
+      id: card.id,
+      type: 'card',
+      data: card,
+    })),
+    {
+      id: 'other-header',
+      type: 'header',
+      title: t('addCard.otherStores'),
+      data: null,
+    },
+    ...unPopularCards.map(card => ({
+      id: card.id,
+      type: 'card',
+      data: card,
+    })),
+  ];
+
+  const renderItem = ({ item, index }: { item: any; index: number }) => {
+    switch (item.type) {
+      case 'custom':
+        return (
+          <TouchableOpacity
+            style={[styles.customCardOption, { backgroundColor: colors.backgroundMedium }]}
+            onPress={handleCreateCustom}
+          >
+            <View style={[styles.customCardIcon, { backgroundColor: colors.accent }]}>
+              <Plus size={24} color={colors.textPrimary} />
+            </View>
+            <View style={styles.customCardText}>
+              <Text style={[styles.customCardTitle, { color: colors.textPrimary }]}>
+                {t('addCard.custom.createCustom')}
+              </Text>
+              <Text style={[styles.customCardDescription, { color: colors.textSecondary }]}>
+                {t('addCard.custom.createCustomDescription')}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        );
+
+      case 'header':
+        return (
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            {item.title}
+          </Text>
+        );
+
+      case 'card':
+        return (
+          <TouchableOpacity
+            style={styles.itemRow}
+            onPress={() => handleSelect(item.data.id)}
+            activeOpacity={0.7}
+          >
+            <Image source={item.data.logo} style={styles.logo} />
+            <Text style={[styles.itemText, { color: colors.textPrimary }]}>
+              {item.data.name}
+            </Text>
+          </TouchableOpacity>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const renderSeparator = () => {
+    return <View style={[styles.separator, { backgroundColor: colors.backgroundMedium }]} />;
+  };
+
+  const getItemLayout = (data: any, index: number) => {
+    // Approximate heights for performance
+    const ITEM_HEIGHT = 60;
+    const HEADER_HEIGHT = 50;
+    const CUSTOM_HEIGHT = 80;
+    
+    let height = ITEM_HEIGHT;
+    if (data && data[index]) {
+      switch (data[index].type) {
+        case 'custom':
+          height = CUSTOM_HEIGHT;
+          break;
+        case 'header':
+          height = HEADER_HEIGHT;
+          break;
+        default:
+          height = ITEM_HEIGHT;
+      }
+    }
+    
+    return {
+      length: height,
+      offset: height * index,
+      index,
+    };
   };
 
   return (
@@ -56,80 +165,18 @@ export default function AddCardScreen() {
         clearButtonMode="while-editing"
       />
 
-      {/* Custom Card Option */}
-      <TouchableOpacity
-        style={[styles.customCardOption, { backgroundColor: colors.backgroundMedium }]}
-        onPress={handleCreateCustom}
-      >
-        <View style={[styles.customCardIcon, { backgroundColor: colors.accent }]}>
-          <Plus size={24} color={colors.textPrimary} />
-        </View>
-        <View style={styles.customCardText}>
-          <Text style={[styles.customCardTitle, { color: colors.textPrimary }]}>
-            {t('addCard.custom.createCustom')}
-          </Text>
-          <Text style={[styles.customCardDescription, { color: colors.textSecondary }]}>
-            {t('addCard.custom.createCustomDescription')}
-          </Text>
-        </View>
-      </TouchableOpacity>
-
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-        {t('addCard.popularStores')}
-      </Text>
-
       <FlatList
-        data={popularCards}
+        data={sections}
         keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={[styles.separator, { backgroundColor: colors.backgroundMedium }]} />
-        )}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.itemRow}
-            onPress={() => handleSelect(item.id)}
-            activeOpacity={0.7}
-          >
-            <Image source={item.logo} style={styles.logo} />
-            <Text style={[styles.itemText, { color: colors.textPrimary }]}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={{
-          paddingBottom: Platform.OS === 'android' ? 16 : 0,
-        }}
+        renderItem={renderItem}
+        ItemSeparatorComponent={renderSeparator}
+        contentContainerStyle={styles.listContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
       />
-
-      <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
-        {t('addCard.otherStores')}
-      </Text>
-
-      <FlatList
-        data={unPopularCards}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => (
-          <View style={[styles.separator, { backgroundColor: colors.backgroundMedium }]} />
-        )}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.itemRow}
-            onPress={() => handleSelect(item.id)}
-            activeOpacity={0.7}
-          >
-            <Image source={item.logo} style={styles.logo} />
-            <Text style={[styles.itemText, { color: colors.textPrimary }]}>
-              {item.name}
-            </Text>
-          </TouchableOpacity>
-        )}
-        contentContainerStyle={{
-          paddingBottom: Platform.OS === 'android' ? 16 : 0,
-        }}
-        keyboardShouldPersistTaps="handled"
-      />
-      
     </SafeAreaView>
   );
 }
@@ -145,6 +192,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 8,
+  },
+  listContent: {
+    paddingBottom: Platform.OS === 'android' ? 16 : 0,
   },
   customCardOption: {
     flexDirection: 'row',
@@ -178,7 +228,8 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     marginHorizontal: 16,
-    marginVertical: 12,
+    marginTop: 16,
+    marginBottom: 12,
   },
   itemRow: {
     flexDirection: 'row',
