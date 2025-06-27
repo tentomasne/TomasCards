@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Check, Globe } from 'lucide-react-native';
 import { useTheme } from '@/hooks/useTheme';
-import { changeLanguage, getStoredLanguage } from '@/utils/i18n';
+import { changeLanguage } from '@/utils/i18n';
 import { lightHaptic } from '@/utils/feedback';
 
 const LANGUAGES = [
@@ -24,55 +24,17 @@ export default function LanguageSelector() {
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [currentLanguageCode, setCurrentLanguageCode] = useState(i18n.language);
-
-  // Update current language when i18n language changes
-  useEffect(() => {
-    const updateLanguage = () => {
-      setCurrentLanguageCode(i18n.language);
-    };
-
-    // Listen for language changes
-    i18n.on('languageChanged', updateLanguage);
-    
-    // Set initial language
-    updateLanguage();
-
-    return () => {
-      i18n.off('languageChanged', updateLanguage);
-    };
-  }, [i18n]);
-
-  // Also sync with stored language on component mount
-  useEffect(() => {
-    const syncStoredLanguage = async () => {
-      try {
-        const storedLang = await getStoredLanguage();
-        if (storedLang && storedLang !== i18n.language) {
-          // If stored language differs from current, update i18n
-          await i18n.changeLanguage(storedLang);
-          setCurrentLanguageCode(storedLang);
-        }
-      } catch (error) {
-        console.error('Error syncing stored language:', error);
-      }
-    };
-
-    syncStoredLanguage();
-  }, [i18n]);
 
   const handleLanguageChange = async (langCode: string) => {
-    if (langCode === currentLanguageCode) {
-      setModalVisible(false);
-      return;
-    }
-
     setLoading(true);
     await lightHaptic();
 
     try {
-      await changeLanguage(langCode);
-      setCurrentLanguageCode(langCode);
+      if (langCode === 'system') {
+        await changeLanguage(navigator.language || 'en');
+      } else {
+        await changeLanguage(langCode);
+      }
     } catch (error) {
       console.error('Error changing language:', error);
     } finally {
@@ -82,7 +44,7 @@ export default function LanguageSelector() {
   };
 
   const currentLanguage = LANGUAGES.find(
-    lang => lang.code === currentLanguageCode
+    lang => lang.code === (i18n.language || 'en')
   );
 
   return (
@@ -137,7 +99,7 @@ export default function LanguageSelector() {
                       </Text>
                     )}
                   </View>
-                  {currentLanguageCode === language.code && (
+                  {i18n.language === language.code && (
                     <Check size={20} color={colors.accent} />
                   )}
                 </TouchableOpacity>

@@ -1,8 +1,10 @@
 translations po prvom zapnuti
+popular cards
 google drive
 
 more cards
 
+optimalizovat 2829839283requestov pri zapnuti
 opravenie crashovania appky
 ------------------------
 UPDATE LATER:
