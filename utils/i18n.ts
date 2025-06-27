@@ -24,6 +24,7 @@ export const setStoredLanguage = async (language: string) => {
   }
 };
 
+// Initialize i18n with a default language first
 i18n
   .use(initReactI18next)
   .init({
@@ -32,7 +33,7 @@ i18n
       en: { translation: en },
       sk: { translation: sk },
     },
-    lng: Localization.locale,
+    lng: 'en', // Start with English as default
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
@@ -48,13 +49,29 @@ export const changeLanguage = async (language: string) => {
 };
 
 export const initializeLanguage = async () => {
-  const storedLanguage = await getStoredLanguage();
-  if (storedLanguage) {
-    await i18n.changeLanguage(storedLanguage);
-  } else {
-    const deviceLanguage = Localization.locale.split('-')[0];
-    await i18n.changeLanguage(deviceLanguage);
-    await setStoredLanguage(deviceLanguage);
+  try {
+    // First check if user has a stored language preference
+    const storedLanguage = await getStoredLanguage();
+    
+    if (storedLanguage) {
+      // User has a stored preference, use it
+      await i18n.changeLanguage(storedLanguage);
+      console.log('Using stored language:', storedLanguage);
+    } else {
+      // No stored preference, use device language
+      const deviceLanguage = Localization.locale.split('-')[0];
+      const supportedLanguages = ['en', 'sk'];
+      const languageToUse = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
+      
+      await i18n.changeLanguage(languageToUse);
+      await setStoredLanguage(languageToUse);
+      console.log('Using device language:', languageToUse);
+    }
+  } catch (error) {
+    console.error('Error initializing language:', error);
+    // Fallback to English if there's any error
+    await i18n.changeLanguage('en');
+    await setStoredLanguage('en');
   }
 };
 

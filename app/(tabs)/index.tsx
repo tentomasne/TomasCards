@@ -46,53 +46,63 @@ export default function HomeScreen() {
   const [storageMode, setStorageMode] = useState<"local" | "cloud">("local");
   const [conflictResolving, setConflictResolving] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
-  const [welcomeCheckCompleted, setWelcomeCheckCompleted] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize storage manager only once
+  // Single initialization effect
   useEffect(() => {
-    const initializeStorage = async () => {
+    let isMounted = true;
+
+    const initializeApp = async () => {
       try {
+        // Initialize storage manager
         await storageManager.initialize();
-        setStorageMode(storageManager.getStorageMode());
-        setIsInitialized(true);
-      } catch (error) {
-        console.error("Failed to initialize storage manager:", error);
-        setIsInitialized(true);
-      }
-    };
+        if (!isMounted) return;
 
-    initializeStorage();
-  }, []);
+        const currentStorageMode = storageManager.getStorageMode();
+        setStorageMode(currentStorageMode);
 
-  // Check welcome status only once after initialization
-  useEffect(() => {
-    const checkWelcomeStatus = async () => {
-      if (!isInitialized) return;
-
-      try {
+        // Check welcome status
         const completed = await hasCompletedWelcome();
+        if (!isMounted) return;
+
         if (!completed) {
-          // Only show welcome if user hasn't completed it and isn't authenticated
+          // Only show welcome if user hasn't completed it and has no cards
           const currentCards = await storageManager.loadCards();
+          if (!isMounted) return;
+
           if (currentCards.length === 0) {
             setShowWelcome(true);
+            setLoading(false);
+            setIsInitialized(true);
+            return;
           } else {
             // User has cards but hasn't marked welcome as completed (edge case)
             await markWelcomeCompleted();
           }
         }
-        setWelcomeCheckCompleted(true);
+
+        // Load cards
+        await loadCardData();
+        if (!isMounted) return;
+
+        setIsInitialized(true);
       } catch (error) {
-        console.error("Error checking welcome status:", error);
-        setWelcomeCheckCompleted(true);
+        console.error("Error initializing app:", error);
+        if (isMounted) {
+          setLoading(false);
+          setIsInitialized(true);
+        }
       }
     };
 
-    checkWelcomeStatus();
-  }, [isInitialized]);
+    initializeApp();
 
-  // Update sync status based on network and auth state
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty dependency array - only run once
+
+  // Update sync status when network or storage mode changes
   useEffect(() => {
     if (!isInitialized) return;
 
@@ -107,11 +117,9 @@ export default function HomeScreen() {
     setPendingOperations(storageManager.getQueuedOperationsCount());
   }, [isOnline, storageMode, isInitialized]);
 
-  // Load card data - optimized to prevent multiple calls
+  // Load card data function - optimized to prevent multiple calls
   const loadCardData = useCallback(async () => {
-    if (!isInitialized || !welcomeCheckCompleted || showWelcome) {
-      return;
-    }
+    if (showWelcome) return;
 
     try {
       setSyncStatus("syncing");
@@ -137,28 +145,15 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
-  }, [
-    isOnline,
-    storageMode,
-    isInitialized,
-    welcomeCheckCompleted,
-    showWelcome,
-  ]);
+  }, [isOnline, storageMode, showWelcome]);
 
-  // Load data when dependencies are ready
+  // Check for sync conflicts only when switching to cloud mode and after initial load
   useEffect(() => {
-    if (isInitialized && welcomeCheckCompleted && !showWelcome) {
-      loadCardData();
+    if (!isInitialized || !isOnline || storageMode !== "cloud" || loading || cards.length === 0) {
+      return;
     }
-  }, [loadCardData]);
 
-  // Check for sync conflicts when switching to cloud mode
-  useEffect(() => {
     const checkSyncConflicts = async () => {
-      if (!isInitialized || !isOnline || storageMode !== "cloud") {
-        return;
-      }
-
       try {
         const conflicts = await storageManager.checkForSyncConflicts();
         if (conflicts) {
@@ -170,25 +165,25 @@ export default function HomeScreen() {
       }
     };
 
-    // Only check conflicts after initial load is complete
-    if (!loading && cards.length >= 0) {
-      checkSyncConflicts();
-    }
-  }, [isInitialized, isOnline, storageMode, loading]);
+    // Add a small delay to ensure everything is loaded
+    const timeoutId = setTimeout(checkSyncConflicts, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [isInitialized, isOnline, storageMode, loading, cards.length]);
 
-  // Focus effect for when returning to screen
+  // Focus effect for when returning to screen - only reload if needed
   useFocusEffect(
     useCallback(() => {
-      if (isInitialized && welcomeCheckCompleted && !showWelcome && !loading) {
-        loadCardData();
+      if (isInitialized && !showWelcome && !loading) {
+        // Only reload if we've been away for more than 30 seconds
+        const lastLoadTime = Date.now();
+        const timeSinceLastLoad = lastLoadTime - (loadCardData as any).lastCall || 0;
+        
+        if (timeSinceLastLoad > 30000) {
+          loadCardData();
+          (loadCardData as any).lastCall = lastLoadTime;
+        }
       }
-    }, [
-      loadCardData,
-      isInitialized,
-      welcomeCheckCompleted,
-      showWelcome,
-      loading,
-    ])
+    }, [loadCardData, isInitialized, showWelcome, loading])
   );
 
   const onRefresh = async () => {
@@ -358,7 +353,7 @@ export default function HomeScreen() {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
   }
 
-  if (loading || !welcomeCheckCompleted || !isInitialized) {
+  if (loading || !isInitialized) {
     return (
       <View style={[styles.center, { backgroundColor: colors.backgroundDark }]}>
         <ActivityIndicator size="large" color={colors.accent} />
