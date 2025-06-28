@@ -22,6 +22,7 @@ import { lightHaptic } from '@/utils/feedback';
 import { storageManager } from '@/utils/storageManager';
 import ColorPicker from '@/components/ColorPicker';
 import CodeTypeSelector from '@/components/CodeTypeSelector';
+import { logError } from '@/utils/debugManager';
 
 const PRESET_COLORS = [
   '#4F6BFF', // Default blue
@@ -119,6 +120,11 @@ export default function CustomCardScreen() {
       router.replace(`/card/${newCard.id}`);
     } catch (err) {
       setError(t('common.validation.invalid'));
+      logError(
+        'Error saving custom card',
+        err instanceof Error ? err.message : String(err),
+        'CustomCardScreen'
+      );
       setLoading(false);
     }
   };
