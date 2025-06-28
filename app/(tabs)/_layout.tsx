@@ -1,88 +1,57 @@
-import { useEffect, useState } from 'react';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Tabs } from 'expo-router';
+import { HomeIcon, PlusCircle, Settings } from 'lucide-react-native';
 import { StyleSheet } from 'react-native';
-import { useFrameworkReady } from '@/hooks/useFrameworkReady';
-import { ThemeProvider } from '@/hooks/useTheme';
-import { initializeLanguage } from '@/utils/i18n';
-import { loadSettings } from '@/utils/storage';
-import { debugManager, DebugLog } from '@/utils/debugManager';
-import SplashScreen from '@/components/SplashScreen';
-import DebugModal from '@/components/DebugModal';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTheme } from '@/hooks/useTheme';
 
-export default function RootLayout() {
-  useFrameworkReady();
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState('');
-  const [debugModalVisible, setDebugModalVisible] = useState(false);
-  const [currentDebugLog, setCurrentDebugLog] = useState<DebugLog | null>(null);
-
-  useEffect(() => {
-    async function initializeApp() {
-      try {
-        setLoadingMessage('Initializing debug system...');
-        await debugManager.initialize();
-
-        // Set up debug modal callback
-        debugManager.setErrorModalCallback((log: DebugLog) => {
-          setCurrentDebugLog(log);
-          setDebugModalVisible(true);
-        });
-
-        setLoadingMessage('Loading language...');
-        // Initialize language first and wait for it to complete
-        await initializeLanguage();
-
-        setLoadingMessage('Loading settings...');
-        await loadSettings();
-        
-        // Small delay to ensure everything is properly initialized
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error initializing app:', error);
-        setLoadingMessage('Error loading app data');
-        setTimeout(() => setIsLoading(false), 2000);
-      }
-    }
-
-    initializeApp();
-  }, []);
-
-  const handleCloseDebugModal = () => {
-    setDebugModalVisible(false);
-    setCurrentDebugLog(null);
-  };
+export default function TabLayout() {
+  const { colors } = useTheme();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ThemeProvider>
-        {isLoading ? (
-          <SplashScreen message={loadingMessage} />
-        ) : (
-          <GestureHandlerRootView style={styles.container}>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-            </Stack>
-            <StatusBar style="auto" />
-            
-            <DebugModal
-              visible={debugModalVisible}
-              log={currentDebugLog}
-              onClose={handleCloseDebugModal}
-            />
-          </GestureHandlerRootView>
-        )}
-      </ThemeProvider>
-    </SafeAreaView>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: [styles.tabBar, { backgroundColor: colors.backgroundDark }],
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: styles.tabBarLabel,
+      }}>
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Cards',
+          tabBarLabel: 'Cards',
+          tabBarIcon: ({ color, size }) => <HomeIcon size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="add"
+        options={{
+          title: 'Add Card',
+          tabBarLabel: 'Add',
+          tabBarIcon: ({ color, size }) => <PlusCircle size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color, size }) => <Settings size={size} color={color} />,
+        }}
+      />
+    </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  tabBar: {
+    borderTopWidth: 0,
+    elevation: 0,
+    height: 60,
+    paddingBottom: 8,
+  },
+  tabBarLabel: {
+    fontSize: 12,
+    fontWeight: '500',
   },
 });
