@@ -13,9 +13,10 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { useTranslation } from 'react-i18next';
 import { Check, Cloud } from 'lucide-react-native';
-import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
+import { CloudStorageProvider } from 'react-native-cloud-storage';
 import { useTheme } from '@/hooks/useTheme';
 import { logError, logInfo, logWarning } from '@/utils/debugManager';
+import { storageManager } from '@/utils/storageManager';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -42,8 +43,30 @@ export default function CloudProviderSelector({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS,
     webClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB,
-    scopes: ['https://www.googleapis.com/auth/drive.appdata'],
+    scopes: [
+      'https://www.googleapis.com/auth/drive.appdata',
+      'https://www.googleapis.com/auth/drive.file'
+    ],
   });
+
+  // Check for existing token on mount
+  useEffect(() => {
+    const checkExistingToken = async () => {
+      try {
+        const existingToken = await storageManager.getAccessToken();
+        if (existingToken) {
+          setAccessToken(existingToken);
+          logInfo('Existing Google Drive token found', 'Token loaded from storage', 'CloudProviderSelector');
+        }
+      } catch (error) {
+        logError('Failed to load existing token', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+      }
+    };
+
+    if (visible) {
+      checkExistingToken();
+    }
+  }, [visible]);
 
   useEffect(() => {
     logInfo('Google auth response received', JSON.stringify(response), 'CloudProviderSelector');
@@ -53,19 +76,7 @@ export default function CloudProviderSelector({
       logInfo('Google auth successful, token received', token ? 'Token present' : 'No token', 'CloudProviderSelector');
       
       if (token) {
-        setAccessToken(token);
-        setIsAuthenticating(false);
-        
-        // Show success message
-        if (Platform.OS === 'web') {
-          alert('Successfully authenticated with Google Drive!');
-        } else {
-          Alert.alert(
-            'Success',
-            'Successfully authenticated with Google Drive!',
-            [{ text: 'OK' }]
-          );
-        }
+        handleTokenReceived(token);
       } else {
         logError('Google auth success but no access token', 'Authentication succeeded but no access token was provided', 'CloudProviderSelector');
         setIsAuthenticating(false);
@@ -99,16 +110,44 @@ export default function CloudProviderSelector({
     }
   }, [response]);
 
-  useEffect(() => {
-    if (selected === CloudStorageProvider.GoogleDrive && accessToken) {
-      logInfo('Setting Google Drive provider options with token', '', 'CloudProviderSelector');
-      try {
-        CloudStorage.setProviderOptions({ accessToken });
-      } catch (error) {
-        logError('Failed to set Google Drive provider options', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+  const handleTokenReceived = async (token: string) => {
+    try {
+      setIsAuthenticating(true);
+      
+      setAccessToken(token);
+      
+      // Store the token in storage manager
+      await storageManager.setAccessToken(token);
+      
+      // Show success message
+      if (Platform.OS === 'web') {
+        alert('Successfully authenticated with Google Drive!');
+      } else {
+        Alert.alert(
+          'Success',
+          'Successfully authenticated with Google Drive!',
+          [{ text: 'OK' }]
+        );
       }
+      
+      logInfo('Google Drive authentication completed successfully', '', 'CloudProviderSelector');
+    } catch (error) {
+      logError('Failed to handle token', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+      setAccessToken(null);
+      
+      if (Platform.OS === 'web') {
+        alert('Failed to set up Google Drive access. Please try again.');
+      } else {
+        Alert.alert(
+          'Setup Failed',
+          'Failed to set up Google Drive access. Please try again.',
+          [{ text: 'OK' }]
+        );
+      }
+    } finally {
+      setIsAuthenticating(false);
     }
-  }, [accessToken, selected]);
+  };
 
   const handleGoogleLogin = async () => {
     logInfo('Starting Google authentication', '', 'CloudProviderSelector');

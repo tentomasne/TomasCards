@@ -8,7 +8,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Cloud, Smartphone, Merge, AlertTriangle } from 'lucide-react-native';
+import { Cloud, Smartphone, Merge, TriangleAlert as AlertTriangle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 import { SyncConflictData, SyncAction } from '@/utils/storageManager';
@@ -31,6 +31,12 @@ export default function SyncConflictModal({
 
   if (!conflictData) return null;
 
+  const handleResolve = (action: SyncAction) => {
+    if (loading) return;
+    console.log('Resolving sync conflict with action:', action);
+    onResolve(action);
+  };
+
   return (
     <Modal
       visible={visible}
@@ -50,7 +56,7 @@ export default function SyncConflictModal({
             </Text>
           </View>
 
-          <ScrollView style={styles.content}>
+          <View style={styles.content}>
             <View style={styles.dataPreview}>
               <View style={[styles.dataCard, { backgroundColor: colors.backgroundMedium }]}>
                 <View style={styles.dataHeader}>
@@ -77,64 +83,90 @@ export default function SyncConflictModal({
               </View>
             </View>
 
-            <View style={styles.actions}>
+            <ScrollView style={styles.actionsContainer} showsVerticalScrollIndicator={false}>
+              <View style={styles.actions}>
+                {/* Replace with Cloud - Recommended */}
                 <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.backgroundMedium }]}
-                onPress={() => onResolve('replace_with_cloud')}
-                disabled={loading}
+                  style={[
+                    styles.actionButton, 
+                    { backgroundColor: colors.backgroundMedium, borderColor: colors.accent, borderWidth: 2 },
+                    loading && styles.disabledButton
+                  ]}
+                  onPress={() => handleResolve('replace_with_cloud')}
+                  disabled={loading}
+                  activeOpacity={0.7}
                 >
-                <Cloud size={20} color={colors.textPrimary} />
-                <View style={styles.actionText}>
-                  <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
-                  {t('sync.conflict.replaceWithCloud')}
-                  </Text>
-                  <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>
-                  {t('sync.conflict.replaceWithCloudDesc')}
-                  </Text>
-                </View>
-                <View style={[styles.recommendedBadge, { backgroundColor: colors.accent }]}>
-                  <Text style={[styles.recommendedText, { color: colors.textPrimary }]}>
-                  {t('sync.conflict.recommended')}
-                  </Text>
-                </View>
+                  <View style={styles.actionRow}>
+                    <Cloud size={20} color={colors.textPrimary} />
+                    <View style={styles.actionTextContainer}>
+                      <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
+                        {t('sync.conflict.replaceWithCloud')}
+                      </Text>
+                      <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>
+                        {t('sync.conflict.replaceWithCloudDesc')}
+                      </Text>
+                    </View>
+                    <View style={[styles.recommendedBadge, { backgroundColor: colors.accent }]}>
+                      <Text style={[styles.recommendedText, { color: colors.textPrimary }]}>
+                        {t('sync.conflict.recommended')}
+                      </Text>
+                    </View>
+                  </View>
                 </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.backgroundMedium }]}
-                onPress={() => onResolve('merge')}
-                disabled={loading}
-              >
-                <Merge size={20} color={colors.textPrimary} />
-                <View style={styles.actionText}>
-                  <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
-                    {t('sync.conflict.merge')}
-                  </Text>
-                  <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>
-                    {t('sync.conflict.mergeDesc')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
+                {/* Merge Data */}
+                <TouchableOpacity
+                  style={[
+                    styles.actionButton, 
+                    { backgroundColor: colors.backgroundMedium },
+                    loading && styles.disabledButton
+                  ]}
+                  onPress={() => handleResolve('merge')}
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.actionRow}>
+                    <Merge size={20} color={colors.textPrimary} />
+                    <View style={styles.actionTextContainer}>
+                      <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
+                        {t('sync.conflict.merge')}
+                      </Text>
+                      <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>
+                        {t('sync.conflict.mergeDesc')}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[styles.actionButton, { backgroundColor: colors.backgroundMedium }]}
-                onPress={() => onResolve('keep_local')}
-                disabled={loading}
-              >
-                <Smartphone size={20} color={colors.textPrimary} />
-                <View style={styles.actionText}>
-                  <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
-                    {t('sync.conflict.keepLocal')}
-                  </Text>
-                  <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>
-                    {t('sync.conflict.keepLocalDesc')}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
+                {/* Keep Local */}
+                <TouchableOpacity
+                  style={[
+                    styles.actionButton, 
+                    { backgroundColor: colors.backgroundMedium },
+                    loading && styles.disabledButton
+                  ]}
+                  onPress={() => handleResolve('keep_local')}
+                  disabled={loading}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.actionRow}>
+                    <Smartphone size={20} color={colors.textPrimary} />
+                    <View style={styles.actionTextContainer}>
+                      <Text style={[styles.actionTitle, { color: colors.textPrimary }]}>
+                        {t('sync.conflict.keepLocal')}
+                      </Text>
+                      <Text style={[styles.actionDescription, { color: colors.textSecondary }]}>
+                        {t('sync.conflict.keepLocalDesc')}
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
 
           {loading && (
-            <View style={styles.loadingOverlay}>
+            <View style={[styles.loadingOverlay, { backgroundColor: colors.overlay }]}>
               <ActivityIndicator size="large" color={colors.accent} />
               <Text style={[styles.loadingText, { color: colors.textPrimary }]}>
                 {t('sync.conflict.resolving')}
@@ -159,6 +191,7 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     borderRadius: 16,
     maxHeight: '80%',
+    minHeight: 400,
   },
   header: {
     alignItems: 'center',
@@ -171,15 +204,6 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
-  recommendedBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  recommendedText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
   subtitle: {
     fontSize: 16,
     marginTop: 8,
@@ -188,10 +212,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingHorizontal: 24,
   },
   dataPreview: {
     flexDirection: 'row',
-    paddingHorizontal: 24,
     gap: 12,
     marginBottom: 24,
   },
@@ -213,18 +237,24 @@ const styles = StyleSheet.create({
   dataCount: {
     fontSize: 14,
   },
+  actionsContainer: {
+    flex: 1,
+    marginBottom: 24,
+  },
   actions: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-    gap: 12,
+    gap: 16,
   },
   actionButton: {
+    borderRadius: 12,
+    padding: 16,
+    minHeight: 80,
+    justifyContent: 'center',
+  },
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
   },
-  actionText: {
+  actionTextContainer: {
     marginLeft: 12,
     flex: 1,
   },
@@ -237,13 +267,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 18,
   },
+  recommendedBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  recommendedText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 16,

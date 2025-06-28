@@ -1,7 +1,12 @@
-translations po prvom zapnuti
-google drive
+google drive warning that it is slow (1-2 seconds)
 
 more cards
+
+error screen
+
+same background cards in index cards
+
+ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat
 
 opravenie crashovania appky
 ------------------------
@@ -10,3 +15,4 @@ widget
 translations
 apple watch
 export import
+app review after 5th open

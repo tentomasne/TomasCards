@@ -1,11 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CloudStorage, CloudStorageProvider } from 'react-native-cloud-storage';
+import { 
+  CloudStorage, 
+  CloudStorageProvider, 
+  CloudStorageScope,
+  CloudStorageError,
+  CloudStorageErrorCode
+} from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 import { logError, logWarning, logInfo } from '@/utils/debugManager';
-
-// Directory in iCloud where the loyalty cards file is stored
-const CLOUD_DIR = '/cards';
-const CARDS_FILE = `${CLOUD_DIR}/loyalty_cards.json`;
 
 export type StorageMode = 'local' | 'cloud';
 export type SyncAction = 'replace_with_cloud' | 'merge' | 'keep_local';
@@ -32,54 +34,32 @@ const LAST_SYNC_KEY = 'last_sync_timestamp';
 const STORAGE_PROVIDER_KEY = 'cloud_storage_provider';
 const GOOGLE_TOKEN_KEY = 'google_drive_token';
 
+// Cloud file paths
+const CARDS_FILE = 'loyalty_cards.json';
+
 export class StorageManager {
   private static instance: StorageManager;
-  private storageMode: StorageMode = 'local'; // Default to local
+  private storageMode: StorageMode = 'local';
   private queuedOperations: QueuedOperation[] = [];
   private isInitialized = false;
   private loadingPromise: Promise<LoyaltyCard[]> | null = null;
   private provider = CloudStorage.getDefaultProvider();
   private accessToken: string | null = null;
-  public cloudStorageConstructor = new CloudStorage(
-    this.provider,
-    this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
-  );
-
-  /**
-   * Ensures that the cloud directory used to store cards exists.
-   */
-  private async ensureCloudDirectory(): Promise<void> {
-    try {
-      if (!(await this.cloudAccessible())) return;
-      logInfo('Ensuring cloud directory exists:', CLOUD_DIR, 'StorageManager');
-      const dirExists = await this.cloudStorageConstructor.exists(CLOUD_DIR);
-      if (!dirExists) {
-        await this.cloudStorageConstructor.mkdir(CLOUD_DIR);
-        logInfo('Cloud directory created successfully', CLOUD_DIR, 'StorageManager');
-      }
-    } catch (error) {
-      console.error('Failed to ensure cloud directory:', error);
-      logError('Failed to ensure cloud directory', error instanceof Error ? error.message : String(error), 'StorageManager');
-    }
-  }
-
-  private async cloudAccessible(): Promise<boolean> {
-    try {
-      const isAvailable = await this.cloudStorageConstructor.isCloudAvailable();
-      logInfo('Cloud accessibility check', `Available: ${isAvailable}`, 'StorageManager');
-      return isAvailable;
-    } catch (error) {
-      console.error('Failed to check cloud availability:', error);
-      logError('Failed to check cloud availability', error instanceof Error ? error.message : String(error), 'StorageManager');
-      return false;
-    }
-  }
+  private cloudStorage: CloudStorage;
 
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
       StorageManager.instance = new StorageManager();
     }
     return StorageManager.instance;
+  }
+
+  constructor() {
+    // Initialize CloudStorage instance with default provider
+    this.cloudStorage = new CloudStorage(
+      this.provider,
+      this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
+    );
   }
 
   async initialize(): Promise<void> {
@@ -89,7 +69,7 @@ export class StorageManager {
       logInfo('Initializing storage manager', '', 'StorageManager');
       
       const mode = await AsyncStorage.getItem(STORAGE_MODE_KEY);
-      this.storageMode = (mode as StorageMode) || 'local'; // Default to local
+      this.storageMode = (mode as StorageMode) || 'local';
       logInfo('Storage mode loaded', this.storageMode, 'StorageManager');
       
       const queuedOps = await AsyncStorage.getItem(QUEUED_OPERATIONS_KEY);
@@ -100,6 +80,12 @@ export class StorageManager {
       if (storedProvider === CloudStorageProvider.ICloud || storedProvider === CloudStorageProvider.GoogleDrive) {
         this.provider = storedProvider;
         logInfo('Cloud provider loaded', this.provider, 'StorageManager');
+        
+        // Recreate CloudStorage instance with the correct provider
+        this.cloudStorage = new CloudStorage(
+          this.provider,
+          this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
+        );
       }
       
       const token = await AsyncStorage.getItem(GOOGLE_TOKEN_KEY);
@@ -108,14 +94,8 @@ export class StorageManager {
         logInfo('Google Drive token loaded', 'Token present', 'StorageManager');
       }
 
-      this.cloudStorageConstructor.setProvider(this.provider);
-      if (this.provider === CloudStorageProvider.GoogleDrive) {
-        this.cloudStorageConstructor.setProviderOptions({ 
-          strictFilenames: true, 
-          accessToken: this.accessToken || undefined 
-        });
-        logInfo('Google Drive provider configured', `Has token: ${!!this.accessToken}`, 'StorageManager');
-      }
+      // Configure cloud storage if we have the necessary credentials
+      await this.configureCloudStorage();
 
       this.isInitialized = true;
       logInfo('Storage manager initialized successfully', '', 'StorageManager');
@@ -123,6 +103,30 @@ export class StorageManager {
       console.error('Failed to initialize storage manager:', error);
       logError('Failed to initialize storage manager', error instanceof Error ? error.message : String(error), 'StorageManager');
       this.isInitialized = true;
+    }
+  }
+
+  private async configureCloudStorage(): Promise<void> {
+    try {
+      // Set the scope for cloud storage
+      this.cloudStorage.setProviderOptions({ scope: CloudStorageScope.AppData });
+      
+      if (this.provider === CloudStorageProvider.GoogleDrive && this.accessToken) {
+        // Set the access token for Google Drive
+        this.cloudStorage.setProviderOptions({ 
+          accessToken: this.accessToken,
+          scope: CloudStorageScope.AppData 
+        });
+        logInfo('Google Drive provider configured', `Has token: ${!!this.accessToken}`, 'StorageManager');
+      } else if (this.provider === CloudStorageProvider.ICloud) {
+        // iCloud doesn't need additional configuration beyond scope
+        logInfo('iCloud provider configured', '', 'StorageManager');
+      } else {
+        logWarning('Cloud storage not configured', `Provider: ${this.provider}, Has token: ${!!this.accessToken}`, 'StorageManager');
+      }
+    } catch (error) {
+      console.error('Failed to configure cloud storage:', error);
+      logError('Failed to configure cloud storage', error instanceof Error ? error.message : String(error), 'StorageManager');
     }
   }
 
@@ -153,33 +157,60 @@ export class StorageManager {
   async setProvider(provider: CloudStorageProvider): Promise<void> {
     this.provider = provider;
     await AsyncStorage.setItem(STORAGE_PROVIDER_KEY, provider);
-    this.cloudStorageConstructor.setProvider(provider);
     
-    if (provider === CloudStorageProvider.GoogleDrive) {
-      this.cloudStorageConstructor.setProviderOptions({ 
-        strictFilenames: true, 
-        accessToken: this.accessToken || undefined 
-      });
-    }
+    // Recreate CloudStorage instance with new provider
+    this.cloudStorage = new CloudStorage(
+      this.provider,
+      this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
+    );
     
+    await this.configureCloudStorage();
     logInfo('Cloud provider set', provider, 'StorageManager');
   }
 
   async setAccessToken(token: string): Promise<void> {
     this.accessToken = token;
     await AsyncStorage.setItem(GOOGLE_TOKEN_KEY, token);
-    
-    if (this.provider === CloudStorageProvider.GoogleDrive) {
-      this.cloudStorageConstructor.setProviderOptions({ 
-        strictFilenames: true,
-        accessToken: token 
-      });
-    }
-    
+    await this.configureCloudStorage();
     logInfo('Google Drive access token set', 'Token updated', 'StorageManager');
   }
 
-  // Local storage operations - always available
+  async getAccessToken(): Promise<string | null> {
+    return this.accessToken;
+  }
+
+  private async cloudAccessible(): Promise<boolean> {
+    try {
+      // For Google Drive, we need an access token
+      if (this.provider === CloudStorageProvider.GoogleDrive && !this.accessToken) {
+        logWarning('Google Drive not accessible - no access token', '', 'StorageManager');
+        return false;
+      }
+
+      // Try a simple operation to test cloud accessibility
+      // We'll try to check if our cards file exists
+      try {
+        const exists = await this.cloudStorage.exists(CARDS_FILE);
+        logInfo('Cloud accessibility test successful', `File exists: ${exists}`, 'StorageManager');
+        return true;
+      } catch (testError) {
+        // If we get a "file not found" error, that's actually good - it means we can access the cloud
+        if (testError instanceof CloudStorageError && testError.code === CloudStorageErrorCode.FILE_NOT_FOUND) {
+          logInfo('Cloud accessible - file not found is expected', '', 'StorageManager');
+          return true;
+        }
+        
+        logError('Cloud accessibility test failed', testError instanceof Error ? testError.message : String(testError), 'StorageManager');
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to check cloud availability:', error);
+      logError('Failed to check cloud availability', error instanceof Error ? error.message : String(error), 'StorageManager');
+      return false;
+    }
+  }
+
+  // Local storage operations
   async loadLocalCards(): Promise<LoyaltyCard[]> {
     try {
       const jsonValue = await AsyncStorage.getItem('loyalty_cards');
@@ -189,36 +220,6 @@ export class StorageManager {
     } catch (error) {
       console.error('Failed to load local cards:', error);
       logError('Failed to load local cards', error instanceof Error ? error.message : String(error), 'StorageManager');
-      return [];
-    }
-  }
-
-  async getCardsFromCloud() {
-    try {
-      if (!(await this.cloudAccessible())) {
-        logWarning('Cloud not accessible for loading cards', '', 'StorageManager');
-        return [];
-      }
-
-      await this.ensureCloudDirectory();
-
-      const exists = await this.cloudStorageConstructor.exists(CARDS_FILE);
-      if (!exists) {
-        logInfo('Cloud cards file does not exist', '', 'StorageManager');
-        return [];
-      }
-
-      const data = await this.cloudStorageConstructor.readFile(CARDS_FILE);
-      const cards = JSON.parse(data) as LoyaltyCard[];
-      logInfo('Cloud cards loaded', `${cards.length} cards`, 'StorageManager');
-      return cards;
-    } catch (error) {
-      if ((error as any)?.code === 'ERR_DIRECTORY_NOT_FOUND') {
-        logInfo('Cloud directory not found, returning empty array', '', 'StorageManager');
-        return [];
-      }
-      console.error('Failed to read cards from cloud:', error);
-      logError('Failed to read cards from cloud', error instanceof Error ? error.message : String(error), 'StorageManager');
       return [];
     }
   }
@@ -251,41 +252,48 @@ export class StorageManager {
         return [];
       }
 
-      await this.ensureCloudDirectory();
-
-      const exists = await this.cloudStorageConstructor.exists(CARDS_FILE);
+      const exists = await this.cloudStorage.exists(CARDS_FILE);
       if (!exists) {
         logInfo('Cloud cards file does not exist', '', 'StorageManager');
         return [];
       }
 
-      const content = await this.cloudStorageConstructor.readFile(CARDS_FILE);
+      const content = await this.cloudStorage.readFile(CARDS_FILE);
       const cards = JSON.parse(content) as LoyaltyCard[];
-      const transformedCards = this.transformCloudCards(cards);
-      logInfo('Cloud cards loaded and transformed', `${transformedCards.length} cards`, 'StorageManager');
-      return transformedCards;
+      logInfo('Cloud cards loaded', `${cards.length} cards`, 'StorageManager');
+      return cards;
     } catch (error) {
-      if ((error as any)?.code === 'ERR_DIRECTORY_NOT_FOUND') {
-        logInfo('Cloud directory not found during load', '', 'StorageManager');
+      if (error instanceof CloudStorageError && error.code === CloudStorageErrorCode.FILE_NOT_FOUND) {
+        logInfo('Cloud cards file not found', '', 'StorageManager');
         return [];
       }
       console.error('Failed to load cloud cards:', error);
       logError('Failed to load cloud cards', error instanceof Error ? error.message : String(error), 'StorageManager');
+      return [];
+    }
+  }
+
+  async saveCloudCards(cards: LoyaltyCard[]): Promise<void> {
+    try {
+      if (!(await this.cloudAccessible())) {
+        logError('Cloud not accessible for saving cards', 'Cloud unavailable', 'StorageManager');
+        throw new Error('cloud_unavailable');
+      }
+      
+      await this.cloudStorage.writeFile(CARDS_FILE, JSON.stringify(cards));
+      logInfo('Cards saved to cloud', `${cards.length} cards`, 'StorageManager');
+    } catch (error) {
+      console.error('Failed to save cloud cards:', error);
+      logError('Failed to save cloud cards', error instanceof Error ? error.message : String(error), 'StorageManager');
       throw error;
     }
   }
 
   async saveCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
     try {
-      if (!(await this.cloudAccessible())) {
-        logError('Cloud not accessible for saving card', 'Cloud unavailable', 'StorageManager');
-        throw new Error('cloud_unavailable');
-      }
-      
-      await this.ensureCloudDirectory();
-      const cards = await this.getCardsFromCloud();
+      const cards = await this.loadCloudCards();
       cards.push(card);
-      await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(cards));
+      await this.saveCloudCards(cards);
       logInfo('Card saved to cloud', `Card ID: ${card.id}`, 'StorageManager');
       return card;
     } catch (error) {
@@ -297,17 +305,11 @@ export class StorageManager {
 
   async updateCloudCard(card: LoyaltyCard): Promise<LoyaltyCard> {
     try {
-      if (!(await this.cloudAccessible())) {
-        logError('Cloud not accessible for updating card', 'Cloud unavailable', 'StorageManager');
-        throw new Error('cloud_unavailable');
-      }
-      
-      await this.ensureCloudDirectory();
-      const cards = await this.getCardsFromCloud();
+      const cards = await this.loadCloudCards();
       const index = cards.findIndex(c => c.id === card.id);
       if (index !== -1) {
         cards[index] = card;
-        await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(cards));
+        await this.saveCloudCards(cards);
         logInfo('Card updated in cloud', `Card ID: ${card.id}`, 'StorageManager');
       } else {
         logWarning('Card not found for update in cloud', `Card ID: ${card.id}`, 'StorageManager');
@@ -322,17 +324,11 @@ export class StorageManager {
 
   async toggleCloudCardFavorite(cardId: string, isFavorite: boolean): Promise<LoyaltyCard> {
     try {
-      if (!(await this.cloudAccessible())) {
-        logError('Cloud not accessible for toggling favorite', 'Cloud unavailable', 'StorageManager');
-        throw new Error('cloud_unavailable');
-      }
-      
-      await this.ensureCloudDirectory();
-      const cards = await this.getCardsFromCloud();
+      const cards = await this.loadCloudCards();
       const index = cards.findIndex(c => c.id === cardId);
       if (index !== -1) {
         cards[index].isFavorite = isFavorite;
-        await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(cards));
+        await this.saveCloudCards(cards);
         logInfo('Card favorite toggled in cloud', `Card ID: ${cardId}, Favorite: ${isFavorite}`, 'StorageManager');
         return cards[index];
       }
@@ -347,41 +343,15 @@ export class StorageManager {
 
   async deleteCloudCard(cardId: string): Promise<void> {
     try {
-      if (!(await this.cloudAccessible())) {
-        logError('Cloud not accessible for deleting card', 'Cloud unavailable', 'StorageManager');
-        throw new Error('cloud_unavailable');
-      }
-      
-      await this.ensureCloudDirectory();
-      const cards = await this.getCardsFromCloud();
+      const cards = await this.loadCloudCards();
       const filtered = cards.filter(c => c.id !== cardId);
-      await this.cloudStorageConstructor.writeFile(CARDS_FILE, JSON.stringify(filtered));
+      await this.saveCloudCards(filtered);
       logInfo('Card deleted from cloud', `Card ID: ${cardId}`, 'StorageManager');
     } catch (error) {
       console.error('Failed to delete cloud card:', error);
       logError('Failed to delete cloud card', error instanceof Error ? error.message : String(error), 'StorageManager');
       throw error;
     }
-  }
-
-  // Transform cloud card format to local format (currently data is stored in the same shape)
-  private transformCloudCard(cloudCard: any): LoyaltyCard {
-    return {
-      id: cloudCard.id,
-      name: cloudCard.name,
-      brand: cloudCard.brand,
-      code: cloudCard.code,
-      codeType: cloudCard.codeType,
-      color: cloudCard.color,
-      dateAdded: cloudCard.dateAdded,
-      lastUsed: cloudCard.lastUsed,
-      notes: cloudCard.notes,
-      isFavorite: cloudCard.isFavorite,
-    };
-  }
-
-  private transformCloudCards(cloudCards: any[]): LoyaltyCard[] {
-    return cloudCards.map(card => this.transformCloudCard(card));
   }
 
   // Queue operations for offline sync
@@ -450,7 +420,7 @@ export class StorageManager {
     logInfo('Queued operations cleanup completed', `Processed: ${processedOperations.length}, Remaining: ${this.queuedOperations.length}`, 'StorageManager');
   }
 
-  // Unified card operations - ALWAYS use local storage, sync to cloud when available
+  // Unified card operations
   async loadCards(): Promise<LoyaltyCard[]> {
     // Prevent multiple simultaneous loads
     if (this.loadingPromise) {
@@ -477,10 +447,21 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       try {
         const cloudCards = await this.loadCloudCards();
-        // Update local cache with cloud data
-        await this.saveLocalCards(cloudCards);
-        logInfo('Cards loaded from cloud and cached locally', `${cloudCards.length} cards`, 'StorageManager');
-        return cloudCards;
+        
+        // Only update local cache if cloud has data
+        if (cloudCards.length > 0) {
+          await this.saveLocalCards(cloudCards);
+          logInfo('Cards loaded from cloud and cached locally', `${cloudCards.length} cards`, 'StorageManager');
+          return cloudCards;
+        } else if (localCards.length === 0) {
+          // Both cloud and local are empty
+          logInfo('Both cloud and local storage are empty', '', 'StorageManager');
+          return [];
+        } else {
+          // Cloud is empty but local has data - keep local data
+          logInfo('Cloud is empty, keeping local cards', `${localCards.length} cards`, 'StorageManager');
+          return localCards;
+        }
       } catch (error) {
         console.error('Failed to load cloud cards, using local cache:', error);
         logError('Failed to load cloud cards', error instanceof Error ? error.message : String(error), 'StorageManager');
@@ -503,16 +484,15 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const savedCard = await this.saveCloudCard(card);
-          // Update local cache with cloud response
-          const updatedLocalCards = await this.loadLocalCards();
-          const index = updatedLocalCards.findIndex(c => c.id === card.id);
-          if (index !== -1) {
-            updatedLocalCards[index] = savedCard;
-            await this.saveLocalCards(updatedLocalCards);
-          }
+          await this.saveCloudCard(card);
+          
+          // After successful cloud save, reload from cloud to get the complete state
+          // This ensures local cache matches cloud exactly
+          const updatedCloudCards = await this.loadCloudCards();
+          await this.saveLocalCards(updatedCloudCards);
+          
           logInfo('Card saved to cloud successfully', `ID: ${card.id}`, 'StorageManager');
-          return savedCard;
+          return card;
         } catch (error) {
           console.error('Failed to save to cloud, queuing operation:', error);
           logError('Failed to save to cloud', error instanceof Error ? error.message : String(error), 'StorageManager');
@@ -543,16 +523,14 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const updatedCard = await this.updateCloudCard(card);
-          // Update local cache with cloud response
-          const updatedLocalCards = await this.loadLocalCards();
-          const localIndex = updatedLocalCards.findIndex(c => c.id === card.id);
-          if (localIndex !== -1) {
-            updatedLocalCards[localIndex] = updatedCard;
-            await this.saveLocalCards(updatedLocalCards);
-          }
+          await this.updateCloudCard(card);
+          
+          // After successful cloud update, reload from cloud to get the complete state
+          const updatedCloudCards = await this.loadCloudCards();
+          await this.saveLocalCards(updatedCloudCards);
+          
           logInfo('Card updated in cloud successfully', `ID: ${card.id}`, 'StorageManager');
-          return updatedCard;
+          return card;
         } catch (error) {
           console.error('Failed to update cloud card, queuing operation:', error);
           logError('Failed to update cloud card', error instanceof Error ? error.message : String(error), 'StorageManager');
@@ -586,16 +564,15 @@ export class StorageManager {
     if (this.storageMode === 'cloud') {
       if (isOnline) {
         try {
-          const updatedCard = await this.toggleCloudCardFavorite(cardId, isFavorite);
-          // Update local cache with cloud response
-          const updatedLocalCards = await this.loadLocalCards();
-          const localIndex = updatedLocalCards.findIndex(c => c.id === cardId);
-          if (localIndex !== -1) {
-            updatedLocalCards[localIndex] = updatedCard;
-            await this.saveLocalCards(updatedLocalCards);
-          }
+          await this.toggleCloudCardFavorite(cardId, isFavorite);
+          
+          // After successful cloud update, reload from cloud to get the complete state
+          const updatedCloudCards = await this.loadCloudCards();
+          await this.saveLocalCards(updatedCloudCards);
+          
+          const updatedCard = updatedCloudCards.find(c => c.id === cardId);
           logInfo('Card favorite toggled in cloud successfully', `ID: ${cardId}`, 'StorageManager');
-          return updatedCard;
+          return updatedCard || localCards[index];
         } catch (error) {
           console.error('Failed to toggle favorite in cloud, queuing operation:', error);
           logError('Failed to toggle favorite in cloud', error instanceof Error ? error.message : String(error), 'StorageManager');
@@ -624,6 +601,11 @@ export class StorageManager {
       if (isOnline) {
         try {
           await this.deleteCloudCard(cardId);
+          
+          // After successful cloud delete, reload from cloud to get the complete state
+          const updatedCloudCards = await this.loadCloudCards();
+          await this.saveLocalCards(updatedCloudCards);
+          
           logInfo('Card deleted from cloud successfully', `ID: ${cardId}`, 'StorageManager');
         } catch (error) {
           console.error('Failed to delete cloud card, queuing operation:', error);
@@ -697,30 +679,13 @@ export class StorageManager {
         const mergedCards = this.mergeCards(conflictData.localCards, conflictData.cloudCards);
         await this.saveLocalCards(mergedCards);
         // Upload merged cards to cloud
-        for (const card of conflictData.localCards) {
-          const existsInCloud = conflictData.cloudCards.some(c => c.code === card.code);
-          if (!existsInCloud) {
-            try {
-              await this.saveCloudCard(card);
-            } catch (error) {
-              console.error('Failed to upload merged card to cloud:', error);
-              logError('Failed to upload merged card to cloud', error instanceof Error ? error.message : String(error), 'StorageManager');
-            }
-          }
-        }
+        await this.saveCloudCards(mergedCards);
         logInfo('Sync conflict resolved - data merged', `${mergedCards.length} total cards`, 'StorageManager');
         break;
       
       case 'keep_local':
         // Upload all local cards to cloud
-        for (const card of conflictData.localCards) {
-          try {
-            await this.saveCloudCard(card);
-          } catch (error) {
-            console.error('Failed to upload local card to cloud:', error);
-            logError('Failed to upload local card to cloud', error instanceof Error ? error.message : String(error), 'StorageManager');
-          }
-        }
+        await this.saveCloudCards(conflictData.localCards);
         logInfo('Sync conflict resolved - kept local data', '', 'StorageManager');
         break;
     }
