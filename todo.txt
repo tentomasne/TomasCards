@@ -1,6 +1,8 @@
 google drive warning that it is slow (1-2 seconds)
-
+drive fix
 more cards
+
+refresh button
 
 error screen
 

@@ -222,6 +222,14 @@ export default function SettingsScreen() {
           {t('settings.sections.appearance')}
         </Text>
 
+      
+        {/* Language Selector */}
+        <LanguageSelector />
+
+        {/* Theme Selector */}
+        <ThemeSelector />
+
+        {/* Haptic Option */}
         <TouchableOpacity
           style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
           onPress={() => {
@@ -250,11 +258,6 @@ export default function SettingsScreen() {
           />
         </TouchableOpacity>
 
-        {/* Language Selector */}
-        <LanguageSelector />
-
-        {/* Theme Selector */}
-        <ThemeSelector />
       </View>
 
       {/* Debug Section - Only show if debug mode is enabled */}

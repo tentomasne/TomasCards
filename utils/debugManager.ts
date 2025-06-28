@@ -119,6 +119,7 @@ class DebugManager {
       component,
       extra,
     };
+      console.error(`[DEBUG] Error in ${component || 'Unknown'}: ${message}`, details);
 
     this.logs.push(log);
     this.saveLogs();
@@ -128,7 +129,6 @@ class DebugManager {
       this.errorModalCallback(log);
     }
 
-    console.error(`[DEBUG] Error in ${component || 'Unknown'}: ${message}`, details);
   }
 
   logWarning(message: string, details?: string, component?: string, extra?: any): void {
