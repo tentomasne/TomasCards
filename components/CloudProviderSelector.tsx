@@ -47,6 +47,11 @@ export default function CloudProviderSelector({
       'https://www.googleapis.com/auth/drive.appdata',
       'https://www.googleapis.com/auth/drive.file'
     ],
+    // Request offline access to get refresh token
+    extraParams: {
+      access_type: 'offline',
+      prompt: 'consent', // Force consent to ensure refresh token
+    },
   });
 
   // Check for existing token on mount
@@ -73,10 +78,13 @@ export default function CloudProviderSelector({
     
     if (response?.type === 'success') {
       const token = response.authentication?.accessToken;
-      logInfo('Google auth successful, token received', token ? 'Token present' : 'No token', 'CloudProviderSelector');
+      const refreshToken = response.authentication?.refreshToken;
+      const expiresIn = response.authentication?.expiresIn;
+      
+      logInfo('Google auth successful', `Token: ${!!token}, Refresh: ${!!refreshToken}, Expires: ${expiresIn}`, 'CloudProviderSelector');
       
       if (token) {
-        handleTokenReceived(token);
+        handleTokenReceived(token, refreshToken, expiresIn);
       } else {
         logError('Google auth success but no access token', 'Authentication succeeded but no access token was provided', 'CloudProviderSelector');
         setIsAuthenticating(false);
@@ -110,14 +118,14 @@ export default function CloudProviderSelector({
     }
   }, [response]);
 
-  const handleTokenReceived = async (token: string) => {
+  const handleTokenReceived = async (token: string, refreshToken?: string, expiresIn?: number) => {
     try {
       setIsAuthenticating(true);
       
       setAccessToken(token);
       
-      // Store the token in storage manager
-      await storageManager.setAccessToken(token);
+      // Store the token with enhanced data including refresh token
+      await storageManager.setAccessToken(token, refreshToken, expiresIn);
       
       // Show success message
       if (Platform.OS === 'web') {
@@ -130,7 +138,7 @@ export default function CloudProviderSelector({
         );
       }
       
-      logInfo('Google Drive authentication completed successfully', '', 'CloudProviderSelector');
+      logInfo('Google Drive authentication completed successfully', `Refresh token: ${!!refreshToken}, Expires in: ${expiresIn}s`, 'CloudProviderSelector');
     } catch (error) {
       logError('Failed to handle token', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
       setAccessToken(null);

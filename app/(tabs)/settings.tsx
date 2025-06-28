@@ -10,7 +10,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { Info, Circle as HelpCircle, HeartPulse as HeartPulseIcon, Database, Bug } from 'lucide-react-native';
+import { Info, Circle as HelpCircle, HeartPulse as HeartPulseIcon, Database, Bug, Smartphone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { AppSettings, ThemeMode } from '@/utils/types';
@@ -127,6 +127,10 @@ export default function SettingsScreen() {
 
   const handleDebugLogs = () => {
     router.push('/debug-logs' as any);
+  };
+
+  const handleDeviceInfo = () => {
+    router.push('/device-info' as any);
   };
 
   const handleVersionTap = async () => {
@@ -282,6 +286,23 @@ export default function SettingsScreen() {
                     total: logCounts.total,
                     errors: logCounts.errors 
                   })}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+            onPress={handleDeviceInfo}
+          >
+            <View style={styles.settingLeft}>
+              <Smartphone size={24} color={colors.textSecondary} />
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                  Device Information
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  View device details, storage info, and authentication status
                 </Text>
               </View>
             </View>

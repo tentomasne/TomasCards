@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 500,
     borderRadius: 16,
-    maxHeight: '80%',
-    minHeight: 400,
+    maxHeight: "100%",
+    minHeight: 700,
   },
   header: {
     alignItems: 'center',

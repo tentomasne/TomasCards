@@ -60,7 +60,8 @@ export async function deleteCard(id: string): Promise<void> {
 }
 
 export async function getCard(id: string): Promise<LoyaltyCard | null> {
-  const cards = await storageManager.loadCards();
+  // Load from local storage for instant access
+  const cards = await storageManager.loadLocalCards();
   return cards.find(card => card.id === id) || null;
 }
 

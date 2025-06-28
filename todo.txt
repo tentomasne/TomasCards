@@ -1,10 +1,12 @@
 google drive warning that it is slow (1-2 seconds)
-drive fix
+drive fix - done
 more cards
+
+more debug - done
 
 apple if not logge din check
 
-refresh button
+refresh button - done
 
 first welcome better
 

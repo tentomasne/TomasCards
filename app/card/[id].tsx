@@ -19,7 +19,6 @@ import { useTranslation } from 'react-i18next';
 import QRCode from 'react-native-qrcode-svg';
 
 import { LoyaltyCard } from '@/utils/types';
-import { getCard } from '@/utils/storage';
 import { storageManager } from '@/utils/storageManager';
 import { useTheme } from '@/hooks/useTheme';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -55,23 +54,54 @@ export default function CardDetailScreen() {
   useEffect(() => {
     const loadCardData = async () => {
       if (!id) return;
+      
       try {
-        const cardData = await getCard(id);
+        // Load from local storage for instant display
+        const localCards = await storageManager.loadLocalCards();
+        const cardData = localCards.find(c => c.id === id);
+        
         if (cardData) {
           setCard(cardData);
+          
+          // Update last used timestamp if not editing
           if (!isEditing) {
-            const updated = { ...cardData, lastUsed: Date.now() };
-            await storageManager.updateCard(updated, isOnline);
+            const updatedCard = { ...cardData, lastUsed: Date.now() };
+            
+            // Update locally immediately for instant UI feedback
+            const updatedCards = localCards.map(c => 
+              c.id === id ? updatedCard : c
+            );
+            await storageManager.saveLocalCards(updatedCards);
+            setCard(updatedCard);
+            
+            // Sync to cloud in background if needed
+            if (storageMode === 'cloud' && isOnline) {
+              try {
+                await storageManager.updateCard(updatedCard, isOnline);
+              } catch (error) {
+                console.error('Failed to sync last used update to cloud:', error);
+                // Don't show error to user as local update succeeded
+              }
+            } else if (storageMode === 'cloud' && !isOnline) {
+              // Queue for later sync when online
+              await storageManager.queueOperation({ 
+                type: 'update', 
+                card: updatedCard 
+              });
+            }
           }
+        } else {
+          console.error('Card not found in local storage:', id);
         }
-      } catch (e) {
-        console.error('Error loading card:', e);
+      } catch (error) {
+        console.error('Error loading card:', error);
       } finally {
         setLoading(false);
       }
     };
+    
     loadCardData();
-  }, [id, isEditing, isOnline]);
+  }, [id, isEditing, storageMode, isOnline]);
 
   const handleUpdateCard = async (updatedCard: LoyaltyCard) => {
     // Check if user is offline and using cloud storage
@@ -84,9 +114,38 @@ export default function CardDetailScreen() {
       return;
     }
 
-    await storageManager.updateCard(updatedCard, isOnline);
-    setCard(updatedCard);
-    setIsEditing(false);
+    try {
+      // Update locally first for instant UI feedback
+      const localCards = await storageManager.loadLocalCards();
+      const updatedCards = localCards.map(c => 
+        c.id === updatedCard.id ? updatedCard : c
+      );
+      await storageManager.saveLocalCards(updatedCards);
+      setCard(updatedCard);
+      setIsEditing(false);
+
+      // Sync to cloud in background
+      if (storageMode === 'cloud') {
+        try {
+          await storageManager.updateCard(updatedCard, isOnline);
+        } catch (error) {
+          console.error('Failed to sync card update to cloud:', error);
+          // Show error but don't revert local changes
+          Alert.alert(
+            t('common.labels.error'),
+            'Card updated locally but failed to sync to cloud. Changes will sync when connection is restored.',
+            [{ text: t('common.buttons.ok') }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update card:', error);
+      Alert.alert(
+        t('common.labels.error'),
+        'Failed to update card. Please try again.',
+        [{ text: t('common.buttons.ok') }]
+      );
+    }
   };
 
   const handleDeleteCard = async () => {
@@ -103,13 +162,29 @@ export default function CardDetailScreen() {
     const confirmDelete = async () => {
       if (id) {
         try {
-          await storageManager.deleteCard(id, isOnline);
+          // Delete locally first for instant UI feedback
+          const localCards = await storageManager.loadLocalCards();
+          const filteredCards = localCards.filter(c => c.id !== id);
+          await storageManager.saveLocalCards(filteredCards);
+          
+          // Navigate back immediately
           router.replace('/');
+
+          // Sync deletion to cloud in background
+          if (storageMode === 'cloud') {
+            try {
+              await storageManager.deleteCard(id, isOnline);
+            } catch (error) {
+              console.error('Failed to sync card deletion to cloud:', error);
+              // Don't show error as local deletion succeeded and user already navigated away
+            }
+          }
         } catch (error) {
           console.error('Failed to delete card:', error);
           Alert.alert(
             t('common.labels.error'),
-            'Failed to delete card. Please try again.'
+            'Failed to delete card. Please try again.',
+            [{ text: t('common.buttons.ok') }]
           );
         }
       }
@@ -146,15 +221,30 @@ export default function CardDetailScreen() {
       const newFavoriteStatus = !card.isFavorite;
       
       try {
-        const updatedCard = await storageManager.toggleFavorite(card.id, newFavoriteStatus, isOnline);
-        if (updatedCard) {
-          setCard(updatedCard);
+        // Update locally first for instant UI feedback
+        const updatedCard = { ...card, isFavorite: newFavoriteStatus };
+        const localCards = await storageManager.loadLocalCards();
+        const updatedCards = localCards.map(c => 
+          c.id === card.id ? updatedCard : c
+        );
+        await storageManager.saveLocalCards(updatedCards);
+        setCard(updatedCard);
+
+        // Sync to cloud in background
+        if (storageMode === 'cloud') {
+          try {
+            await storageManager.toggleFavorite(card.id, newFavoriteStatus, isOnline);
+          } catch (error) {
+            console.error('Failed to sync favorite toggle to cloud:', error);
+            // Don't show error as local update succeeded
+          }
         }
       } catch (error) {
         console.error('Failed to toggle favorite:', error);
         Alert.alert(
           t('common.labels.error'),
-          'Failed to update favorite status. Please try again.'
+          'Failed to update favorite status. Please try again.',
+          [{ text: t('common.buttons.ok') }]
         );
       }
     }
@@ -177,6 +267,9 @@ export default function CardDetailScreen() {
     return (
       <View style={[styles.centerContainer, { backgroundColor: colors.backgroundDark }]}>
         <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          {t('common.labels.loading')}
+        </Text>
       </View>
     );
   }
@@ -186,6 +279,9 @@ export default function CardDetailScreen() {
       <View style={[styles.centerContainer, { backgroundColor: colors.backgroundDark }]}>
         <Text style={[styles.errorText, { color: colors.error }]}>
           {t('common.labels.error')}
+        </Text>
+        <Text style={[styles.errorSubtext, { color: colors.textSecondary }]}>
+          Card not found in local storage
         </Text>
         <TouchableOpacity 
           style={[styles.backButton, { backgroundColor: colors.backgroundMedium }]}
@@ -368,9 +464,20 @@ const styles = StyleSheet.create({
   disabledButton: {
     opacity: 0.5,
   },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: 'center',
+  },
   errorText: {
     fontSize: 18,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    fontSize: 14,
     marginBottom: 24,
+    textAlign: 'center',
   },
   backButton: {
     paddingVertical: 12,

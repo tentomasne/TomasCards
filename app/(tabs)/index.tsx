@@ -29,14 +29,23 @@ import OfflineBanner from "@/components/OfflineBanner";
 
 type SortType = "name" | "date" | "lastUsed";
 
+interface LoadingState {
+  initial: boolean;
+  cloud: boolean;
+  refresh: boolean;
+}
+
 export default function HomeScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { colors } = useTheme();
   const { isOnline } = useNetworkStatus();
   const [cards, setCards] = useState<LoyaltyCard[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState<LoadingState>({
+    initial: true,
+    cloud: false,
+    refresh: false,
+  });
   const [sortType, setSortType] = useState<SortType>("name");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("offline");
@@ -49,6 +58,7 @@ export default function HomeScreen() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
+  const [lastCloudSync, setLastCloudSync] = useState<number>(0);
 
   // Single initialization effect
   useEffect(() => {
@@ -69,12 +79,12 @@ export default function HomeScreen() {
 
         if (!completed) {
           // Only show welcome if user hasn't completed it and has no cards
-          const currentCards = await storageManager.loadCards();
+          const currentCards = await storageManager.loadLocalCards();
           if (!isMounted) return;
 
           if (currentCards.length === 0) {
             setShowWelcome(true);
-            setLoading(false);
+            setLoading(prev => ({ ...prev, initial: false }));
             setIsInitialized(true);
             return;
           } else {
@@ -83,15 +93,15 @@ export default function HomeScreen() {
           }
         }
 
-        // Load cards
-        await loadCardData();
+        // Load cards with local-first strategy
+        await loadCardsWithLocalFirst();
         if (!isMounted) return;
 
         setIsInitialized(true);
       } catch (error) {
         console.error("Error initializing app:", error);
         if (isMounted) {
-          setLoading(false);
+          setLoading(prev => ({ ...prev, initial: false }));
           setIsInitialized(true);
         }
       }
@@ -119,35 +129,63 @@ export default function HomeScreen() {
     setPendingOperations(storageManager.getQueuedOperationsCount());
   }, [isOnline, storageMode, isInitialized]);
 
-  // Load card data function - optimized to prevent multiple calls
-  const loadCardData = useCallback(async () => {
-    if (showWelcome) return;
-
+  // Local-first loading strategy
+  const loadCardsWithLocalFirst = useCallback(async () => {
     try {
-      setSyncStatus("syncing");
-      const data = await storageManager.loadCards();
-      setCards(data);
+      // Step 1: Load local cards immediately for instant UI
+      const localCards = await storageManager.loadLocalCards();
+      setCards(localCards);
+      setLoading(prev => ({ ...prev, initial: false }));
 
-      // Process queued operations if online and using cloud storage
-      if (isOnline && storageMode === "cloud") {
-        await storageManager.processQueuedOperations();
-        setPendingOperations(storageManager.getQueuedOperationsCount());
+      // Step 2: If cloud mode and online, sync with cloud in background
+      if (storageMode === "cloud" && isOnline) {
+        setLoading(prev => ({ ...prev, cloud: true }));
+        setSyncStatus("syncing");
+
+        try {
+          // Load from cloud
+          const cloudCards = await storageManager.loadCloudCards();
+          
+          // Check if cloud data is different from local
+          if (cloudCards.length > 0 && !arraysEqual(localCards, cloudCards)) {
+            // Update local cache and UI with cloud data
+            await storageManager.saveLocalCards(cloudCards);
+            setCards(cloudCards);
+            setLastCloudSync(Date.now());
+          } else if (cloudCards.length === 0 && localCards.length > 0) {
+            // Cloud is empty but local has data - this might be first sync
+            // Don't automatically upload to prevent conflicts
+          }
+
+          // Process queued operations
+          await storageManager.processQueuedOperations();
+          setPendingOperations(storageManager.getQueuedOperationsCount());
+          
+          setSyncStatus("synced");
+        } catch (cloudError) {
+          console.error("Cloud sync failed:", cloudError);
+          setSyncStatus("error");
+          // Keep local cards displayed
+        } finally {
+          setLoading(prev => ({ ...prev, cloud: false }));
+        }
       }
-
-      setSyncStatus(
-        storageMode === "cloud" && isOnline
-          ? "synced"
-          : storageMode === "local"
-          ? "synced"
-          : "offline"
-      );
-    } catch (e) {
-      console.error("Error loading cards", e);
+    } catch (error) {
+      console.error("Error loading cards:", error);
       setSyncStatus("error");
-    } finally {
-      setLoading(false);
+      setLoading(prev => ({ ...prev, initial: false, cloud: false }));
     }
-  }, [isOnline, storageMode, showWelcome]);
+  }, [storageMode, isOnline]);
+
+  // Helper function to compare card arrays
+  const arraysEqual = (a: LoyaltyCard[], b: LoyaltyCard[]): boolean => {
+    if (a.length !== b.length) return false;
+    
+    const aIds = new Set(a.map(card => card.id));
+    const bIds = new Set(b.map(card => card.id));
+    
+    return aIds.size === bIds.size && [...aIds].every(id => bIds.has(id));
+  };
 
   // Manual cloud sync function
   const handleManualCloudSync = useCallback(async () => {
@@ -180,6 +218,7 @@ export default function HomeScreen() {
         // Update local cache with cloud data
         await storageManager.saveLocalCards(cloudCards);
         setCards(cloudCards);
+        setLastCloudSync(Date.now());
         
         Alert.alert(
           t("sync.success.title"),
@@ -200,6 +239,7 @@ export default function HomeScreen() {
                 onPress: async () => {
                   try {
                     await storageManager.syncLocalToCloud();
+                    setLastCloudSync(Date.now());
                     Alert.alert(
                       t("sync.upload.success.title"),
                       t("sync.upload.success.message"),
@@ -246,7 +286,7 @@ export default function HomeScreen() {
 
   // Check for sync conflicts only when switching to cloud mode and after initial load
   useEffect(() => {
-    if (!isInitialized || !isOnline || storageMode !== "cloud" || loading || cards.length === 0) {
+    if (!isInitialized || !isOnline || storageMode !== "cloud" || loading.initial || cards.length === 0) {
       return;
     }
 
@@ -265,28 +305,26 @@ export default function HomeScreen() {
     // Add a small delay to ensure everything is loaded
     const timeoutId = setTimeout(checkSyncConflicts, 1000);
     return () => clearTimeout(timeoutId);
-  }, [isInitialized, isOnline, storageMode, loading, cards.length]);
+  }, [isInitialized, isOnline, storageMode, loading.initial, cards.length]);
 
   // Focus effect for when returning to screen - only reload if needed
   useFocusEffect(
     useCallback(() => {
-      if (isInitialized && !showWelcome && !loading) {
+      if (isInitialized && !showWelcome && !loading.initial) {
         // Only reload if we've been away for more than 30 seconds
-        const lastLoadTime = Date.now();
-        const timeSinceLastLoad = lastLoadTime - (loadCardData as any).lastCall || 0;
+        const timeSinceLastSync = Date.now() - lastCloudSync;
         
-        if (timeSinceLastLoad > 30000) {
-          loadCardData();
-          (loadCardData as any).lastCall = lastLoadTime;
+        if (timeSinceLastSync > 30000) {
+          loadCardsWithLocalFirst();
         }
       }
-    }, [loadCardData, isInitialized, showWelcome, loading])
+    }, [loadCardsWithLocalFirst, isInitialized, showWelcome, loading.initial, lastCloudSync])
   );
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    await loadCardData();
-    setRefreshing(false);
+    setLoading(prev => ({ ...prev, refresh: true }));
+    await loadCardsWithLocalFirst();
+    setLoading(prev => ({ ...prev, refresh: false }));
   };
 
   const handleAddCard = () => {
@@ -313,7 +351,7 @@ export default function HomeScreen() {
       await storageManager.resolveSyncConflict(action, syncConflictData);
       setShowConflictModal(false);
       setSyncConflictData(null);
-      await loadCardData();
+      await loadCardsWithLocalFirst();
     } catch (error) {
       console.error("Failed to resolve sync conflict:", error);
       Alert.alert(t("sync.conflict.error"), t("sync.conflict.errorMessage"));
@@ -332,7 +370,7 @@ export default function HomeScreen() {
     }
 
     // Load cards after welcome is completed
-    await loadCardData();
+    await loadCardsWithLocalFirst();
   };
 
   const sortCards = (cards: LoyaltyCard[]) => {
@@ -471,10 +509,13 @@ export default function HomeScreen() {
     return <WelcomeScreen onComplete={handleWelcomeComplete} />;
   }
 
-  if (loading || !isInitialized) {
+  if (loading.initial || !isInitialized) {
     return (
       <View style={[styles.center, { backgroundColor: colors.backgroundDark }]}>
         <ActivityIndicator size="large" color={colors.accent} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          {t("common.labels.loading")}
+        </Text>
       </View>
     );
   }
@@ -500,7 +541,7 @@ export default function HomeScreen() {
             <SyncStatusIndicator
               status={isManualSyncing ? "syncing" : syncStatus}
               pendingCount={pendingOperations}
-              onRetry={loadCardData}
+              onRetry={loadCardsWithLocalFirst}
               compact
             />
           </TouchableOpacity>
@@ -519,6 +560,16 @@ export default function HomeScreen() {
           </View>
         }
       />
+
+      {/* Cloud Loading Indicator */}
+      {loading.cloud && (
+        <View style={[styles.cloudLoadingBanner, { backgroundColor: colors.backgroundMedium }]}>
+          <ActivityIndicator size="small" color={colors.accent} />
+          <Text style={[styles.cloudLoadingText, { color: colors.textSecondary }]}>
+            {t("sync.status.syncing")}
+          </Text>
+        </View>
+      )}
 
       <SortMenu />
 
@@ -542,7 +593,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.list}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={loading.refresh}
               onRefresh={onRefresh}
               tintColor={colors.accent}
               colors={[colors.accent]}
@@ -582,6 +633,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    marginTop: 12,
+  },
+  cloudLoadingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  cloudLoadingText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   list: {
     padding: 8,
