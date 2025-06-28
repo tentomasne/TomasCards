@@ -26,7 +26,7 @@
       "invalid": "Invalid value"
     },
     "offline": {
-      "banner": "Offline Mode Active - Using local data"
+      "banner": "You're offline - Some features are limited"
     }
   },
   "welcome": {
@@ -192,6 +192,7 @@
     "offline": {
       "title": "Internet Required",
       "message": "Cloud storage features require an internet connection. Please connect to the internet or switch to local storage mode.",
+      "operationBlocked": "This operation requires an internet connection when using cloud storage. Please connect to the internet and try again.",
       "banner": "Internet connection required for cloud features"
     },
     "provider": {
@@ -233,6 +234,33 @@
       "error": "Sync Error",
       "errorMessage": "Failed to resolve sync conflict. Please try again.",
       "recommended": "Recommended"
+    },
+    "success": {
+      "title": "Sync Complete",
+      "message": "Successfully synced {{count}} cards from cloud."
+    },
+    "uploadLocal": {
+      "title": "Upload Local Cards?",
+      "message": "Cloud storage is empty but you have {{count}} cards locally. Would you like to upload them to the cloud?",
+      "confirm": "Upload to Cloud"
+    },
+    "upload": {
+      "success": {
+        "title": "Upload Complete",
+        "message": "Your local cards have been successfully uploaded to the cloud."
+      },
+      "error": {
+        "title": "Upload Failed",
+        "message": "Failed to upload cards to cloud. Please try again."
+      }
+    },
+    "empty": {
+      "title": "No Data Found",
+      "message": "Both local and cloud storage are empty. Add some cards to get started!"
+    },
+    "error": {
+      "title": "Sync Failed",
+      "message": "Failed to sync with cloud storage. Please check your connection and try again."
     }
   },
   "debug": {

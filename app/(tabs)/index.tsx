@@ -25,6 +25,7 @@ import SyncStatusIndicator, {
 } from "@/components/SyncStatusIndicator";
 import SyncConflictModal from "@/components/SyncConflictModal";
 import WelcomeScreen from "@/components/WelcomeScreen";
+import OfflineBanner from "@/components/OfflineBanner";
 
 type SortType = "name" | "date" | "lastUsed";
 
@@ -47,6 +48,7 @@ export default function HomeScreen() {
   const [conflictResolving, setConflictResolving] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
 
   // Single initialization effect
   useEffect(() => {
@@ -147,6 +149,101 @@ export default function HomeScreen() {
     }
   }, [isOnline, storageMode, showWelcome]);
 
+  // Manual cloud sync function
+  const handleManualCloudSync = useCallback(async () => {
+    if (storageMode !== "cloud") {
+      Alert.alert(
+        t("sync.error"),
+        "Cloud sync is only available when using cloud storage mode.",
+        [{ text: t("common.buttons.ok") }]
+      );
+      return;
+    }
+
+    if (!isOnline) {
+      Alert.alert(
+        t("storage.offline.title"),
+        t("storage.offline.message"),
+        [{ text: t("common.buttons.ok") }]
+      );
+      return;
+    }
+
+    setIsManualSyncing(true);
+    setSyncStatus("syncing");
+
+    try {
+      // Force reload from cloud
+      const cloudCards = await storageManager.loadCloudCards();
+      
+      if (cloudCards.length > 0) {
+        // Update local cache with cloud data
+        await storageManager.saveLocalCards(cloudCards);
+        setCards(cloudCards);
+        
+        Alert.alert(
+          t("sync.success.title"),
+          t("sync.success.message", { count: cloudCards.length }),
+          [{ text: t("common.buttons.ok") }]
+        );
+      } else {
+        // Cloud is empty, ask if user wants to upload local cards
+        const localCards = await storageManager.loadLocalCards();
+        if (localCards.length > 0) {
+          Alert.alert(
+            t("sync.uploadLocal.title"),
+            t("sync.uploadLocal.message", { count: localCards.length }),
+            [
+              { text: t("common.buttons.cancel"), style: "cancel" },
+              {
+                text: t("sync.uploadLocal.confirm"),
+                onPress: async () => {
+                  try {
+                    await storageManager.syncLocalToCloud();
+                    Alert.alert(
+                      t("sync.upload.success.title"),
+                      t("sync.upload.success.message"),
+                      [{ text: t("common.buttons.ok") }]
+                    );
+                  } catch (error) {
+                    console.error("Failed to upload to cloud:", error);
+                    Alert.alert(
+                      t("sync.upload.error.title"),
+                      t("sync.upload.error.message"),
+                      [{ text: t("common.buttons.ok") }]
+                    );
+                  }
+                }
+              }
+            ]
+          );
+        } else {
+          Alert.alert(
+            t("sync.empty.title"),
+            t("sync.empty.message"),
+            [{ text: t("common.buttons.ok") }]
+          );
+        }
+      }
+
+      // Process any queued operations
+      await storageManager.processQueuedOperations();
+      setPendingOperations(storageManager.getQueuedOperationsCount());
+      
+      setSyncStatus("synced");
+    } catch (error) {
+      console.error("Manual sync failed:", error);
+      setSyncStatus("error");
+      Alert.alert(
+        t("sync.error.title"),
+        t("sync.error.message"),
+        [{ text: t("common.buttons.ok") }]
+      );
+    } finally {
+      setIsManualSyncing(false);
+    }
+  }, [storageMode, isOnline, t]);
+
   // Check for sync conflicts only when switching to cloud mode and after initial load
   useEffect(() => {
     if (!isInitialized || !isOnline || storageMode !== "cloud" || loading || cards.length === 0) {
@@ -193,6 +290,16 @@ export default function HomeScreen() {
   };
 
   const handleAddCard = () => {
+    // Check if user is offline and using cloud storage
+    if (!isOnline && storageMode === "cloud") {
+      Alert.alert(
+        t("storage.offline.title"),
+        t("storage.offline.operationBlocked"),
+        [{ text: t("common.buttons.ok") }]
+      );
+      return;
+    }
+    
     router.push("/add");
   };
 
@@ -339,7 +446,18 @@ export default function HomeScreen() {
           renderItem={({ item }) => (
             <LoyaltyCardComponent
               card={item}
-              onPress={() => router.push(`/card/${item.id}`)}
+              onPress={() => {
+                // Check if user is offline and using cloud storage
+                if (!isOnline && storageMode === "cloud") {
+                  Alert.alert(
+                    t("storage.offline.title"),
+                    t("storage.offline.operationBlocked"),
+                    [{ text: t("common.buttons.ok") }]
+                  );
+                  return;
+                }
+                router.push(`/card/${item.id}`);
+              }}
             />
           )}
           scrollEnabled={false}
@@ -365,27 +483,27 @@ export default function HomeScreen() {
     <View
       style={[styles.container, { backgroundColor: colors.backgroundDark }]}
     >
-      {!isOnline && storageMode === "cloud" && (
-        <View
-          style={[styles.offlineBanner, { backgroundColor: colors.warning }]}
-        >
-          <WifiOff size={16} color={colors.textPrimary} />
-          <Text style={[styles.offlineText, { color: colors.textPrimary }]}>
-            {t("storage.offline.banner")}
-          </Text>
-        </View>
-      )}
+      <OfflineBanner visible={!isOnline && storageMode === "cloud"} />
 
       <Header
         title={t("cards.title")}
         showBack={false}
         leftElement={
-          <SyncStatusIndicator
-            status={syncStatus}
-            pendingCount={pendingOperations}
-            onRetry={loadCardData}
-            compact
-          />
+          <TouchableOpacity
+            onPress={handleManualCloudSync}
+            disabled={isManualSyncing || storageMode === "local"}
+            style={[
+              styles.syncButton,
+              (isManualSyncing || storageMode === "local") && styles.syncButtonDisabled
+            ]}
+          >
+            <SyncStatusIndicator
+              status={isManualSyncing ? "syncing" : syncStatus}
+              pendingCount={pendingOperations}
+              onRetry={loadCardData}
+              compact
+            />
+          </TouchableOpacity>
         }
         rightElement={
           <View style={styles.headerButtons}>
@@ -433,6 +551,19 @@ export default function HomeScreen() {
         />
       )}
 
+      {/* Floating Add Button */}
+      <TouchableOpacity
+        style={[
+          styles.fab,
+          { backgroundColor: colors.accent },
+          (!isOnline && storageMode === "cloud") && styles.fabDisabled
+        ]}
+        onPress={handleAddCard}
+        disabled={!isOnline && storageMode === "cloud"}
+      >
+        <Plus size={24} color={colors.textPrimary} />
+      </TouchableOpacity>
+
       <SyncConflictModal
         visible={showConflictModal}
         conflictData={syncConflictData}
@@ -452,20 +583,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  offlineBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  offlineText: {
-    fontSize: 14,
-    fontWeight: "600",
-  },
   list: {
     padding: 8,
+    paddingBottom: 100, // Add space for FAB
   },
   section: {
     marginBottom: 24,
@@ -484,6 +604,12 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: 8,
     borderRadius: 8,
+  },
+  syncButton: {
+    opacity: 1,
+  },
+  syncButtonDisabled: {
+    opacity: 0.5,
   },
   sortMenu: {
     position: "absolute",
@@ -509,5 +635,23 @@ const styles = StyleSheet.create({
   },
   sortOptionText: {
     fontSize: 16,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabDisabled: {
+    opacity: 0.5,
   },
 });

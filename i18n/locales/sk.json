@@ -26,7 +26,7 @@
       "invalid": "Neplatná hodnota"
     },
     "offline": {
-      "banner": "Offline režim aktívny - Používajú sa lokálne údaje"
+      "banner": "Ste offline - Niektoré funkcie sú obmedzené"
     }
   },
   "welcome": {
@@ -196,6 +196,7 @@
     "offline": {
       "title": "Vyžaduje sa internet",
       "message": "Cloudové funkcie vyžadujú internetové pripojenie. Pripojte sa na internet alebo prepnite na lokálny režim úložiska.",
+      "operationBlocked": "Táto operácia vyžaduje internetové pripojenie pri používaní cloudového úložiska. Pripojte sa na internet a skúste znova.",
       "banner": "Pre cloudové funkcie je potrebné internetové pripojenie"
     },
     "provider": {
@@ -237,6 +238,33 @@
       "error": "Chyba synchronizácie",
       "errorMessage": "Nepodarilo sa vyriešiť konflikt synchronizácie. Skúste to znova.",
       "recommended": "Odporúčané"
+    },
+    "success": {
+      "title": "Synchronizácia dokončená",
+      "message": "Úspešne synchronizovaných {{count}} kariet z cloudu."
+    },
+    "uploadLocal": {
+      "title": "Nahrať lokálne karty?",
+      "message": "Cloudové úložisko je prázdne, ale máte {{count}} kariet lokálne. Chcete ich nahrať do cloudu?",
+      "confirm": "Nahrať do cloudu"
+    },
+    "upload": {
+      "success": {
+        "title": "Nahrávanie dokončené",
+        "message": "Vaše lokálne karty boli úspešne nahrané do cloudu."
+      },
+      "error": {
+        "title": "Nahrávanie zlyhalo",
+        "message": "Nepodarilo sa nahrať karty do cloudu. Skúste to znova."
+      }
+    },
+    "empty": {
+      "title": "Žiadne údaje nenájdené",
+      "message": "Lokálne aj cloudové úložisko sú prázdne. Pridajte nejaké karty pre začiatok!"
+    },
+    "error": {
+      "title": "Synchronizácia zlyhala",
+      "message": "Nepodarilo sa synchronizovať s cloudovým úložiskom. Skontrolujte pripojenie a skúste znova."
     }
   },
   "debug": {

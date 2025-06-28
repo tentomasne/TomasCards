@@ -1,6 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Cloud, CloudOff, RefreshCw, AlertCircle } from 'lucide-react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  interpolate,
+} from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -13,6 +20,8 @@ interface SyncStatusIndicatorProps {
   compact?: boolean;
 }
 
+const AnimatedRefreshCw = Animated.createAnimatedComponent(RefreshCw);
+
 export default function SyncStatusIndicator({
   status,
   pendingCount = 0,
@@ -21,6 +30,31 @@ export default function SyncStatusIndicator({
 }: SyncStatusIndicatorProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  
+  // Animation for spinning refresh icon
+  const rotation = useSharedValue(0);
+
+  React.useEffect(() => {
+    if (status === 'syncing') {
+      rotation.value = withRepeat(
+        withTiming(360, { duration: 1000 }),
+        -1,
+        false
+      );
+    } else {
+      rotation.value = withTiming(0, { duration: 200 });
+    }
+  }, [status, rotation]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          rotate: `${rotation.value}deg`,
+        },
+      ],
+    };
+  });
 
   const getStatusConfig = () => {
     switch (status) {
@@ -32,7 +66,13 @@ export default function SyncStatusIndicator({
         };
       case 'syncing':
         return {
-          icon: <RefreshCw size={compact ? 16 : 20} color={colors.accent} />,
+          icon: (
+            <AnimatedRefreshCw 
+              size={compact ? 16 : 20} 
+              color={colors.accent} 
+              style={animatedStyle}
+            />
+          ),
           text: t('sync.status.syncing'),
           color: colors.accent,
         };
@@ -50,7 +90,13 @@ export default function SyncStatusIndicator({
         };
       case 'pending':
         return {
-          icon: <RefreshCw size={compact ? 16 : 20} color={colors.warning} />,
+          icon: (
+            <AnimatedRefreshCw 
+              size={compact ? 16 : 20} 
+              color={colors.warning} 
+              style={animatedStyle}
+            />
+          ),
           text: t('sync.status.pending', { count: pendingCount }),
           color: colors.warning,
         };

@@ -26,6 +26,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import BarcodeRenderer from '@/components/BarcodeRenderer';
 import CardForm from '@/components/CardForm';
 import Header from '@/components/Header';
+import OfflineBanner from '@/components/OfflineBanner';
 import { POPULAR_CARDS } from '@/assets/cards';
 
 export default function CardDetailScreen() {
@@ -37,10 +38,19 @@ export default function CardDetailScreen() {
   const [card, setCard] = useState<LoyaltyCard | null>(null);
   const [isEditing, setIsEditing] = useState(edit === 'true');
   const [loading, setLoading] = useState(true);
+  const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
 
   const matchedCard = card ? POPULAR_CARDS.find(
     (item) => item.id?.toLowerCase() === card.brand?.toLowerCase()
   ) : undefined;
+
+  useEffect(() => {
+    const initializeStorageMode = async () => {
+      await storageManager.initialize();
+      setStorageMode(storageManager.getStorageMode());
+    };
+    initializeStorageMode();
+  }, []);
 
   useEffect(() => {
     const loadCardData = async () => {
@@ -64,12 +74,32 @@ export default function CardDetailScreen() {
   }, [id, isEditing, isOnline]);
 
   const handleUpdateCard = async (updatedCard: LoyaltyCard) => {
+    // Check if user is offline and using cloud storage
+    if (!isOnline && storageMode === 'cloud') {
+      Alert.alert(
+        t('storage.offline.title'),
+        t('storage.offline.operationBlocked'),
+        [{ text: t('common.buttons.ok') }]
+      );
+      return;
+    }
+
     await storageManager.updateCard(updatedCard, isOnline);
     setCard(updatedCard);
     setIsEditing(false);
   };
 
   const handleDeleteCard = async () => {
+    // Check if user is offline and using cloud storage
+    if (!isOnline && storageMode === 'cloud') {
+      Alert.alert(
+        t('storage.offline.title'),
+        t('storage.offline.operationBlocked'),
+        [{ text: t('common.buttons.ok') }]
+      );
+      return;
+    }
+
     const confirmDelete = async () => {
       if (id) {
         try {
@@ -103,6 +133,16 @@ export default function CardDetailScreen() {
 
   const toggleFavorite = async () => {
     if (card) {
+      // Check if user is offline and using cloud storage
+      if (!isOnline && storageMode === 'cloud') {
+        Alert.alert(
+          t('storage.offline.title'),
+          t('storage.offline.operationBlocked'),
+          [{ text: t('common.buttons.ok') }]
+        );
+        return;
+      }
+
       const newFavoriteStatus = !card.isFavorite;
       
       try {
@@ -118,6 +158,19 @@ export default function CardDetailScreen() {
         );
       }
     }
+  };
+
+  const handleEditPress = () => {
+    // Check if user is offline and using cloud storage
+    if (!isOnline && storageMode === 'cloud') {
+      Alert.alert(
+        t('storage.offline.title'),
+        t('storage.offline.operationBlocked'),
+        [{ text: t('common.buttons.ok') }]
+      );
+      return;
+    }
+    setIsEditing(true);
   };
 
   if (loading) {
@@ -152,12 +205,21 @@ export default function CardDetailScreen() {
 
   return (
     <View style={[styles.mainContainer, { backgroundColor: colors.backgroundDark }]}>
+      <OfflineBanner visible={!isOnline && storageMode === 'cloud'} />
+      
       <Header
         title={card.name}
         showBack={true}
         onBack={() => router.back()}
         rightElement={
-          <TouchableOpacity onPress={toggleFavorite} style={styles.favoriteButton}>
+          <TouchableOpacity 
+            onPress={toggleFavorite} 
+            style={[
+              styles.favoriteButton,
+              (!isOnline && storageMode === 'cloud') && styles.disabledButton
+            ]}
+            disabled={!isOnline && storageMode === 'cloud'}
+          >
             <Star
               size={24}
               color={colors.textPrimary}
@@ -212,8 +274,13 @@ export default function CardDetailScreen() {
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.editButton, { backgroundColor: colors.backgroundMedium }]}
-            onPress={() => setIsEditing(true)}
+            style={[
+              styles.editButton, 
+              { backgroundColor: colors.backgroundMedium },
+              (!isOnline && storageMode === 'cloud') && styles.disabledButton
+            ]}
+            onPress={handleEditPress}
+            disabled={!isOnline && storageMode === 'cloud'}
           >
             <Pencil size={20} color={colors.textPrimary} />
             <Text style={[styles.buttonText, { color: colors.textPrimary }]}>
@@ -221,8 +288,13 @@ export default function CardDetailScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.deleteButton, { backgroundColor: colors.backgroundMedium }]}
+            style={[
+              styles.deleteButton, 
+              { backgroundColor: colors.backgroundMedium },
+              (!isOnline && storageMode === 'cloud') && styles.disabledButton
+            ]}
             onPress={handleDeleteCard}
+            disabled={!isOnline && storageMode === 'cloud'}
           >
             <Trash2 size={20} color={colors.error} />
             <Text style={[styles.deleteButtonText, { color: colors.error }]}>
@@ -292,6 +364,9 @@ const styles = StyleSheet.create({
   },
   favoriteButton: {
     padding: 8,
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
   errorText: {
     fontSize: 18,
