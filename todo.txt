@@ -1,10 +1,12 @@
 google drive warning that it is slow (1-2 seconds)
 drive fix - done
 more cards
-
+fix sychronization X times when switching cards
 more debug - done
-
+refreshing whole app
 apple if not logge din check
+if not authenticated with google prompt a google auth
+fixed cloud sync - done
 
 refresh button - done
 

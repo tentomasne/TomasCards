@@ -1,10 +1,27 @@
 import { Tabs } from 'expo-router';
 import { HomeIcon, PlusCircle, Settings } from 'lucide-react-native';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { storageManager } from '@/utils/storageManager';
+import { useEffect, useState } from 'react';
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const { isOnline } = useNetworkStatus();
+  const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
+
+  // Track storage mode changes
+  useEffect(() => {
+    const initializeStorageMode = async () => {
+      await storageManager.initialize();
+      setStorageMode(storageManager.getStorageMode());
+    };
+    initializeStorageMode();
+  }, []);
+
+  // Determine if add tab should be disabled
+  const isAddDisabled = !isOnline && storageMode === 'cloud';
 
   return (
     <Tabs
@@ -28,7 +45,37 @@ export default function TabLayout() {
         options={{
           title: 'Add Card',
           tabBarLabel: 'Add',
-          tabBarIcon: ({ color, size }) => <PlusCircle size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => (
+            <PlusCircle 
+              size={size} 
+              color={isAddDisabled ? colors.textHint : color} 
+            />
+          ),
+          tabBarLabelStyle: [
+            styles.tabBarLabel,
+            isAddDisabled && { color: colors.textHint }
+          ],
+          // Disable the tab when offline in cloud mode
+          tabBarButton: (props) => {
+            if (isAddDisabled) {
+              return (
+                <View style={[styles.disabledTab, { backgroundColor: colors.backgroundDark }]}>
+                  <PlusCircle size={24} color={colors.textHint} />
+                  <Text style={[styles.disabledTabLabel, { color: colors.textHint }]}>
+                    Add
+                  </Text>
+                </View>
+              );
+            }
+            return (
+              <TouchableOpacity 
+                onPress={props.onPress}
+                style={props.style}
+              >
+                {props.children}
+              </TouchableOpacity>
+            );
+          },
         }}
       />
       <Tabs.Screen
@@ -53,5 +100,17 @@ const styles = StyleSheet.create({
   tabBarLabel: {
     fontSize: 12,
     fontWeight: '500',
+  },
+  disabledTab: {
+    flex: 1,
+    opacity: 0.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 8,
+  },
+  disabledTabLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 4,
   },
 });

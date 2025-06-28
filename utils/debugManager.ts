@@ -20,6 +20,7 @@ class DebugManager {
   private logs: DebugLog[] = [];
   private isDebugMode: boolean = false;
   private errorModalCallback?: (error: DebugLog) => void;
+  private isLogging: boolean = false; // Prevent recursive logging
 
   static getInstance(): DebugManager {
     if (!DebugManager.instance) {
@@ -29,16 +30,27 @@ class DebugManager {
   }
 
   async initialize(): Promise<void> {
-    // Check if debug mode is enabled from storage (runtime toggle)
-    const storedDebugMode = await AsyncStorage.getItem(DEBUG_MODE_KEY);
-    this.isDebugMode = storedDebugMode === 'true';
-    
-    // Load existing logs
-    await this.loadLogs();
-    
-    // Set up global error handlers if debug mode is enabled
-    if (this.isDebugMode) {
-      this.setupGlobalErrorHandlers();
+    // Prevent recursive initialization
+    if (this.isLogging) return;
+    this.isLogging = true;
+
+    try {
+      // Check if debug mode is enabled from storage (runtime toggle)
+      const storedDebugMode = await AsyncStorage.getItem(DEBUG_MODE_KEY);
+      this.isDebugMode = storedDebugMode === 'true';
+      
+      // Load existing logs
+      await this.loadLogs();
+      
+      // Set up global error handlers if debug mode is enabled
+      if (this.isDebugMode) {
+        this.setupGlobalErrorHandlers();
+      }
+    } catch (error) {
+      // Use console.error directly to avoid infinite loop
+      console.error('Failed to initialize debug manager:', error);
+    } finally {
+      this.isLogging = false;
     }
   }
 
@@ -68,6 +80,9 @@ class DebugManager {
   }
 
   private async saveLogs(): Promise<void> {
+    // Prevent recursive logging during save
+    if (this.isLogging) return;
+    
     try {
       // Keep only the last MAX_LOGS entries
       if (this.logs.length > MAX_LOGS) {
@@ -80,27 +95,42 @@ class DebugManager {
   }
 
   private setupGlobalErrorHandlers(): void {
-    // Handle JavaScript errors
+    // Only set up handlers once
+    if ((global as any).__debugHandlersSetup) return;
+    (global as any).__debugHandlersSetup = true;
+
+    // Handle JavaScript errors - but avoid infinite loops
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      this.logError('Console Error', args.join(' '));
+      // Prevent logging our own debug messages
+      const message = args.join(' ');
+      if (!message.includes('[DEBUG]') && !message.includes('debug_logs') && !this.isLogging) {
+        this.logError('Console Error', message);
+      }
       originalConsoleError.apply(console, args);
     };
 
     const originalConsoleWarn = console.warn;
     console.warn = (...args) => {
-      this.logWarning('Console Warning', args.join(' '));
+      const message = args.join(' ');
+      if (!message.includes('[DEBUG]') && !message.includes('debug_logs') && !this.isLogging) {
+        this.logWarning('Console Warning', message);
+      }
       originalConsoleWarn.apply(console, args);
     };
 
     // Handle unhandled promise rejections
     if (Platform.OS === 'web') {
       window.addEventListener('unhandledrejection', (event) => {
-        this.logError('Unhandled Promise Rejection', event.reason?.toString() || 'Unknown error');
+        if (!this.isLogging) {
+          this.logError('Unhandled Promise Rejection', event.reason?.toString() || 'Unknown error');
+        }
       });
 
       window.addEventListener('error', (event) => {
-        this.logError('Global Error', event.error?.toString() || event.message, event.error?.stack);
+        if (!this.isLogging) {
+          this.logError('Global Error', event.error?.toString() || event.message, event.error?.stack);
+        }
       });
     }
   }
@@ -110,64 +140,100 @@ class DebugManager {
   }
 
   logError(message: string, details?: string, stack?: string, component?: string, extra?: any): void {
-    const log: DebugLog = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      timestamp: Date.now(),
-      level: 'error',
-      message,
-      stack: stack || details,
-      component,
-      extra,
-    };
+    // Prevent recursive logging
+    if (this.isLogging) return;
+    this.isLogging = true;
+
+    try {
+      const log: DebugLog = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        timestamp: Date.now(),
+        level: 'error',
+        message,
+        stack: stack || details,
+        component,
+        extra,
+      };
+
+      this.logs.push(log);
+      
+      // Save logs asynchronously without awaiting to prevent blocking
+      this.saveLogs().catch(err => {
+        console.error('Failed to save error log:', err);
+      });
+
+      // Show modal if debug mode is enabled and callback is set
+      if (this.isDebugMode && this.errorModalCallback) {
+        this.errorModalCallback(log);
+      }
+
       console.error(`[DEBUG] Error in ${component || 'Unknown'}: ${message}`, details);
-
-    this.logs.push(log);
-    this.saveLogs();
-
-    // Show modal if debug mode is enabled and callback is set
-    if (this.isDebugMode && this.errorModalCallback) {
-      this.errorModalCallback(log);
+    } finally {
+      this.isLogging = false;
     }
-
   }
 
   logWarning(message: string, details?: string, component?: string, extra?: any): void {
-    const log: DebugLog = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      timestamp: Date.now(),
-      level: 'warning',
-      message,
-      stack: details,
-      component,
-      extra,
-    };
+    // Prevent recursive logging
+    if (this.isLogging) return;
+    this.isLogging = true;
 
-    this.logs.push(log);
-    this.saveLogs();
+    try {
+      const log: DebugLog = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        timestamp: Date.now(),
+        level: 'warning',
+        message,
+        stack: details,
+        component,
+        extra,
+      };
 
-    // Show modal if debug mode is enabled and callback is set
-    if (this.isDebugMode && this.errorModalCallback) {
-      this.errorModalCallback(log);
+      this.logs.push(log);
+      
+      // Save logs asynchronously without awaiting
+      this.saveLogs().catch(err => {
+        console.error('Failed to save warning log:', err);
+      });
+
+      // Show modal if debug mode is enabled and callback is set
+      if (this.isDebugMode && this.errorModalCallback) {
+        this.errorModalCallback(log);
+      }
+
+      console.warn(`[DEBUG] Warning in ${component || 'Unknown'}: ${message}`, details);
+    } finally {
+      this.isLogging = false;
     }
-
-    console.warn(`[DEBUG] Warning in ${component || 'Unknown'}: ${message}`, details);
   }
 
   logInfo(message: string, details?: string, component?: string, extra?: any): void {
-    const log: DebugLog = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      timestamp: Date.now(),
-      level: 'info',
-      message,
-      stack: details,
-      component,
-      extra,
-    };
+    // Prevent recursive logging
+    if (this.isLogging) return;
+    this.isLogging = true;
 
-    this.logs.push(log);
-    this.saveLogs();
+    try {
+      const log: DebugLog = {
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        timestamp: Date.now(),
+        level: 'info',
+        message,
+        stack: details,
+        component,
+        extra,
+      };
 
-    console.log(`[DEBUG] Info in ${component || 'Unknown'}: ${message}`, details);
+      this.logs.push(log);
+      
+      // Save logs asynchronously without awaiting
+      this.saveLogs().catch(err => {
+        console.error('Failed to save info log:', err);
+      });
+
+      console.log(`[DEBUG] Info in ${component || 'Unknown'}: ${message}`, details);
+    } finally {
+      this.isLogging = false;
+    }
   }
 
   getLogs(): DebugLog[] {

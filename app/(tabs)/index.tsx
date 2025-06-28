@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
-import { ArrowUpDown, Plus, WifiOff } from "lucide-react-native";
+import { ArrowUpDown, WifiOff } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 import type { LoyaltyCard } from "@/utils/types";
 import { useTheme } from "@/hooks/useTheme";
@@ -327,20 +327,6 @@ export default function HomeScreen() {
     setLoading(prev => ({ ...prev, refresh: false }));
   };
 
-  const handleAddCard = () => {
-    // Check if user is offline and using cloud storage
-    if (!isOnline && storageMode === "cloud") {
-      Alert.alert(
-        t("storage.offline.title"),
-        t("storage.offline.operationBlocked"),
-        [{ text: t("common.buttons.ok") }]
-      );
-      return;
-    }
-    
-    router.push("/add");
-  };
-
   const handleSyncConflictResolve = async (
     action: "replace_with_cloud" | "merge" | "keep_local"
   ) => {
@@ -602,19 +588,6 @@ export default function HomeScreen() {
         />
       )}
 
-      {/* Floating Add Button */}
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          { backgroundColor: colors.accent },
-          (!isOnline && storageMode === "cloud") && styles.fabDisabled
-        ]}
-        onPress={handleAddCard}
-        disabled={!isOnline && storageMode === "cloud"}
-      >
-        <Plus size={24} color={colors.textPrimary} />
-      </TouchableOpacity>
-
       <SyncConflictModal
         visible={showConflictModal}
         conflictData={syncConflictData}
@@ -652,7 +625,7 @@ const styles = StyleSheet.create({
   },
   list: {
     padding: 8,
-    paddingBottom: 100, // Add space for FAB
+    paddingBottom: 100, // Add space for tab bar
   },
   section: {
     marginBottom: 24,
@@ -702,23 +675,5 @@ const styles = StyleSheet.create({
   },
   sortOptionText: {
     fontSize: 16,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  fabDisabled: {
-    opacity: 0.5,
   },
 });

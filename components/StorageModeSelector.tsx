@@ -13,6 +13,7 @@ import { Cloud, Smartphone, Check, AlertTriangle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 import { StorageMode } from '@/utils/storageManager';
+import * as Updates from 'expo-updates';
 
 interface StorageModeSelectorProps {
   visible: boolean;
@@ -42,23 +43,52 @@ export default function StorageModeSelector({
     }
   }, [visible, currentMode]);
 
+  const reloadApp = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        // For web, reload the page
+        window.location.reload();
+      } else {
+        // For native, try to reload using Expo Updates
+        try {
+          await Updates.reloadAsync();
+        } catch (updateError) {
+          // If Updates.reloadAsync fails, show a message to manually restart
+          Alert.alert(
+            'Restart Required',
+            'Please close and reopen the app to complete the storage mode change.',
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to reload app:', error);
+      // Fallback: show manual restart message
+      Alert.alert(
+        'Restart Required',
+        'Please close and reopen the app to complete the storage mode change.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   const handleSelect = async (mode: StorageMode) => {
     // Don't allow selection while processing
     if (isProcessing || loading) return;
 
     // Show warning when switching from local to cloud
     if (currentMode === 'local' && mode === 'cloud') {
+      const confirmMessage = `${t('storage.mode.warning.title')}\n\n${t('storage.mode.warning.message')}\n\nThe app will reload after the change.`;
+      
       if (Platform.OS === 'web') {
-        const confirmed = window.confirm(
-          `${t('storage.mode.warning.title')}\n\n${t('storage.mode.warning.message')}`
-        );
+        const confirmed = window.confirm(confirmMessage);
         if (confirmed) {
-          await handleModeChange(mode);
+          await handleModeChangeWithReload(mode);
         }
       } else {
         Alert.alert(
           t('storage.mode.warning.title'),
-          t('storage.mode.warning.message'),
+          `${t('storage.mode.warning.message')}\n\nThe app will reload after the change.`,
           [
             {
               text: t('common.buttons.cancel'),
@@ -71,24 +101,45 @@ export default function StorageModeSelector({
             {
               text: t('storage.mode.warning.confirm'),
               style: 'destructive',
-              onPress: () => handleModeChange(mode),
+              onPress: () => handleModeChangeWithReload(mode),
             },
           ]
         );
       }
     } else {
-      await handleModeChange(mode);
+      await handleModeChangeWithReload(mode);
     }
   };
 
-  const handleModeChange = async (mode: StorageMode) => {
+  const handleModeChangeWithReload = async (mode: StorageMode) => {
     setIsProcessing(true);
     setSelectedMode(mode);
     
     try {
+      // Apply the storage mode change
       await onSelect(mode);
-      // Only close modal if the operation was successful
-      onClose();
+      
+      // Show success message and reload
+      const successMessage = mode === 'cloud' 
+        ? 'Switched to cloud storage. The app will now reload.'
+        : 'Switched to local storage. The app will now reload.';
+      
+      if (Platform.OS === 'web') {
+        alert(successMessage);
+        await reloadApp();
+      } else {
+        Alert.alert(
+          'Storage Mode Changed',
+          successMessage,
+          [
+            {
+              text: 'Reload Now',
+              onPress: reloadApp,
+            }
+          ],
+          { cancelable: false }
+        );
+      }
     } catch (error) {
       console.error('Failed to change storage mode:', error);
       // Reset to current mode if operation failed
@@ -104,7 +155,6 @@ export default function StorageModeSelector({
           [{ text: t('common.buttons.ok') }]
         );
       }
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -205,6 +255,14 @@ export default function StorageModeSelector({
             </TouchableOpacity>
           </View>
 
+          {/* Warning about app reload */}
+          <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
+            <AlertTriangle size={16} color={colors.warning} />
+            <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+              Changing storage mode will reload the app to ensure all settings are properly applied.
+            </Text>
+          </View>
+
           <TouchableOpacity
             style={[
               styles.closeButton, 
@@ -255,7 +313,7 @@ const styles = StyleSheet.create({
   },
   options: {
     gap: 16,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   option: {
     padding: 20,
@@ -298,6 +356,19 @@ const styles = StyleSheet.create({
   },
   feature: {
     fontSize: 12,
+    lineHeight: 16,
+  },
+  warningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  warningText: {
+    fontSize: 12,
+    flex: 1,
     lineHeight: 16,
   },
   closeButton: {
