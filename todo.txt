@@ -1,8 +1,8 @@
 google drive warning that it is slow (1-2 seconds)
+google drive refresh token
 more cards
 fix sychronization X times when switching cards
 if not authenticated with google prompt a google auth
-add pallet color select dfor debug
 same background cards in index cards
 
 ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat
