@@ -143,3 +143,5 @@ expo-env.d.ts
 /.expo
 /ios
 /android
+
+.env.local
