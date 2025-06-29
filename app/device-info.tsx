@@ -30,7 +30,8 @@ import {
   Settings,
   Cloud,
   Database,
-  Clock
+  Clock,
+  RotateCcw
 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
@@ -45,6 +46,7 @@ import Constants from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { loadSettings } from '@/utils/storage';
+import { logInfo, logError } from '@/utils/debugManager';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -69,6 +71,7 @@ export default function DeviceInfoScreen() {
   const [appInfo, setAppInfo] = useState<DeviceInfoItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
+  const [refreshLoading, setRefreshLoading] = useState(false);
   const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
 
@@ -116,23 +119,68 @@ export default function DeviceInfoScreen() {
     }
   }, [response]);
 
+  const reloadApp = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        // For web, reload the page
+        window.location.reload();
+      } else {
+        // For native, try to reload using Expo Updates
+        try {
+          await Updates.reloadAsync();
+        } catch (updateError) {
+          // If Updates.reloadAsync fails, show a message to manually restart
+          Alert.alert(
+            'Restart Required',
+            'Please close and reopen the app to complete the setup.',
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to reload app:', error);
+      // Fallback: show manual restart message
+      Alert.alert(
+        'Restart Required',
+        'Please close and reopen the app to complete the setup.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
+
   const handleTokenReceived = async (token: string, refreshToken?: string, expiresIn?: number) => {
     try {
+      setAuthLoading(true);
+      
+      setAccessToken(token);
+      
+      // Store the token with enhanced data including refresh token
       await storageManager.setAccessToken(token, refreshToken, expiresIn);
       
+      // Show success message
       if (Platform.OS === 'web') {
         alert('Successfully authenticated with Google Drive!');
       } else {
-        Alert.alert('Success', 'Successfully authenticated with Google Drive!');
+        Alert.alert(
+          'Success',
+          'Successfully authenticated with Google Drive!',
+          [{ text: 'OK' }]
+        );
       }
       
-      await loadDeviceInfo(); // Refresh the info
+      logInfo('Google Drive authentication completed successfully', `Refresh token: ${!!refreshToken}, Expires in: ${expiresIn}s`, 'DeviceInfoScreen');
     } catch (error) {
-      console.error('Failed to handle token:', error);
+      logError('Failed to handle token', error instanceof Error ? error.message : String(error), 'DeviceInfoScreen');
+      setAccessToken(null);
+      
       if (Platform.OS === 'web') {
         alert('Failed to set up Google Drive access. Please try again.');
       } else {
-        Alert.alert('Setup Failed', 'Failed to set up Google Drive access. Please try again.');
+        Alert.alert(
+          'Setup Failed',
+          'Failed to set up Google Drive access. Please try again.',
+          [{ text: 'OK' }]
+        );
       }
     } finally {
       setAuthLoading(false);
@@ -140,24 +188,43 @@ export default function DeviceInfoScreen() {
   };
 
   const handleGoogleLogin = async () => {
+    logInfo('Starting Google authentication', '', 'DeviceInfoScreen');
+    
     if (!request) {
+      logError('Google auth request not ready', 'Auth request is null', 'DeviceInfoScreen');
+      
       if (Platform.OS === 'web') {
         alert('Authentication not ready. Please try again.');
       } else {
-        Alert.alert('Error', 'Authentication not ready. Please try again.');
+        Alert.alert(
+          'Error',
+          'Authentication not ready. Please try again.',
+          [{ text: 'OK' }]
+        );
       }
       return;
     }
 
     try {
       setAuthLoading(true);
-      await promptAsync();
+      logInfo('Prompting Google auth', '', 'DeviceInfoScreen');
+      
+      const result = await promptAsync();
+      logInfo('Google auth prompt result', JSON.stringify(result), 'DeviceInfoScreen');
+      
+      // The useEffect will handle the response
     } catch (error) {
+      logError('Google auth prompt failed', error instanceof Error ? error.message : String(error), 'DeviceInfoScreen');
       setAuthLoading(false);
+      
       if (Platform.OS === 'web') {
         alert(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       } else {
-        Alert.alert('Authentication Failed', error instanceof Error ? error.message : 'Unknown error occurred');
+        Alert.alert(
+          'Authentication Failed',
+          error instanceof Error ? error.message : 'Unknown error occurred',
+          [{ text: 'OK' }]
+        );
       }
     }
   };
@@ -200,6 +267,75 @@ export default function DeviceInfoScreen() {
           { text: 'Logout', onPress: confirmLogout, style: 'destructive' },
         ]
       );
+    }
+  };
+
+  const handleForceRefreshToken = async () => {
+    if (provider !== CloudStorageProvider.GoogleDrive) {
+      if (Platform.OS === 'web') {
+        alert('Token refresh is only available for Google Drive');
+      } else {
+        Alert.alert('Not Available', 'Token refresh is only available for Google Drive');
+      }
+      return;
+    }
+
+    const accessToken = await storageManager.getAccessToken();
+    if (!accessToken) {
+      if (Platform.OS === 'web') {
+        alert('No access token found. Please authenticate first.');
+      } else {
+        Alert.alert('No Token', 'No access token found. Please authenticate first.');
+      }
+      return;
+    }
+
+    const tokenData = storageManager.getTokenData();
+    if (!tokenData?.refreshToken) {
+      if (Platform.OS === 'web') {
+        alert('No refresh token available. Please re-authenticate to get a refresh token.');
+      } else {
+        Alert.alert('No Refresh Token', 'No refresh token available. Please re-authenticate to get a refresh token.');
+      }
+      return;
+    }
+
+    setRefreshLoading(true);
+    logInfo('Force refreshing Google Drive token', '', 'DeviceInfoScreen');
+
+    try {
+      // Force refresh by calling the private method through a test
+      const success = await storageManager.refreshAccessToken();
+      
+      if (success) {
+        if (Platform.OS === 'web') {
+          alert('Token refreshed successfully!');
+        } else {
+          Alert.alert('Success', 'Token refreshed successfully!');
+        }
+        logInfo('Force token refresh successful', '', 'DeviceInfoScreen');
+        await loadDeviceInfo(); // Refresh the display
+      } else {
+        if (Platform.OS === 'web') {
+          alert('Token refresh failed. Please check the logs for details.');
+        } else {
+          Alert.alert('Refresh Failed', 'Token refresh failed. Please check the logs for details.');
+        }
+        logError('Force token refresh failed', 'Refresh returned false', 'DeviceInfoScreen');
+      }
+    } catch (error) {
+      logError('Force token refresh error', error instanceof Error ? error.message : String(error), 'DeviceInfoScreen');
+      
+      if (Platform.OS === 'web') {
+        alert(`Token refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      } else {
+        Alert.alert(
+          'Refresh Failed',
+          `Token refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+      }
+    } finally {
+      setRefreshLoading(false);
     }
   };
 
@@ -393,6 +529,19 @@ export default function DeviceInfoScreen() {
             label: 'Refresh Token',
             value: tokenData?.refreshToken ? 'Available' : 'Not Available',
           });
+
+          // Add force refresh button if refresh token is available
+          if (tokenData?.refreshToken) {
+            authData.push({
+              icon: <RotateCcw size={20} color={colors.accent} />,
+              label: 'Force Refresh Token',
+              value: 'Manually refresh access token',
+              action: handleForceRefreshToken,
+              actionLabel: 'Refresh Now',
+              actionIcon: <RotateCcw size={16} color={colors.accent} />,
+              loading: refreshLoading,
+            });
+          }
         }
       } else if (currentProvider === CloudStorageProvider.ICloud) {
         authData.push({

@@ -34,6 +34,7 @@ export interface GoogleTokenData {
   refreshToken?: string;
   expiresAt?: number;
   tokenType?: string;
+  scope?: string;
 }
 
 const STORAGE_MODE_KEY = 'storage_mode';
@@ -57,6 +58,7 @@ export class StorageManager {
   private cloudStorage: CloudStorage;
   private isRefreshingToken = false;
   private authenticationRequiredCallback?: () => void;
+  private refreshPromise: Promise<boolean> | null = null;
 
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
@@ -108,7 +110,7 @@ export class StorageManager {
       if (tokenDataStr) {
         this.tokenData = JSON.parse(tokenDataStr);
         this.accessToken = this.tokenData.accessToken;
-        logInfo('Google Drive token data loaded', 'Token data present', 'StorageManager');
+        logInfo('Google Drive token data loaded', `Expires: ${this.tokenData.expiresAt ? new Date(this.tokenData.expiresAt).toISOString() : 'unknown'}`, 'StorageManager');
       } else {
         // Fallback to old token format
         const token = await AsyncStorage.getItem(GOOGLE_TOKEN_KEY);
@@ -136,10 +138,10 @@ export class StorageManager {
       if (this.provider === CloudStorageProvider.GoogleDrive && this.accessToken) {
         // Check if token needs refresh before configuring
         if (this.isTokenExpired()) {
-          logInfo('Access token expired, attempting refresh', '', 'StorageManager');
+          logInfo('Access token expired, attempting refresh during configuration', '', 'StorageManager');
           const refreshed = await this.refreshAccessToken();
           if (!refreshed) {
-            logWarning('Token refresh failed, authentication required', '', 'StorageManager');
+            logWarning('Token refresh failed during configuration', '', 'StorageManager');
             return;
           }
         }
@@ -149,7 +151,7 @@ export class StorageManager {
           accessToken: this.accessToken,
           scope: CloudStorageScope.AppData 
         });
-        logInfo('Google Drive provider configured', `Has token: ${!!this.accessToken}`, 'StorageManager');
+        logInfo('Google Drive provider configured', `Token expires: ${this.getTokenExpiryString()}`, 'StorageManager');
       } else if (this.provider === CloudStorageProvider.ICloud) {
         // Set scope for iCloud
         this.cloudStorage.setProviderOptions({ scope: CloudStorageScope.AppData });
@@ -170,13 +172,43 @@ export class StorageManager {
     
     // Add 5 minute buffer before actual expiry
     const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
-    return Date.now() >= (this.tokenData.expiresAt - bufferTime);
+    const isExpired = Date.now() >= (this.tokenData.expiresAt - bufferTime);
+    
+    if (isExpired) {
+      logInfo('Token is expired or expiring soon', this.getTokenExpiryString(), 'StorageManager');
+    }
+    
+    return isExpired;
+  }
+
+  private getTokenExpiryString(): string {
+    if (!this.tokenData?.expiresAt) {
+      return 'No expiry info';
+    }
+    
+    const now = Date.now();
+    const expiresAt = this.tokenData.expiresAt;
+    
+    if (now >= expiresAt) {
+      return 'Expired';
+    }
+    
+    const timeLeft = expiresAt - now;
+    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `Expires in ${hours}h ${minutes}m`;
+    } else {
+      return `Expires in ${minutes}m`;
+    }
   }
 
   private async refreshAccessToken(): Promise<boolean> {
-    if (this.isRefreshingToken) {
-      logInfo('Token refresh already in progress', '', 'StorageManager');
-      return false;
+    // If already refreshing, wait for the existing refresh to complete
+    if (this.refreshPromise) {
+      logInfo('Token refresh already in progress, waiting...', '', 'StorageManager');
+      return await this.refreshPromise;
     }
 
     if (!this.tokenData?.refreshToken) {
@@ -185,10 +217,33 @@ export class StorageManager {
       return false;
     }
 
+    // Create a promise for this refresh operation
+    this.refreshPromise = this.performTokenRefresh();
+    
+    try {
+      const result = await this.refreshPromise;
+      return result;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private async performTokenRefresh(): Promise<boolean> {
     this.isRefreshingToken = true;
 
     try {
-      logInfo('Attempting to refresh Google Drive access token', '', 'StorageManager');
+      logInfo('Attempting to refresh Google Drive access token', `Current token expires: ${this.getTokenExpiryString()}`, 'StorageManager');
+
+      // Determine the correct client ID based on platform
+      let clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS;
+      
+      // You might want to detect platform and use appropriate client ID
+      // For now, using web client ID as it's most commonly used for refresh tokens
+      
+      if (!clientId) {
+        logError('No Google client ID configured', 'Missing EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB', 'StorageManager');
+        throw new Error('Google client ID not configured');
+      }
 
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
@@ -196,8 +251,8 @@ export class StorageManager {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          client_id: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB || '',
-          refresh_token: this.tokenData.refreshToken,
+          client_id: clientId,
+          refresh_token: this.tokenData!.refreshToken!,
           grant_type: 'refresh_token',
         }),
       });
@@ -222,7 +277,7 @@ export class StorageManager {
       if (data.access_token) {
         // Update token data
         const newTokenData: GoogleTokenData = {
-          ...this.tokenData,
+          ...this.tokenData!,
           accessToken: data.access_token,
           expiresAt: data.expires_in ? Date.now() + (data.expires_in * 1000) : undefined,
           tokenType: data.token_type || 'Bearer',
@@ -231,6 +286,7 @@ export class StorageManager {
         // If a new refresh token is provided, update it
         if (data.refresh_token) {
           newTokenData.refreshToken = data.refresh_token;
+          logInfo('New refresh token received', '', 'StorageManager');
         }
 
         this.tokenData = newTokenData;
@@ -245,7 +301,7 @@ export class StorageManager {
         // Reconfigure cloud storage with new token
         await this.configureCloudStorage();
 
-        logInfo('Access token refreshed successfully', `Expires in: ${data.expires_in}s`, 'StorageManager');
+        logInfo('Access token refreshed successfully', `New token expires: ${this.getTokenExpiryString()}`, 'StorageManager');
         return true;
       } else {
         throw new Error('No access token in refresh response');
@@ -254,9 +310,12 @@ export class StorageManager {
       console.error('Failed to refresh access token:', error);
       logError('Failed to refresh access token', error instanceof Error ? error.message : String(error), 'StorageManager');
       
-      // Clear invalid token data and require re-authentication
-      await this.clearTokenData();
-      this.triggerAuthenticationRequired();
+      // Only clear token data if it's an authentication error
+      if (error instanceof Error && (error.message.includes('400') || error.message.includes('401'))) {
+        await this.clearTokenData();
+        this.triggerAuthenticationRequired();
+      }
+      
       return false;
     } finally {
       this.isRefreshingToken = false;
@@ -390,6 +449,7 @@ export class StorageManager {
     }
     
     if (this.provider === CloudStorageProvider.GoogleDrive) {
+      // Valid if we have a token and either it's not expired or we have a refresh token
       return !!this.accessToken && (!this.isTokenExpired() || !!this.tokenData?.refreshToken);
     }
     
