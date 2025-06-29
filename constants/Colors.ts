@@ -3,28 +3,37 @@ import { Platform } from 'react-native';
 export const LIGHT_COLORS = {
   // Primary colors
   primary: '#FFFFFF',
-  backgroundDark: '#F5F5F7',
-  backgroundMedium: '#FFFFFF',
-  backgroundLight: '#F0F0F5',
+  backgroundDark: '#FFFFFF',
+  backgroundMedium: '#F8FAFC',
+  backgroundLight: '#F1F5F9',
 
   // Text
-  textPrimary: '#1A1B2E',
-  textSecondary: '#4A4B5C',
-  textHint: '#6E6E8A',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textHint: '#94A3B8',
 
-  // Accent colors
-  accent: '#4F6BFF',
-  accentLight: '#657FFF',
-  accentDark: '#3451DB',
+  // Gradients
+  orangeGradient: ['#FF7A00', '#FFA149'],
+  blueGradient: ['#2563EB', '#60A5FA'],
+  
+  // Accent colors (using orange as primary accent)
+  accent: '#FF7A00',
+  accentLight: '#FFA149',
+  accentDark: '#E6690A',
+
+  // Secondary accent (blue)
+  secondary: '#2563EB',
+  secondaryLight: '#60A5FA',
+  secondaryDark: '#1D4ED8',
 
   // UI elements
-  border: '#E6E6F0',
-  divider: '#EEEEF5',
+  border: '#E2E8F0',
+  divider: '#F1F5F9',
   
   // Status colors
-  success: '#4CAF93',
-  warning: '#F2BD6E',
-  error: '#F46E6E',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
   
   // Card colors
   cardShadow: Platform.OS === 'ios' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.15)',
@@ -36,36 +45,45 @@ export const LIGHT_COLORS = {
 
 export const DARK_COLORS = {
   // Primary colors
-  primary: '#1A1B2E',
-  backgroundDark: '#121224',
-  backgroundMedium: '#1A1B2E',
-  backgroundLight: '#252640',
+  primary: '#121212',
+  backgroundDark: '#121212',
+  backgroundMedium: '#1E1E1E',
+  backgroundLight: '#2A2A2A',
 
   // Text
   textPrimary: '#FFFFFF',
-  textSecondary: '#B0B0C0',
-  textHint: '#8181A0',
+  textSecondary: '#B0B0B0',
+  textHint: '#6B7280',
 
-  // Accent colors
-  accent: '#4F6BFF',
-  accentLight: '#657FFF',
-  accentDark: '#3451DB',
+  // Gradients
+  orangeGradient: ['#FF7A00', '#FFA149'],
+  blueGradient: ['#2563EB', '#60A5FA'],
+  
+  // Accent colors (using orange as primary accent)
+  accent: '#FF7A00',
+  accentLight: '#FFA149',
+  accentDark: '#E6690A',
+
+  // Secondary accent (blue)
+  secondary: '#2563EB',
+  secondaryLight: '#60A5FA',
+  secondaryDark: '#1D4ED8',
 
   // UI elements
-  border: '#33334D',
-  divider: '#2D2D45',
+  border: '#374151',
+  divider: '#2A2A2A',
   
   // Status colors
-  success: '#4CAF93',
-  warning: '#F2BD6E',
-  error: '#F46E6E',
+  success: '#10B981',
+  warning: '#F59E0B',
+  error: '#EF4444',
   
   // Card colors
-  cardShadow: 'rgba(0, 0, 0, 0.3)',
-  cardBackground: '#252640',
+  cardShadow: 'rgba(255, 255, 255, 0.05)',
+  cardBackground: '#1E1E1E',
   
   // Overlays
-  overlay: 'rgba(0, 0, 0, 0.5)',
+  overlay: 'rgba(0, 0, 0, 0.7)',
 };
 
 export const COLORS = DARK_COLORS;

@@ -10,7 +10,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
-import { Info, Circle as HelpCircle, HeartPulse as HeartPulseIcon, Database, Bug, Smartphone } from 'lucide-react-native';
+import { Info, Circle as HelpCircle, HeartPulse as HeartPulseIcon, Database, Bug, Smartphone, Palette } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import { AppSettings, ThemeMode } from '@/utils/types';
@@ -131,6 +131,10 @@ export default function SettingsScreen() {
 
   const handleDeviceInfo = () => {
     router.push('/device-info' as any);
+  };
+
+  const handleDesignDemo = () => {
+    router.push('/design-demo' as any);
   };
 
   const handleVersionTap = async () => {
@@ -270,6 +274,23 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             {t('debug.title')}
           </Text>
+
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+            onPress={handleDesignDemo}
+          >
+            <View style={styles.settingLeft}>
+              <Palette size={24} color={colors.textSecondary} />
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                  Design System
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  View design components and color palette
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}

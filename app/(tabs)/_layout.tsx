@@ -68,10 +68,7 @@ export default function TabLayout() {
               );
             }
             return (
-              <TouchableOpacity 
-                onPress={props.onPress}
-                style={props.style}
-              >
+              <TouchableOpacity {...props} style={props.style}>
                 {props.children}
               </TouchableOpacity>
             );

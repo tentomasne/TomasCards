@@ -6,7 +6,7 @@ apple if not logge din check
 if not authenticated with google prompt a google auth
 remove the modal debug and error
 first welcome better
-
+orange mode - done
 error screen
 
 same background cards in index cards
