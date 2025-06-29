@@ -195,6 +195,13 @@
       "operationBlocked": "This operation requires an internet connection when using cloud storage. Please connect to the internet and try again.",
       "banner": "Internet connection required for cloud features"
     },
+    "auth": {
+      "required": {
+        "title": "Authentication Required",
+        "message": "Your cloud storage session has expired. Please sign in again to continue syncing your cards.",
+        "reauth": "Sign In Again"
+      }
+    },
     "provider": {
       "title": "Cloud Provider",
       "subtitle": "Select where your data should be stored",

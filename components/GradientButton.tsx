@@ -24,7 +24,9 @@ export default function GradientButton({
 }: GradientButtonProps) {
   const { colors } = useTheme();
 
-  const gradientColors = variant === 'orange' ? colors.orangeGradient : colors.blueGradient;
+  const gradientColors: [string, string, ...string[]] = variant === 'orange' 
+    ? colors.orangeGradient as [string, string, ...string[]]
+    : colors.blueGradient as [string, string, ...string[]];
   
   const buttonStyle = [
     styles.button,

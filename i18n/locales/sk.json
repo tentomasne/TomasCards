@@ -199,6 +199,13 @@
       "operationBlocked": "Táto operácia vyžaduje internetové pripojenie pri používaní cloudového úložiska. Pripojte sa na internet a skúste znova.",
       "banner": "Pre cloudové funkcie je potrebné internetové pripojenie"
     },
+    "auth": {
+      "required": {
+        "title": "Vyžaduje sa overenie",
+        "message": "Vaša relácia cloudového úložiska vypršala. Prihláste sa znova pre pokračovanie synchronizácie kariet.",
+        "reauth": "Prihlásiť sa znova"
+      }
+    },
     "provider": {
       "title": "Cloud poskytovateľ",
       "subtitle": "Zvoľte si službu pre uloženie dát",

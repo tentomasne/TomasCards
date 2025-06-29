@@ -59,6 +59,7 @@ export default function HomeScreen() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [lastCloudSync, setLastCloudSync] = useState<number>(0);
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
 
   // Single initialization effect
   useEffect(() => {
@@ -69,6 +70,13 @@ export default function HomeScreen() {
         // Initialize storage manager
         await storageManager.initialize();
         if (!isMounted) return;
+
+        // Set up authentication required callback
+        storageManager.setAuthenticationRequiredCallback(() => {
+          if (isMounted) {
+            setShowAuthRequired(true);
+          }
+        });
 
         const currentStorageMode = storageManager.getStorageMode();
         setStorageMode(currentStorageMode);
@@ -122,6 +130,8 @@ export default function HomeScreen() {
       setSyncStatus("synced");
     } else if (!isOnline) {
       setSyncStatus("offline");
+    } else if (!storageManager.isAuthenticationValid()) {
+      setSyncStatus("error");
     } else {
       setSyncStatus("synced");
     }
@@ -138,7 +148,7 @@ export default function HomeScreen() {
       setLoading(prev => ({ ...prev, initial: false }));
 
       // Step 2: If cloud mode and online, sync with cloud in background
-      if (storageMode === "cloud" && isOnline) {
+      if (storageMode === "cloud" && isOnline && storageManager.isAuthenticationValid()) {
         setLoading(prev => ({ ...prev, cloud: true }));
         setSyncStatus("syncing");
 
@@ -187,6 +197,36 @@ export default function HomeScreen() {
     return aIds.size === bIds.size && [...aIds].every(id => bIds.has(id));
   };
 
+  // Handle authentication required
+  const handleAuthRequired = () => {
+    setShowAuthRequired(false);
+    
+    Alert.alert(
+      t("storage.auth.required.title"),
+      t("storage.auth.required.message"),
+      [
+        { 
+          text: t("common.buttons.cancel"), 
+          style: "cancel" 
+        },
+        {
+          text: t("storage.auth.required.reauth"),
+          onPress: () => {
+            // Navigate to settings to re-authenticate
+            router.push('/settings');
+          }
+        }
+      ]
+    );
+  };
+
+  // Show auth required alert when needed
+  useEffect(() => {
+    if (showAuthRequired) {
+      handleAuthRequired();
+    }
+  }, [showAuthRequired]);
+
   // Manual cloud sync function
   const handleManualCloudSync = useCallback(async () => {
     if (storageMode !== "cloud") {
@@ -203,6 +243,21 @@ export default function HomeScreen() {
         t("storage.offline.title"),
         t("storage.offline.message"),
         [{ text: t("common.buttons.ok") }]
+      );
+      return;
+    }
+
+    if (!storageManager.isAuthenticationValid()) {
+      Alert.alert(
+        t("storage.auth.required.title"),
+        t("storage.auth.required.message"),
+        [
+          { text: t("common.buttons.cancel"), style: "cancel" },
+          {
+            text: t("storage.auth.required.reauth"),
+            onPress: () => router.push('/settings')
+          }
+        ]
       );
       return;
     }
@@ -286,7 +341,7 @@ export default function HomeScreen() {
 
   // Check for sync conflicts only when switching to cloud mode and after initial load
   useEffect(() => {
-    if (!isInitialized || !isOnline || storageMode !== "cloud" || loading.initial || cards.length === 0) {
+    if (!isInitialized || !isOnline || storageMode !== "cloud" || loading.initial || cards.length === 0 || !storageManager.isAuthenticationValid()) {
       return;
     }
 
@@ -480,6 +535,23 @@ export default function HomeScreen() {
                   );
                   return;
                 }
+
+                // Check if authentication is required
+                if (storageMode === "cloud" && !storageManager.isAuthenticationValid()) {
+                  Alert.alert(
+                    t("storage.auth.required.title"),
+                    t("storage.auth.required.message"),
+                    [
+                      { text: t("common.buttons.cancel"), style: "cancel" },
+                      {
+                        text: t("storage.auth.required.reauth"),
+                        onPress: () => router.push('/settings')
+                      }
+                    ]
+                  );
+                  return;
+                }
+
                 router.push(`/card/${item.id}`);
               }}
             />
@@ -518,10 +590,10 @@ export default function HomeScreen() {
         leftElement={
           <TouchableOpacity
             onPress={handleManualCloudSync}
-            disabled={isManualSyncing || storageMode === "local"}
+            disabled={isManualSyncing || storageMode === "local" || !storageManager.isAuthenticationValid()}
             style={[
               styles.syncButton,
-              (isManualSyncing || storageMode === "local") && styles.syncButtonDisabled
+              (isManualSyncing || storageMode === "local" || !storageManager.isAuthenticationValid()) && styles.syncButtonDisabled
             ]}
           >
             <SyncStatusIndicator

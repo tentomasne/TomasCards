@@ -68,7 +68,11 @@ export default function TabLayout() {
               );
             }
             return (
-              <TouchableOpacity {...props} style={props.style}>
+              <TouchableOpacity 
+                {...props} 
+                style={props.style}
+                delayLongPress={props.delayLongPress || undefined}
+              >
                 {props.children}
               </TouchableOpacity>
             );

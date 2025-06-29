@@ -16,12 +16,12 @@ export default function GradientBackground({
 }: GradientBackgroundProps) {
   const { colors, isDark } = useTheme();
 
-  const getGradientColors = () => {
+  const getGradientColors = (): [string, string, ...string[]] => {
     switch (variant) {
       case 'orange':
-        return colors.orangeGradient;
+        return colors.orangeGradient as [string, string, ...string[]];
       case 'blue':
-        return colors.blueGradient;
+        return colors.blueGradient as [string, string, ...string[]];
       case 'subtle':
       default:
         return isDark 

@@ -56,6 +56,7 @@ export class StorageManager {
   private tokenData: GoogleTokenData | null = null;
   private cloudStorage: CloudStorage;
   private isRefreshingToken = false;
+  private authenticationRequiredCallback?: () => void;
 
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
@@ -70,6 +71,10 @@ export class StorageManager {
       this.provider,
       this.provider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
     );
+  }
+
+  setAuthenticationRequiredCallback(callback: () => void): void {
+    this.authenticationRequiredCallback = callback;
   }
 
   async initialize(): Promise<void> {
@@ -130,9 +135,13 @@ export class StorageManager {
     try {
       if (this.provider === CloudStorageProvider.GoogleDrive && this.accessToken) {
         // Check if token needs refresh before configuring
-        if (this.tokenData?.expiresAt && Date.now() >= this.tokenData.expiresAt) {
+        if (this.isTokenExpired()) {
           logInfo('Access token expired, attempting refresh', '', 'StorageManager');
-          await this.refreshAccessToken();
+          const refreshed = await this.refreshAccessToken();
+          if (!refreshed) {
+            logWarning('Token refresh failed, authentication required', '', 'StorageManager');
+            return;
+          }
         }
 
         // Set the access token for Google Drive with proper scope
@@ -154,6 +163,16 @@ export class StorageManager {
     }
   }
 
+  private isTokenExpired(): boolean {
+    if (!this.tokenData?.expiresAt) {
+      return false; // If no expiry info, assume it's still valid
+    }
+    
+    // Add 5 minute buffer before actual expiry
+    const bufferTime = 5 * 60 * 1000; // 5 minutes in milliseconds
+    return Date.now() >= (this.tokenData.expiresAt - bufferTime);
+  }
+
   private async refreshAccessToken(): Promise<boolean> {
     if (this.isRefreshingToken) {
       logInfo('Token refresh already in progress', '', 'StorageManager');
@@ -161,7 +180,8 @@ export class StorageManager {
     }
 
     if (!this.tokenData?.refreshToken) {
-      logWarning('No refresh token available', '', 'StorageManager');
+      logWarning('No refresh token available, authentication required', '', 'StorageManager');
+      this.triggerAuthenticationRequired();
       return false;
     }
 
@@ -177,13 +197,23 @@ export class StorageManager {
         },
         body: new URLSearchParams({
           client_id: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB || '',
-          client_secret: '', // Note: For mobile apps, this might be empty
           refresh_token: this.tokenData.refreshToken,
           grant_type: 'refresh_token',
         }),
       });
 
       if (!response.ok) {
+        const errorText = await response.text();
+        logError('Token refresh HTTP error', `${response.status}: ${errorText}`, 'StorageManager');
+        
+        // If refresh token is invalid, clear tokens and require re-authentication
+        if (response.status === 400 || response.status === 401) {
+          logWarning('Refresh token invalid, clearing tokens', '', 'StorageManager');
+          await this.clearTokenData();
+          this.triggerAuthenticationRequired();
+          return false;
+        }
+        
         throw new Error(`Token refresh failed: ${response.status} ${response.statusText}`);
       }
 
@@ -224,8 +254,9 @@ export class StorageManager {
       console.error('Failed to refresh access token:', error);
       logError('Failed to refresh access token', error instanceof Error ? error.message : String(error), 'StorageManager');
       
-      // Clear invalid token data
+      // Clear invalid token data and require re-authentication
       await this.clearTokenData();
+      this.triggerAuthenticationRequired();
       return false;
     } finally {
       this.isRefreshingToken = false;
@@ -240,22 +271,28 @@ export class StorageManager {
     logInfo('Token data cleared', '', 'StorageManager');
   }
 
+  private triggerAuthenticationRequired(): void {
+    if (this.authenticationRequiredCallback) {
+      logInfo('Triggering authentication required callback', '', 'StorageManager');
+      this.authenticationRequiredCallback();
+    }
+  }
+
   private async handleCloudStorageError(error: any): Promise<boolean> {
     if (error instanceof CloudStorageError) {
       switch (error.code) {
         case CloudStorageErrorCode.AUTHENTICATION_FAILED:
         case CloudStorageErrorCode.INVALID_SCOPE:
-          logWarning('Authentication error detected, attempting token refresh', error.message, 'StorageManager');
+          logWarning('Authentication error detected', error.message, 'StorageManager');
           
           if (this.provider === CloudStorageProvider.GoogleDrive) {
+            // First try to refresh the token
             const refreshed = await this.refreshAccessToken();
             if (refreshed) {
               logInfo('Token refreshed successfully after auth error', '', 'StorageManager');
               return true; // Indicate that the operation should be retried
             } else {
               logError('Token refresh failed after auth error', 'User needs to re-authenticate', 'StorageManager');
-              // Clear invalid tokens
-              await this.clearTokenData();
               return false;
             }
           }
@@ -327,12 +364,12 @@ export class StorageManager {
     await AsyncStorage.setItem(GOOGLE_TOKEN_DATA_KEY, JSON.stringify(this.tokenData));
     
     await this.configureCloudStorage();
-    logInfo('Google Drive access token set', `Expires in: ${expiresIn}s`, 'StorageManager');
+    logInfo('Google Drive access token set', `Expires in: ${expiresIn}s, Has refresh: ${!!refreshToken}`, 'StorageManager');
   }
 
   async getAccessToken(): Promise<string | null> {
     // Check if token needs refresh
-    if (this.tokenData?.expiresAt && Date.now() >= this.tokenData.expiresAt) {
+    if (this.isTokenExpired()) {
       logInfo('Token expired, attempting refresh', '', 'StorageManager');
       const refreshed = await this.refreshAccessToken();
       if (!refreshed) {
@@ -347,11 +384,30 @@ export class StorageManager {
     return this.tokenData;
   }
 
+  isAuthenticationValid(): boolean {
+    if (this.provider === CloudStorageProvider.ICloud) {
+      return true; // iCloud uses system authentication
+    }
+    
+    if (this.provider === CloudStorageProvider.GoogleDrive) {
+      return !!this.accessToken && (!this.isTokenExpired() || !!this.tokenData?.refreshToken);
+    }
+    
+    return false;
+  }
+
   private async cloudAccessible(): Promise<boolean> {
     try {
       // For Google Drive, we need an access token
       if (this.provider === CloudStorageProvider.GoogleDrive && !this.accessToken) {
         logWarning('Google Drive not accessible - no access token', '', 'StorageManager');
+        return false;
+      }
+
+      // Check if token is expired and can't be refreshed
+      if (this.provider === CloudStorageProvider.GoogleDrive && this.isTokenExpired() && !this.tokenData?.refreshToken) {
+        logWarning('Google Drive not accessible - token expired and no refresh token', '', 'StorageManager');
+        this.triggerAuthenticationRequired();
         return false;
       }
 
@@ -629,7 +685,7 @@ export class StorageManager {
 
     // If cloud mode, try to sync to cloud
     if (this.storageMode === 'cloud') {
-      if (isOnline) {
+      if (isOnline && this.isAuthenticationValid()) {
         try {
           await this.saveCloudCard(card);
           logInfo('Card saved to cloud successfully', `ID: ${card.id}`, 'StorageManager');
@@ -640,7 +696,7 @@ export class StorageManager {
           await this.queueOperation({ type: 'create', card });
         }
       } else {
-        // Queue for later sync when online
+        // Queue for later sync when online or authenticated
         await this.queueOperation({ type: 'create', card });
         logInfo('Card save queued for later sync', `ID: ${card.id}`, 'StorageManager');
       }
@@ -662,7 +718,7 @@ export class StorageManager {
 
     // If cloud mode, try to sync to cloud
     if (this.storageMode === 'cloud') {
-      if (isOnline) {
+      if (isOnline && this.isAuthenticationValid()) {
         try {
           await this.updateCloudCard(card);
           logInfo('Card updated in cloud successfully', `ID: ${card.id}`, 'StorageManager');
@@ -673,7 +729,7 @@ export class StorageManager {
           await this.queueOperation({ type: 'update', card });
         }
       } else {
-        // Queue for later sync when online
+        // Queue for later sync when online or authenticated
         await this.queueOperation({ type: 'update', card });
         logInfo('Card update queued for later sync', `ID: ${card.id}`, 'StorageManager');
       }
@@ -698,7 +754,7 @@ export class StorageManager {
 
     // If cloud mode, try to sync to cloud
     if (this.storageMode === 'cloud') {
-      if (isOnline) {
+      if (isOnline && this.isAuthenticationValid()) {
         try {
           await this.toggleCloudCardFavorite(cardId, isFavorite);
           logInfo('Card favorite toggled in cloud successfully', `ID: ${cardId}`, 'StorageManager');
@@ -709,7 +765,7 @@ export class StorageManager {
           await this.queueOperation({ type: 'favorite', cardId, isFavorite });
         }
       } else {
-        // Queue for later sync when online
+        // Queue for later sync when online or authenticated
         await this.queueOperation({ type: 'favorite', cardId, isFavorite });
         logInfo('Favorite toggle queued for later sync', `ID: ${cardId}`, 'StorageManager');
       }
@@ -728,7 +784,7 @@ export class StorageManager {
 
     // If cloud mode, try to sync to cloud
     if (this.storageMode === 'cloud') {
-      if (isOnline) {
+      if (isOnline && this.isAuthenticationValid()) {
         try {
           await this.deleteCloudCard(cardId);
           logInfo('Card deleted from cloud successfully', `ID: ${cardId}`, 'StorageManager');
@@ -738,7 +794,7 @@ export class StorageManager {
           await this.queueOperation({ type: 'delete', cardId });
         }
       } else {
-        // Queue for later sync when online
+        // Queue for later sync when online or authenticated
         await this.queueOperation({ type: 'delete', cardId });
         logInfo('Card deletion queued for later sync', `ID: ${cardId}`, 'StorageManager');
       }
