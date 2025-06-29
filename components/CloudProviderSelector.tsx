@@ -5,18 +5,19 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Button,
-  Platform,
+  ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { useTranslation } from 'react-i18next';
-import { Check, Cloud } from 'lucide-react-native';
-import { CloudStorageProvider } from 'react-native-cloud-storage';
+import { Check, Cloud, AlertTriangle } from 'lucide-react-native';
+import { CloudStorageProvider, CloudStorage } from 'react-native-cloud-storage';
 import { useTheme } from '@/hooks/useTheme';
 import { logError, logInfo, logWarning } from '@/utils/debugManager';
 import { storageManager } from '@/utils/storageManager';
+import * as Updates from 'expo-updates';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -25,6 +26,7 @@ interface CloudProviderSelectorProps {
   currentProvider: CloudStorageProvider;
   onSelect: (provider: CloudStorageProvider) => Promise<void>;
   onClose: () => void;
+  shouldReloadAfterSelection?: boolean; // New prop to control reload behavior
 }
 
 export default function CloudProviderSelector({
@@ -32,12 +34,16 @@ export default function CloudProviderSelector({
   currentProvider,
   onSelect,
   onClose,
+  shouldReloadAfterSelection = false, // Default to false for backward compatibility
 }: CloudProviderSelectorProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const [selected, setSelected] = useState<CloudStorageProvider>(currentProvider);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [iCloudAvailable, setICloudAvailable] = useState<boolean | null>(null);
+  const [iCloudError, setICloudError] = useState<string | null>(null);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
@@ -70,8 +76,52 @@ export default function CloudProviderSelector({
 
     if (visible) {
       checkExistingToken();
+      checkICloudAvailability();
     }
   }, [visible]);
+
+  // Check iCloud availability
+  const checkICloudAvailability = async () => {
+    if (Platform.OS !== 'ios') {
+      setICloudAvailable(false);
+      setICloudError('iCloud is only available on iOS devices');
+      return;
+    }
+
+    try {
+      logInfo('Checking iCloud availability', '', 'CloudProviderSelector');
+      
+      // Create a temporary CloudStorage instance to test iCloud
+      const testCloudStorage = new CloudStorage(CloudStorageProvider.ICloud);
+      
+      // Try to check if iCloud is available by testing a simple operation
+      try {
+        await testCloudStorage.exists('test-availability-check.txt');
+        setICloudAvailable(true);
+        setICloudError(null);
+        logInfo('iCloud is available', '', 'CloudProviderSelector');
+      } catch (error: any) {
+        logWarning('iCloud availability check failed', error.message, 'CloudProviderSelector');
+        
+        // Parse the error to provide a user-friendly message
+        if (error.message?.includes('not signed in') || error.message?.includes('account')) {
+          setICloudError('Please sign in to iCloud in your device settings');
+        } else if (error.message?.includes('disabled') || error.message?.includes('restricted')) {
+          setICloudError('iCloud Drive is disabled. Please enable it in Settings');
+        } else if (error.message?.includes('network') || error.message?.includes('connection')) {
+          setICloudError('No internet connection. Please check your network');
+        } else {
+          setICloudError('iCloud is not available on this device');
+        }
+        
+        setICloudAvailable(false);
+      }
+    } catch (error) {
+      logError('Failed to check iCloud availability', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
+      setICloudAvailable(false);
+      setICloudError('Unable to check iCloud availability');
+    }
+  };
 
   useEffect(() => {
     logInfo('Google auth response received', JSON.stringify(response), 'CloudProviderSelector');
@@ -117,6 +167,35 @@ export default function CloudProviderSelector({
       setIsAuthenticating(false);
     }
   }, [response]);
+
+  const reloadApp = async () => {
+    try {
+      if (Platform.OS === 'web') {
+        // For web, reload the page
+        window.location.reload();
+      } else {
+        // For native, try to reload using Expo Updates
+        try {
+          await Updates.reloadAsync();
+        } catch (updateError) {
+          // If Updates.reloadAsync fails, show a message to manually restart
+          Alert.alert(
+            'Restart Required',
+            'Please close and reopen the app to complete the setup.',
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    } catch (error) {
+      console.error('Failed to reload app:', error);
+      // Fallback: show manual restart message
+      Alert.alert(
+        'Restart Required',
+        'Please close and reopen the app to complete the setup.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   const handleTokenReceived = async (token: string, refreshToken?: string, expiresIn?: number) => {
     try {
@@ -199,13 +278,45 @@ export default function CloudProviderSelector({
     }
   };
 
+  const handleICloudSelect = () => {
+    if (!iCloudAvailable) {
+      // Show error message when trying to select unavailable iCloud
+      if (Platform.OS === 'web') {
+        alert(`iCloud Unavailable: ${iCloudError}`);
+      } else {
+        Alert.alert(
+          'iCloud Unavailable',
+          iCloudError || 'iCloud is not available on this device',
+          [
+            { text: 'OK', style: 'cancel' },
+            {
+              text: 'Open Settings',
+              onPress: () => {
+                // On iOS, we could potentially open Settings app
+                if (Platform.OS === 'ios') {
+                  // This would require additional setup to open Settings
+                  Alert.alert(
+                    'Open Settings',
+                    'Please go to Settings > [Your Name] > iCloud > iCloud Drive and make sure it\'s enabled.',
+                    [{ text: 'OK' }]
+                  );
+                }
+              }
+            }
+          ]
+        );
+      }
+      return;
+    }
+    
+    setSelected(CloudStorageProvider.ICloud);
+  };
+
   const handleConfirm = async () => {
-    logInfo('Confirming provider selection', `Provider: ${selected}, Has token: ${!!accessToken}`, 'CloudProviderSelector');
+    logInfo('Confirming provider selection', `Provider: ${selected}, Has token: ${!!accessToken}, Should reload: ${shouldReloadAfterSelection}`, 'CloudProviderSelector');
     
     // Check if Google Drive is selected but not authenticated
     if (selected === CloudStorageProvider.GoogleDrive && !accessToken) {
-      logWarning('Google Drive selected but not authenticated', '', 'CloudProviderSelector');
-      
       if (Platform.OS === 'web') {
         alert('Please authenticate with Google Drive first.');
       } else {
@@ -218,9 +329,50 @@ export default function CloudProviderSelector({
       return;
     }
 
+    // Check if iCloud is selected but not available
+    if (selected === CloudStorageProvider.ICloud && !iCloudAvailable) {
+      if (Platform.OS === 'web') {
+        alert(`iCloud Unavailable: ${iCloudError}`);
+      } else {
+        Alert.alert(
+          'iCloud Unavailable',
+          iCloudError || 'iCloud is not available on this device',
+          [{ text: 'OK' }]
+        );
+      }
+      return;
+    }
+
+    setIsProcessing(true);
+
     try {
       await onSelect(selected);
       logInfo('Provider selection confirmed successfully', `Provider: ${selected}`, 'CloudProviderSelector');
+      
+      // If we should reload after selection (e.g., when switching from local to cloud)
+      if (shouldReloadAfterSelection) {
+        const successMessage = `Successfully set up ${selected === CloudStorageProvider.ICloud ? 'iCloud' : 'Google Drive'} storage. The app will now reload.`;
+        
+        if (Platform.OS === 'web') {
+          alert(successMessage);
+          await reloadApp();
+        } else {
+          Alert.alert(
+            'Setup Complete',
+            successMessage,
+            [
+              {
+                text: 'Reload Now',
+                onPress: reloadApp,
+              }
+            ],
+            { cancelable: false }
+          );
+        }
+      } else {
+        // Just close the modal without reloading
+        onClose();
+      }
     } catch (error) {
       logError('Failed to confirm provider selection', error instanceof Error ? error.message : String(error), 'CloudProviderSelector');
       
@@ -233,6 +385,8 @@ export default function CloudProviderSelector({
           [{ text: 'OK' }]
         );
       }
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -269,36 +423,53 @@ export default function CloudProviderSelector({
                   borderColor: colors.accent,
                   borderWidth: 2,
                 },
+                !iCloudAvailable && styles.disabledOption,
               ]}
-              onPress={() => setSelected(CloudStorageProvider.ICloud)}
+              onPress={handleICloudSelect}
+              disabled={isAuthenticating || isProcessing}
             >
               <View style={styles.optionHeader}>
-                <Cloud size={24} color={colors.textPrimary} />
-                <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>
+                <Cloud size={24} color={!iCloudAvailable ? colors.textHint : colors.textPrimary} />
+                <Text style={[
+                  styles.optionTitle, 
+                  { color: !iCloudAvailable ? colors.textHint : colors.textPrimary }
+                ]}>
                   {t('storage.provider.icloud.title')}
                 </Text>
                 <View style={styles.badges}>
-                  <View
-                    style={[
-                      styles.recommendedBadge,
-                      { backgroundColor: colors.accent },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.recommendedText, { color: colors.textPrimary }]}
-                    >
-                      {t('storage.mode.recommended')}
-                    </Text>
-                  </View>
-                  {selected === CloudStorageProvider.ICloud && (
+                  {iCloudAvailable === null && (
+                    <ActivityIndicator size="small" color={colors.accent} />
+                  )}
+                  {iCloudAvailable === false && (
+                    <View style={[styles.errorBadge, { backgroundColor: colors.error }]}>
+                      <AlertTriangle size={12} color={colors.textPrimary} />
+                      <Text style={[styles.errorText, { color: colors.textPrimary }]}>
+                        Unavailable
+                      </Text>
+                    </View>
+                  )}
+                  {iCloudAvailable === true && (
+                    <View style={[styles.recommendedBadge, { backgroundColor: colors.accent }]}>
+                      <Text style={[styles.recommendedText, { color: colors.textPrimary }]}>
+                        {t('storage.mode.recommended')}
+                      </Text>
+                    </View>
+                  )}
+                  {selected === CloudStorageProvider.ICloud && iCloudAvailable && (
                     <Check size={20} color={colors.accent} />
                   )}
                 </View>
               </View>
               <Text
-                style={[styles.optionDescription, { color: colors.textSecondary }]}
+                style={[
+                  styles.optionDescription, 
+                  { color: !iCloudAvailable ? colors.textHint : colors.textSecondary }
+                ]}
               >
-                {t('storage.provider.icloud.description')}
+                {iCloudAvailable === false && iCloudError 
+                  ? iCloudError 
+                  : t('storage.provider.icloud.description')
+                }
               </Text>
             </TouchableOpacity>
           )}
@@ -313,6 +484,7 @@ export default function CloudProviderSelector({
               },
             ]}
             onPress={() => setSelected(CloudStorageProvider.GoogleDrive)}
+            disabled={isAuthenticating || isProcessing}
           >
             <View style={styles.optionHeader}>
               <Cloud size={24} color={colors.textPrimary} />
@@ -354,12 +526,13 @@ export default function CloudProviderSelector({
                 onPress={handleGoogleLogin}
                 disabled={!request || isAuthenticating}
               >
-                <Text style={[styles.loginButtonText, { color: colors.textPrimary }]}>
-                  {isAuthenticating 
-                    ? 'Authenticating...' 
-                    : t('storage.provider.googledrive.login')
-                  }
-                </Text>
+                {isAuthenticating ? (
+                  <ActivityIndicator size="small" color={colors.textPrimary} />
+                ) : (
+                  <Text style={[styles.loginButtonText, { color: colors.textPrimary }]}>
+                    {t('storage.provider.googledrive.login')}
+                  </Text>
+                )}
               </TouchableOpacity>
             )}
           </TouchableOpacity>
@@ -367,24 +540,41 @@ export default function CloudProviderSelector({
           <TouchableOpacity
             style={[
               styles.closeButton, 
-              { backgroundColor: colors.backgroundMedium },
-              (selected === CloudStorageProvider.GoogleDrive && !accessToken) && styles.closeButtonDisabled
+              { backgroundColor: colors.accent },
+              (
+                (selected === CloudStorageProvider.GoogleDrive && !accessToken) ||
+                (selected === CloudStorageProvider.ICloud && !iCloudAvailable)
+              ) && styles.closeButtonDisabled,
+              (isAuthenticating || isProcessing) && styles.closeButtonDisabled
             ]}
             onPress={handleConfirm}
-            disabled={selected === CloudStorageProvider.GoogleDrive && !accessToken}
+            disabled={
+              (selected === CloudStorageProvider.GoogleDrive && !accessToken) || 
+              (selected === CloudStorageProvider.ICloud && !iCloudAvailable) ||
+              isAuthenticating || 
+              isProcessing
+            }
           >
-            <Text style={[
-              styles.closeButtonText, 
-              { color: colors.textPrimary },
-              (selected === CloudStorageProvider.GoogleDrive && !accessToken) && { opacity: 0.5 }
-            ]}>
-              {t('common.buttons.confirm')}
-            </Text>
+            {isProcessing ? (
+              <ActivityIndicator size="small" color={colors.textPrimary} />
+            ) : (
+              <Text style={[
+                styles.closeButtonText, 
+                { color: colors.textPrimary },
+                (
+                  (selected === CloudStorageProvider.GoogleDrive && !accessToken) ||
+                  (selected === CloudStorageProvider.ICloud && !iCloudAvailable)
+                ) && { opacity: 0.5 }
+              ]}>
+                {shouldReloadAfterSelection ? 'Complete Setup' : t('common.buttons.confirm')}
+              </Text>
+            )}
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: colors.backgroundMedium }]}
             onPress={onClose}
+            disabled={isAuthenticating || isProcessing}
           >
             <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
               {t('common.buttons.close')}
@@ -428,6 +618,9 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     marginBottom: 16,
   },
+  disabledOption: {
+    opacity: 0.6,
+  },
   optionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,6 +653,18 @@ const styles = StyleSheet.create({
   },
   authenticatedText: {
     fontSize: 12,
+    fontWeight: '600',
+  },
+  errorBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  errorText: {
+    fontSize: 10,
     fontWeight: '600',
   },
   optionDescription: {

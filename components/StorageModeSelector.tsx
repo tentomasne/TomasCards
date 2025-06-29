@@ -78,17 +78,17 @@ export default function StorageModeSelector({
 
     // Show warning when switching from local to cloud
     if (currentMode === 'local' && mode === 'cloud') {
-      const confirmMessage = `${t('storage.mode.warning.title')}\n\n${t('storage.mode.warning.message')}\n\nThe app will reload after the change.`;
+      const confirmMessage = `${t('storage.mode.warning.title')}\n\n${t('storage.mode.warning.message')}\n\nYou'll be able to select your cloud provider next.`;
       
       if (Platform.OS === 'web') {
         const confirmed = window.confirm(confirmMessage);
         if (confirmed) {
-          await handleModeChangeWithReload(mode);
+          await handleModeChange(mode);
         }
       } else {
         Alert.alert(
           t('storage.mode.warning.title'),
-          `${t('storage.mode.warning.message')}\n\nThe app will reload after the change.`,
+          `${t('storage.mode.warning.message')}\n\nYou'll be able to select your cloud provider next.`,
           [
             {
               text: t('common.buttons.cancel'),
@@ -101,17 +101,17 @@ export default function StorageModeSelector({
             {
               text: t('storage.mode.warning.confirm'),
               style: 'destructive',
-              onPress: () => handleModeChangeWithReload(mode),
+              onPress: () => handleModeChange(mode),
             },
           ]
         );
       }
     } else {
-      await handleModeChangeWithReload(mode);
+      await handleModeChange(mode);
     }
   };
 
-  const handleModeChangeWithReload = async (mode: StorageMode) => {
+  const handleModeChange = async (mode: StorageMode) => {
     setIsProcessing(true);
     setSelectedMode(mode);
     
@@ -119,26 +119,31 @@ export default function StorageModeSelector({
       // Apply the storage mode change
       await onSelect(mode);
       
-      // Show success message and reload
-      const successMessage = mode === 'cloud' 
-        ? 'Switched to cloud storage. The app will now reload.'
-        : 'Switched to local storage. The app will now reload.';
-      
-      if (Platform.OS === 'web') {
-        alert(successMessage);
-        await reloadApp();
+      // If switching to local mode, reload immediately
+      if (mode === 'local') {
+        const successMessage = 'Switched to local storage. The app will now reload.';
+        
+        if (Platform.OS === 'web') {
+          alert(successMessage);
+          await reloadApp();
+        } else {
+          Alert.alert(
+            'Storage Mode Changed',
+            successMessage,
+            [
+              {
+                text: 'Reload Now',
+                onPress: reloadApp,
+              }
+            ],
+            { cancelable: false }
+          );
+        }
       } else {
-        Alert.alert(
-          'Storage Mode Changed',
-          successMessage,
-          [
-            {
-              text: 'Reload Now',
-              onPress: reloadApp,
-            }
-          ],
-          { cancelable: false }
-        );
+        // For cloud mode, just close the modal - provider selector will open next
+        // Don't reload yet - wait for provider selection
+        setIsProcessing(false);
+        // The parent component will handle opening the provider selector
       }
     } catch (error) {
       console.error('Failed to change storage mode:', error);
@@ -255,13 +260,25 @@ export default function StorageModeSelector({
             </TouchableOpacity>
           </View>
 
-          {/* Warning about app reload */}
-          <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
-            <AlertTriangle size={16} color={colors.warning} />
-            <Text style={[styles.warningText, { color: colors.textSecondary }]}>
-              Changing storage mode will reload the app to ensure all settings are properly applied.
-            </Text>
-          </View>
+          {/* Warning about app reload - only show for local mode */}
+          {selectedMode === 'local' && (
+            <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
+              <AlertTriangle size={16} color={colors.warning} />
+              <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+                Switching to local storage will reload the app to ensure all settings are properly applied.
+              </Text>
+            </View>
+          )}
+
+          {/* Info about cloud provider selection */}
+          {selectedMode === 'cloud' && currentMode === 'local' && (
+            <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
+              <Cloud size={16} color={colors.accent} />
+              <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+                After switching to cloud storage, you'll be able to select your preferred cloud provider (Apple iCloud or Google Drive).
+              </Text>
+            </View>
+          )}
 
           <TouchableOpacity
             style={[

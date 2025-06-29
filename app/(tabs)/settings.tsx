@@ -42,6 +42,7 @@ export default function SettingsScreen() {
   const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
   const [versionTapCount, setVersionTapCount] = useState(0);
+  const [shouldReloadAfterProviderSelection, setShouldReloadAfterProviderSelection] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     sortOption: 'alphabetical',
     hapticFeedback: true,
@@ -98,9 +99,13 @@ export default function SettingsScreen() {
       await storageManager.setStorageMode(mode);
       setStorageMode(mode);
       setShowStorageSelector(false);
+      
+      // If switching to cloud, show provider selector and set flag to reload after selection
       if (mode === 'cloud') {
+        setShouldReloadAfterProviderSelection(true);
         setShowProviderSelector(true);
       }
+      // If switching to local, the StorageModeSelector will handle the reload
     } catch (error) {
       console.error('Failed to change storage mode:', error);
       
@@ -122,7 +127,14 @@ export default function SettingsScreen() {
   const handleProviderSelect = async (prov: CloudStorageProvider) => {
     setProvider(prov);
     await storageManager.setProvider(prov);
+    
+    // Don't close the modal here - let CloudProviderSelector handle it
+    // The reload will happen in CloudProviderSelector if shouldReloadAfterProviderSelection is true
+  };
+
+  const handleProviderSelectorClose = () => {
     setShowProviderSelector(false);
+    setShouldReloadAfterProviderSelection(false);
   };
 
   const handleDebugLogs = () => {
@@ -207,7 +219,10 @@ export default function SettingsScreen() {
         {storageMode === 'cloud' && (
           <TouchableOpacity
             style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
-            onPress={() => setShowProviderSelector(true)}
+            onPress={() => {
+              setShouldReloadAfterProviderSelection(false); // Don't reload when changing provider from settings
+              setShowProviderSelector(true);
+            }}
           >
             <View style={styles.settingLeft}>
               <Database size={24} color={colors.textSecondary} />
@@ -394,7 +409,8 @@ export default function SettingsScreen() {
           visible={showProviderSelector}
           currentProvider={provider}
           onSelect={handleProviderSelect}
-          onClose={() => setShowProviderSelector(false)}
+          onClose={handleProviderSelectorClose}
+          shouldReloadAfterSelection={shouldReloadAfterProviderSelection}
         />
       )}
     </ScrollView>
