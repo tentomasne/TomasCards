@@ -1,19 +1,12 @@
 google drive warning that it is slow (1-2 seconds)
 more cards
 fix sychronization X times when switching cards
-refreshing whole app - done
-apple if not logge din check - done
 if not authenticated with google prompt a google auth
-remove the modal debug and error - done
-first welcome bett - done
-orange mode - done
-error screen -done
-
+add pallet color select dfor debug
 same background cards in index cards
 
 ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat
 
-opravenie crashovania appky - done
 ------------------------
 UPDATE LATER:
 widget
