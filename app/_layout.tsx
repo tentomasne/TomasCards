@@ -7,29 +7,20 @@ import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { initializeLanguage } from '@/utils/i18n';
 import { loadSettings } from '@/utils/storage';
-import { debugManager, DebugLog } from '@/utils/debugManager';
+import { debugManager } from '@/utils/debugManager';
 import SplashScreen from '@/components/SplashScreen';
-import DebugModal from '@/components/DebugModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   useFrameworkReady();
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [debugModalVisible, setDebugModalVisible] = useState(false);
-  const [currentDebugLog, setCurrentDebugLog] = useState<DebugLog | null>(null);
 
   useEffect(() => {
     async function initializeApp() {
       try {
         setLoadingMessage('Initializing debug system...');
         await debugManager.initialize();
-
-        // Set up debug modal callback
-        debugManager.setErrorModalCallback((log: DebugLog) => {
-          setCurrentDebugLog(log);
-          setDebugModalVisible(true);
-        });
 
         setLoadingMessage('Loading language...');
         await initializeLanguage();
@@ -50,11 +41,6 @@ export default function RootLayout() {
     initializeApp();
   }, []);
 
-  const handleCloseDebugModal = () => {
-    setDebugModalVisible(false);
-    setCurrentDebugLog(null);
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <ThemeProvider>
@@ -66,12 +52,6 @@ export default function RootLayout() {
               <Stack.Screen name="+not-found" options={{ headerShown: false }} />
             </Stack>
             <StatusBar style="auto" />
-            
-            <DebugModal
-              visible={debugModalVisible}
-              log={currentDebugLog}
-              onClose={handleCloseDebugModal}
-            />
           </GestureHandlerRootView>
         )}
       </ThemeProvider>

@@ -19,7 +19,6 @@ class DebugManager {
   private static instance: DebugManager;
   private logs: DebugLog[] = [];
   private isDebugMode: boolean = false;
-  private errorModalCallback?: (error: DebugLog) => void;
   private isLogging: boolean = false; // Prevent recursive logging
 
   static getInstance(): DebugManager {
@@ -135,10 +134,6 @@ class DebugManager {
     }
   }
 
-  setErrorModalCallback(callback: (error: DebugLog) => void): void {
-    this.errorModalCallback = callback;
-  }
-
   logError(message: string, details?: string, stack?: string, component?: string, extra?: any): void {
     // Prevent recursive logging
     if (this.isLogging) return;
@@ -161,11 +156,6 @@ class DebugManager {
       this.saveLogs().catch(err => {
         console.error('Failed to save error log:', err);
       });
-
-      // Show modal if debug mode is enabled and callback is set
-      if (this.isDebugMode && this.errorModalCallback) {
-        this.errorModalCallback(log);
-      }
 
       console.error(`[DEBUG] Error in ${component || 'Unknown'}: ${message}`, details);
     } finally {
@@ -195,11 +185,6 @@ class DebugManager {
       this.saveLogs().catch(err => {
         console.error('Failed to save warning log:', err);
       });
-
-      // Show modal if debug mode is enabled and callback is set
-      if (this.isDebugMode && this.errorModalCallback) {
-        this.errorModalCallback(log);
-      }
 
       console.warn(`[DEBUG] Warning in ${component || 'Unknown'}: ${message}`, details);
     } finally {
