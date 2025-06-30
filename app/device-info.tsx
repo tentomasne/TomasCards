@@ -271,7 +271,7 @@ export default function DeviceInfoScreen() {
   };
 
   const handleForceRefreshToken = async () => {
-    if (provider !== CloudStorageProvider.GoogleDrive) {
+    if (provider !== "googledrive") {
       if (Platform.OS === 'web') {
         alert('Token refresh is only available for Google Drive');
       } else {
@@ -304,7 +304,7 @@ export default function DeviceInfoScreen() {
     logInfo('Force refreshing Google Drive token', '', 'DeviceInfoScreen');
 
     try {
-      // Force refresh by calling the private method through a test
+      // Force refresh by calling the public method
       const success = await storageManager.refreshAccessToken();
       
       if (success) {

@@ -9,6 +9,7 @@ import {
 } from 'react-native-cloud-storage';
 import { LoyaltyCard } from './types';
 import { logError, logWarning, logInfo } from '@/utils/debugManager';
+import { Platform } from 'react-native';
 
 export type StorageMode = 'local' | 'cloud';
 export type SyncAction = 'replace_with_cloud' | 'merge' | 'keep_local';
@@ -204,7 +205,8 @@ export class StorageManager {
     }
   }
 
-  private async refreshAccessToken(): Promise<boolean> {
+  // Public method to force refresh token (for testing/debugging)
+  async refreshAccessToken(): Promise<boolean> {
     // If already refreshing, wait for the existing refresh to complete
     if (this.refreshPromise) {
       logInfo('Token refresh already in progress, waiting...', '', 'StorageManager');
@@ -234,27 +236,38 @@ export class StorageManager {
     try {
       logInfo('Attempting to refresh Google Drive access token', `Current token expires: ${this.getTokenExpiryString()}`, 'StorageManager');
 
-      // Determine the correct client ID based on platform
-      let clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS;
+      // Get the appropriate client ID based on platform
+      let clientId: string | undefined;
       
-      // You might want to detect platform and use appropriate client ID
-      // For now, using web client ID as it's most commonly used for refresh tokens
-      
-      if (!clientId) {
-        logError('No Google client ID configured', 'Missing EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB', 'StorageManager');
-        throw new Error('Google client ID not configured');
+      if (Platform.OS === 'web') {
+        clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_WEB;
+      } else if (Platform.OS === 'ios') {
+        clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS;
+      } else if (Platform.OS === 'android') {
+        clientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID;
       }
+
+      if (!clientId) {
+        logError('No Google client ID configured for platform', `Platform: ${Platform.OS}`, 'StorageManager');
+        throw new Error(`Google client ID not configured for platform: ${Platform.OS}`);
+      }
+
+      logInfo('Using client ID for token refresh', `Platform: ${Platform.OS}`, 'StorageManager');
+
+      const requestBody = new URLSearchParams({
+        client_id: clientId,
+        refresh_token: this.tokenData!.refreshToken!,
+        grant_type: 'refresh_token',
+      });
+
+      logInfo('Token refresh request prepared', `Body: ${requestBody.toString()}`, 'StorageManager');
 
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({
-          client_id: clientId,
-          refresh_token: this.tokenData!.refreshToken!,
-          grant_type: 'refresh_token',
-        }),
+        body: requestBody.toString(),
       });
 
       if (!response.ok) {
@@ -273,6 +286,7 @@ export class StorageManager {
       }
 
       const data = await response.json();
+      logInfo('Token refresh response received', `Has access_token: ${!!data.access_token}`, 'StorageManager');
 
       if (data.access_token) {
         // Update token data
