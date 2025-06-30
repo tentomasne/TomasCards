@@ -50,43 +50,7 @@ export default function NotFoundScreen() {
                 onPress={() => router.replace('/')}
                 style={styles.primaryButton}
               />
-              
-              <TouchableOpacity
-                style={[styles.secondaryButton, { backgroundColor: colors.backgroundMedium }]}
-                onPress={() => router.back()}
-              >
-                <ArrowLeft size={20} color={colors.textPrimary} />
-                <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>
-                  Go Back
-                </Text>
-              </TouchableOpacity>
             </View>
-
-            {/* Quick Links */}
-            <ModernCard style={styles.quickLinksCard}>
-              <Text style={[styles.quickLinksTitle, { color: colors.textPrimary }]}>
-                Quick Links
-              </Text>
-              <View style={styles.quickLinks}>
-                <Link href="/" asChild>
-                  <TouchableOpacity style={[styles.quickLink, { backgroundColor: colors.backgroundLight }]}>
-                    <Home size={20} color={colors.textSecondary} />
-                    <Text style={[styles.quickLinkText, { color: colors.textPrimary }]}>
-                      Cards
-                    </Text>
-                  </TouchableOpacity>
-                </Link>
-                
-                <Link href="/add" asChild>
-                  <TouchableOpacity style={[styles.quickLink, { backgroundColor: colors.backgroundLight }]}>
-                    <Search size={20} color={colors.textSecondary} />
-                    <Text style={[styles.quickLinkText, { color: colors.textPrimary }]}>
-                      Add Card
-                    </Text>
-                  </TouchableOpacity>
-                </Link>
-              </View>
-            </ModernCard>
 
             {/* Decorative Elements */}
             <View style={styles.decorativeElements}>

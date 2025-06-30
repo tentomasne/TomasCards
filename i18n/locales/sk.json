@@ -216,7 +216,8 @@
       "googledrive": {
         "title": "Google Drive",
         "description": "Synchronizácia cez Google účet",
-        "login": "Prihlásiť sa cez Google"
+        "login": "Prihlásiť sa cez Google",
+        "slow_warning": "(Poznámka: Google Drive môže byť pomalý a načítanie môže trvať 2-3 sekundy)"
       }
     }
   },

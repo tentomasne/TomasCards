@@ -212,7 +212,8 @@
       "googledrive": {
         "title": "Google Drive",
         "description": "Sync using your Google account",
-        "login": "Sign in with Google"
+        "login": "Sign in with Google",
+        "slow_warning": "(Note: Google Drive can be slow and may take 2-3 seconds to load)"
       }
     }
   },

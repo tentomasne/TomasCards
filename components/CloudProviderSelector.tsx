@@ -514,7 +514,7 @@ export default function CloudProviderSelector({
             <Text
               style={[styles.optionDescription, { color: colors.textSecondary }]}
             >
-              {t('storage.provider.googledrive.description')}
+              {t('storage.provider.googledrive.description')} {t('storage.provider.googledrive.slow_warning')}
             </Text>
             {selected === CloudStorageProvider.GoogleDrive && !accessToken && (
               <TouchableOpacity
