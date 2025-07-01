@@ -4,9 +4,11 @@ same background cards in index cards
 sync conflit local to cloud does not work
 ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat taky switch
 more languages - vlajky
-
+empty image not showing
+cloud provider defaultne da icloud aj ked je unavailable a ked dam close the cloud provider nech to da spat local storage
+ked nieje intenret nech neswitchuje storage mode 
 the delete does not works - snad fix idk nemam intenret
-
+if search result nothimg in add do not show popular or other stores
 ------------------------
 UPDATE LATER:
 widget

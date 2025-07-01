@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  Image,
   RefreshControl,
   TouchableOpacity,
   Alert,
