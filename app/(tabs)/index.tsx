@@ -526,16 +526,6 @@ export default function HomeScreen() {
             <LoyaltyCardComponent
               card={item}
               onPress={() => {
-                // Check if user is offline and using cloud storage
-                if (!isOnline && storageMode === "cloud") {
-                  Alert.alert(
-                    t("storage.offline.title"),
-                    t("storage.offline.operationBlocked"),
-                    [{ text: t("common.buttons.ok") }]
-                  );
-                  return;
-                }
-
                 // Check if authentication is required
                 if (storageMode === "cloud" && !storageManager.isAuthenticationValid()) {
                   Alert.alert(

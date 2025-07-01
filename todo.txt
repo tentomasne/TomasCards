@@ -5,6 +5,7 @@ the delete does not works
 sync conflit local to cloud does not work
 ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat taky switch
 more languages - vlajky
+
 ------------------------
 UPDATE LATER:
 widget
