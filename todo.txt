@@ -9,6 +9,7 @@ cloud provider defaultne da icloud aj ked je unavailable a ked dam close the clo
 ked nieje intenret nech neswitchuje storage mode 
 the delete does not works - snad fix idk nemam intenret
 if search result nothimg in add do not show popular or other stores
+
 ------------------------
 UPDATE LATER:
 widget

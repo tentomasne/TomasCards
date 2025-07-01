@@ -15,13 +15,13 @@ import { changeLanguage, getStoredLanguage } from '@/utils/i18n';
 import { lightHaptic } from '@/utils/feedback';
 
 const LANGUAGES = [
-  { code: 'en', name: 'English', nativeName: 'English' },
-  { code: 'sk', name: 'Slovenčina', nativeName: 'Slovenčina' },
-  { code: 'cs', name: 'Čeština', nativeName: 'Čeština' },
-  { code: 'fr', name: 'Français', nativeName: 'Français' },
-  { code: 'es', name: 'Español', nativeName: 'Español' },
-  { code: 'it', name: 'Italiano', nativeName: 'Italiano' },
-  { code: 'uk', name: 'Українська', nativeName: 'Українська' },
+  { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
+  { code: 'sk', name: 'Slovenčina', nativeName: 'Slovenčina', flag: '🇸🇰' },
+  { code: 'cs', name: 'Čeština', nativeName: 'Čeština', flag: '🇨🇿' },
+  { code: 'fr', name: 'Français', nativeName: 'Français', flag: '🇫🇷' },
+  { code: 'es', name: 'Español', nativeName: 'Español', flag: '🇪🇸' },
+  { code: 'it', name: 'Italiano', nativeName: 'Italiano', flag: '🇮🇹' },
+  { code: 'uk', name: 'Українська', nativeName: 'Українська', flag: '🇺🇦' },
 ];
 
 export default function LanguageSelector() {
@@ -102,9 +102,11 @@ export default function LanguageSelector() {
             <Text style={[styles.label, { color: colors.textPrimary }]}>
               {t('settings.language.title')}
             </Text>
-            <Text style={[styles.currentLanguage, { color: colors.textSecondary }]}>
-              {currentLanguage?.name || 'English'}
-            </Text>
+            <View style={styles.currentLanguageContainer}>
+              <Text style={[styles.currentLanguage, { color: colors.textSecondary }]}>
+                {currentLanguage?.name || 'English'}
+              </Text>
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -133,14 +135,19 @@ export default function LanguageSelector() {
                   disabled={loading}
                 >
                   <View style={styles.languageInfo}>
-                    <Text style={[styles.languageName, { color: colors.textPrimary }]}>
-                      {language.name}
-                    </Text>
-                    {language.nativeName !== language.name && (
-                      <Text style={[styles.nativeName, { color: colors.textSecondary }]}>
-                        {language.nativeName}
-                      </Text>
-                    )}
+                    <View style={styles.languageHeader}>
+                      <Text style={styles.flag}>{language.flag}</Text>
+                      <View style={styles.languageTextContainer}>
+                        <Text style={[styles.languageName, { color: colors.textPrimary }]}>
+                          {language.name}
+                        </Text>
+                        {language.nativeName !== language.name && (
+                          <Text style={[styles.nativeName, { color: colors.textSecondary }]}>
+                            {language.nativeName}
+                          </Text>
+                        )}
+                      </View>
+                    </View>
                   </View>
                   {currentLanguageCode === language.code && (
                     <Check size={20} color={colors.accent} />
@@ -191,9 +198,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  currentLanguageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  flag: {
+    fontSize: 16,
+    marginRight: 8,
+  },
   currentLanguage: {
     fontSize: 14,
-    marginTop: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -222,6 +237,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   languageInfo: {
+    flex: 1,
+  },
+  languageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  languageTextContainer: {
     flex: 1,
   },
   languageName: {

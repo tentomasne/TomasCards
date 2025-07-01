@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { CreditCard } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -16,7 +15,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
-      <Image source={require('@/assets/undraw_empty_4zx0.svg')} style={{ width: 100, height: 100 }} />
+      <Image source={require('@/assets/undraw_empty_4zx0.png')} style={{ width: 100, height: 100 }} />
       <Text style={[styles.message, { color: colors.textSecondary }]}>
         {t(message)}
       </Text>

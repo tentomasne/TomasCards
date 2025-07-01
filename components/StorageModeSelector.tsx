@@ -9,9 +9,10 @@ import {
   Alert,
   Platform,
 } from 'react-native';
-import { Cloud, Smartphone, Check, AlertTriangle } from 'lucide-react-native';
+import { Cloud, Smartphone, Check, TriangleAlert as AlertTriangle, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { StorageMode } from '@/utils/storageManager';
 import * as Updates from 'expo-updates';
 
@@ -32,6 +33,7 @@ export default function StorageModeSelector({
 }: StorageModeSelectorProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { isOnline } = useNetworkStatus();
   const [selectedMode, setSelectedMode] = useState<StorageMode>(currentMode);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -75,6 +77,16 @@ export default function StorageModeSelector({
   const handleSelect = async (mode: StorageMode) => {
     // Don't allow selection while processing
     if (isProcessing || loading) return;
+
+    // Prevent switching to cloud mode when offline
+    if (mode === 'cloud' && !isOnline) {
+      Alert.alert(
+        t('storage.offline.title'),
+        t('storage.offline.message'),
+        [{ text: t('common.buttons.ok') }]
+      );
+      return;
+    }
 
     // Show warning when switching from local to cloud
     if (currentMode === 'local' && mode === 'cloud') {
@@ -188,38 +200,59 @@ export default function StorageModeSelector({
             {t('storage.mode.subtitle')}
           </Text>
 
+          {/* Offline Warning */}
+          {!isOnline && (
+            <View style={[styles.offlineWarning, { backgroundColor: colors.backgroundLight }]}>
+              <WifiOff size={16} color={colors.error} />
+              <Text style={[styles.offlineWarningText, { color: colors.error }]}>
+                {t('storage.offline.banner')}
+              </Text>
+            </View>
+          )}
+
           <View style={styles.options}>
             <TouchableOpacity
               style={[
                 styles.option,
                 { backgroundColor: colors.backgroundMedium },
                 selectedMode === 'cloud' && { borderColor: colors.accent, borderWidth: 2 },
+                !isOnline && styles.disabledOption,
               ]}
               onPress={() => handleSelect('cloud')}
-              disabled={isProcessing || loading}
+              disabled={isProcessing || loading || !isOnline}
             >
               <View style={styles.optionHeader}>
-                <Cloud size={24} color={colors.textPrimary} />
-                <Text style={[styles.optionTitle, { color: colors.textPrimary }]}>
+                <Cloud size={24} color={!isOnline ? colors.textHint : colors.textPrimary} />
+                <Text style={[styles.optionTitle, { color: !isOnline ? colors.textHint : colors.textPrimary }]}>
                   {t('storage.mode.cloud.title')}
                 </Text>
                 <View style={styles.badges}>
-                  {selectedMode === 'cloud' && (
+                  {!isOnline && (
+                    <View style={[styles.disabledBadge, { backgroundColor: colors.error }]}>
+                      <Text style={[styles.disabledText, { color: colors.textPrimary }]}>
+                        Offline
+                      </Text>
+                    </View>
+                  )}
+                  {selectedMode === 'cloud' && isOnline && (
                     <Check size={20} color={colors.accent} />
                   )}
                 </View>
               </View>
-              <Text style={[styles.optionDescription, { color: colors.textSecondary }]}>
-                {t('storage.mode.cloud.description')}
+              <Text style={[styles.optionDescription, { color: !isOnline ? colors.textHint : colors.textSecondary }]}>
+                {!isOnline 
+                  ? t('storage.offline.message')
+                  : t('storage.mode.cloud.description')
+                }
               </Text>
               <View style={styles.features}>
-                <Text style={[styles.feature, { color: colors.success }]}>
+                <Text style={[styles.feature, { color: !isOnline ? colors.textHint : colors.success }]}>
                   ✓ {t('storage.mode.cloud.feature1')}
                 </Text>
-                <Text style={[styles.feature, { color: colors.success }]}>
+                <Text style={[styles.feature, { color: !isOnline ? colors.textHint : colors.success }]}>
                   ✓ {t('storage.mode.cloud.feature2')}
                 </Text>
-                <Text style={[styles.feature, { color: colors.success }]}>
+                <Text style={[styles.feature, { color: !isOnline ? colors.textHint : colors.success }]}>
                   ✓ {t('storage.mode.cloud.feature3')}
                 </Text>
               </View>
@@ -271,7 +304,7 @@ export default function StorageModeSelector({
           )}
 
           {/* Info about cloud provider selection */}
-          {selectedMode === 'cloud' && currentMode === 'local' && (
+          {selectedMode === 'cloud' && currentMode === 'local' && isOnline && (
             <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
               <Cloud size={16} color={colors.accent} />
               <Text style={[styles.warningText, { color: colors.textSecondary }]}>
@@ -328,6 +361,19 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     lineHeight: 22,
   },
+  offlineWarning: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    gap: 8,
+  },
+  offlineWarningText: {
+    fontSize: 14,
+    flex: 1,
+    fontWeight: '600',
+  },
   options: {
     gap: 16,
     marginBottom: 16,
@@ -337,6 +383,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: 'transparent',
+  },
+  disabledOption: {
+    opacity: 0.6,
   },
   optionHeader: {
     flexDirection: 'row',
@@ -354,12 +403,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  recommendedBadge: {
+  disabledBadge: {
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  recommendedText: {
+  disabledText: {
     fontSize: 12,
     fontWeight: '600',
   },

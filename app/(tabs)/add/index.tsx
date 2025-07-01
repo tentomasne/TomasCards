@@ -38,30 +38,30 @@ export default function AddCardScreen() {
     router.push('/add/custom');
   };
 
-  // Create sections data for the FlatList
+  // Create sections data for the FlatList - only show sections if there are results
   const sections = [
     {
       id: 'custom',
       type: 'custom',
       data: null,
     },
-    {
+    ...(popularCards.length > 0 ? [{
       id: 'popular-header',
       type: 'header',
       title: t('addCard.popularStores'),
       data: null,
-    },
+    }] : []),
     ...popularCards.map(card => ({
       id: card.id,
       type: 'card',
       data: card,
     })),
-    {
+    ...(unPopularCards.length > 0 ? [{
       id: 'other-header',
       type: 'header',
       title: t('addCard.otherStores'),
       data: null,
-    },
+    }] : []),
     ...unPopularCards.map(card => ({
       id: card.id,
       type: 'card',
