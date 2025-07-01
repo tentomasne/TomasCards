@@ -38,6 +38,7 @@ export default function CardDetailScreen() {
   const [card, setCard] = useState<LoyaltyCard | null>(null);
   const [isEditing, setIsEditing] = useState(edit === 'true');
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
 
   const matchedCard = card ? POPULAR_CARDS.find(
@@ -162,30 +163,25 @@ export default function CardDetailScreen() {
 
     const confirmDelete = async () => {
       if (id) {
+        setIsDeleting(true);
+        
         try {
-          if (storageMode === 'cloud') {
-            try {
-              await storageManager.deleteCard(id, isOnline);
-            } catch (error) {
-              console.error('Failed to sync card deletion to cloud:', error);
-              logError("Failed to delete a card", String(error), "CardComponent")
-              return
-            }
-          }
-
-           // Delete locally first for instant UI feedback
-          const localCards = await storageManager.loadLocalCards();
-          const filteredCards = localCards.filter(c => c.id !== id);
-          await storageManager.saveLocalCards(filteredCards);
-
+          // Delete from storage manager (handles both local and cloud)
+          await storageManager.deleteCard(id, isOnline);
+          
+          // Navigate back to home after successful deletion
           router.replace('/');
         } catch (error) {
           console.error('Failed to delete card:', error);
+          logError("Failed to delete a card", String(error), "CardComponent");
+          
           Alert.alert(
             t('common.labels.error'),
             'Failed to delete card. Please try again.',
             [{ text: t('common.buttons.ok') }]
           );
+        } finally {
+          setIsDeleting(false);
         }
       }
     };
@@ -390,7 +386,7 @@ export default function CardDetailScreen() {
               (!isOnline && storageMode === 'cloud') && styles.disabledButton
             ]}
             onPress={handleDeleteCard}
-            disabled={!isOnline && storageMode === 'cloud'}
+            disabled={!isOnline && storageMode === 'cloud' || isDeleting}
           >
             <Trash2 size={20} color={colors.error} />
             <Text style={[styles.deleteButtonText, { color: colors.error }]}>
@@ -414,6 +410,32 @@ export default function CardDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Deletion Loading Modal */}
+      <Modal
+        visible={isDeleting}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {}} // Prevent dismissal
+      >
+        <View style={[styles.deletionModalOverlay, { backgroundColor: colors.overlay }]}>
+          <View style={[styles.deletionModalContent, { backgroundColor: colors.backgroundDark }]}>
+            <ActivityIndicator size="large" color={colors.accent} style={styles.deletionLoader} />
+            <Text style={[styles.deletionTitle, { color: colors.textPrimary }]}>
+              {t('cardDetail.deleting.title')}
+            </Text>
+            <Text style={[styles.deletionMessage, { color: colors.textSecondary }]}>
+              {storageMode === 'cloud' 
+                ? t('cardDetail.deleting.cloudMessage')
+                : t('cardDetail.deleting.localMessage')
+              }
+            </Text>
+            <Text style={[styles.deletionNote, { color: colors.textHint }]}>
+              {t('cardDetail.deleting.pleaseWait')}
+            </Text>
+          </View>
+        </View>
+      </Modal>
 
       <Modal
         visible={isEditing}
@@ -567,6 +589,45 @@ const styles = StyleSheet.create({
   deleteButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  deletionModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  deletionModalContent: {
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 280,
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  deletionLoader: {
+    marginBottom: 24,
+    transform: [{ scale: 1.2 }],
+  },
+  deletionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  deletionMessage: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  deletionNote: {
+    fontSize: 14,
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   modalBackground: {
     flex: 1,

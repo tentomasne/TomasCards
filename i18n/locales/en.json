@@ -120,7 +120,13 @@
     "added": "Added: {{date}}",
     "lastUsed": "Last used: {{date}}",
     "deleteConfirm": "Are you sure you want to delete this card? This action cannot be undone.",
-    "deleteSuccess": "Card deleted successfully"
+    "deleteSuccess": "Card deleted successfully",
+    "deleting": {
+      "title": "Deleting Card",
+      "localMessage": "Removing card from your device...",
+      "cloudMessage": "Removing card from cloud storage...",
+      "pleaseWait": "Please wait, this may take a few seconds."
+    }
   },
   "settings": {
     "title": "Settings",
