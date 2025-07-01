@@ -120,7 +120,13 @@
     "added": "Ajouté : {{date}}",
     "lastUsed": "Dernière utilisation : {{date}}",
     "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette carte ? Cette action est irréversible.",
-    "deleteSuccess": "Carte supprimée avec succès"
+    "deleteSuccess": "Carte supprimée avec succès",
+    "deleting": {
+      "title": "Suppression de la carte",
+      "localMessage": "Suppression de la carte de votre appareil...",
+      "cloudMessage": "Suppression de la carte du stockage cloud...",
+      "pleaseWait": "Veuillez patienter, cela peut prendre quelques secondes."
+    }
   },
   "settings": {
     "title": "Paramètres",
@@ -265,6 +271,10 @@
     "empty": {
       "title": "Aucune donnée trouvée",
       "message": "Le stockage local et cloud sont vides. Ajoutez des cartes pour commencer !"
+    },
+    "error": {
+      "title": "Échec de la synchronisation",
+      "message": "Échec de la synchronisation avec le stockage cloud. Veuillez vérifier votre connexion et réessayer."
     },
     "error": {
       "title": "Échec de la synchronisation",

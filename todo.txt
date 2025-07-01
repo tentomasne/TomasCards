@@ -1,14 +1,13 @@
-google drive refresh token
+google drive refresh token - asi fix
 more cards
 same background cards in index cards
-sync conflit local to cloud does not work
-ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat taky switch
+sync conflit local to cloud does not work - asi fix
+ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat taky switch - done
 cloud provider defaultne da icloud aj ked je unavailable a ked dam close the cloud provider nech to da spat local storage
 
 ------------------------
 UPDATE LATER:
 widget
-translations
 apple watch
 export import
 app review after 5th open

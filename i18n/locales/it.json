@@ -120,7 +120,13 @@
     "added": "Aggiunto: {{date}}",
     "lastUsed": "Ultimo utilizzo: {{date}}",
     "deleteConfirm": "Sei sicuro di voler eliminare questa carta? Questa azione non può essere annullata.",
-    "deleteSuccess": "Carta eliminata con successo"
+    "deleteSuccess": "Carta eliminata con successo",
+    "deleting": {
+      "title": "Eliminazione Carta",
+      "localMessage": "Rimozione della carta dal tuo dispositivo...",
+      "cloudMessage": "Rimozione della carta dall'archivio cloud...",
+      "pleaseWait": "Si prega di attendere, potrebbero essere necessari alcuni secondi."
+    }
   },
   "settings": {
     "title": "Impostazioni",
@@ -265,6 +271,10 @@
     "empty": {
       "title": "Nessun dato trovato",
       "message": "Sia l'archiviazione locale che quella cloud sono vuote. Aggiungi alcune carte per iniziare!"
+    },
+    "error": {
+      "title": "Sincronizzazione fallita",
+      "message": "Impossibile sincronizzare con l'archiviazione cloud. Controlla la tua connessione e riprova."
     },
     "error": {
       "title": "Sincronizzazione fallita",

@@ -9,6 +9,8 @@ import {
   RefreshControl,
   TouchableOpacity,
   Alert,
+  Animated,
+  Easing,
 } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { ArrowUpDown, WifiOff } from "lucide-react-native";
@@ -47,6 +49,8 @@ export default function HomeScreen() {
   });
   const [sortType, setSortType] = useState<SortType>("name");
   const [showSortMenu, setShowSortMenu] = useState(false);
+  const [sortMenuAnim] = useState(new Animated.Value(0));
+  const [isSortMenuRendered, setIsSortMenuRendered] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("offline");
   const [pendingOperations, setPendingOperations] = useState(0);
   const [syncConflictData, setSyncConflictData] =
@@ -58,6 +62,25 @@ export default function HomeScreen() {
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [lastCloudSync, setLastCloudSync] = useState<number>(0);
   const [showAuthRequired, setShowAuthRequired] = useState(false);
+
+  useEffect(() => {
+    if (showSortMenu) {
+      setIsSortMenuRendered(true);
+      Animated.timing(sortMenuAnim, {
+        toValue: 1,
+        duration: 300,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+        useNativeDriver: true,
+      }).start();
+    } else {
+      Animated.timing(sortMenuAnim, {
+        toValue: 0,
+        duration: 200,
+        easing: Easing.ease,
+        useNativeDriver: true,
+      }).start(() => setIsSortMenuRendered(false));
+    }
+  }, [showSortMenu]);
 
   // Single initialization effect
   useEffect(() => {
@@ -406,14 +429,30 @@ export default function HomeScreen() {
   const favoriteCards = sortedCards.filter((card) => card.isFavorite);
   const otherCards = sortedCards.filter((card) => !card.isFavorite);
 
-  const SortMenu = () => (
-    <View
-      style={[
-        styles.sortMenu,
-        !showSortMenu && styles.hidden,
-        { backgroundColor: colors.backgroundMedium },
-      ]}
-    >
+  const SortMenu = () => {
+    const menuTranslateY = sortMenuAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [-20, 0],
+    });
+
+    const menuOpacity = sortMenuAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1],
+    });
+
+    if (!isSortMenuRendered) return null;
+
+    return (
+      <Animated.View
+        style={[
+          styles.sortMenu,
+          { 
+            backgroundColor: colors.backgroundMedium,
+            opacity: menuOpacity,
+            transform: [{ translateY: menuTranslateY }]
+          },
+        ]}
+      >
       <TouchableOpacity
         style={[
           styles.sortOption,
@@ -476,8 +515,10 @@ export default function HomeScreen() {
           {t("cards.sort.lastUsed")}
         </Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
+  
+  }
 
   const renderSection = (title: string, data: LoyaltyCard[]) => {
     if (data.length === 0) return null;
@@ -691,9 +732,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
     minWidth: 200,
-  },
-  hidden: {
-    display: "none",
   },
   sortOption: {
     padding: 12,

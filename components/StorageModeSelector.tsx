@@ -8,8 +8,9 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Switch,
 } from 'react-native';
-import { Cloud, Smartphone, Check, TriangleAlert as AlertTriangle, WifiOff } from 'lucide-react-native';
+import { Cloud, Smartphone, Check, TriangleAlert as AlertTriangle, WifiOff, Copy } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/hooks/useTheme';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
@@ -19,7 +20,7 @@ import * as Updates from 'expo-updates';
 interface StorageModeSelectorProps {
   visible: boolean;
   currentMode: StorageMode;
-  onSelect: (mode: StorageMode) => Promise<void>;
+  onSelect: (mode: StorageMode, shouldMigrateData?: boolean) => Promise<void>;
   onClose: () => void;
   loading?: boolean;
 }
@@ -36,12 +37,14 @@ export default function StorageModeSelector({
   const { isOnline } = useNetworkStatus();
   const [selectedMode, setSelectedMode] = useState<StorageMode>(currentMode);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [shouldMigrateData, setShouldMigrateData] = useState(true);
 
   // Reset selected mode when modal opens
   React.useEffect(() => {
     if (visible) {
       setSelectedMode(currentMode);
       setIsProcessing(false);
+      setShouldMigrateData(true); // Default to true
     }
   }, [visible, currentMode]);
 
@@ -88,19 +91,21 @@ export default function StorageModeSelector({
       return;
     }
 
-    // Show warning when switching from local to cloud
-    if (currentMode === 'local' && mode === 'cloud') {
-      const confirmMessage = `${t('storage.mode.warning.title')}\n\n${t('storage.mode.warning.message')}\n\nYou'll be able to select your cloud provider next.`;
-      
+    // If switching modes, show migration confirmation
+    if (currentMode !== mode) {
+      const migrationMessage = mode === 'cloud' 
+        ? `Switch to cloud storage and ${shouldMigrateData ? 'copy your local cards to the cloud' : 'start fresh in the cloud'}?`
+        : `Switch to local storage and ${shouldMigrateData ? 'copy your cloud cards locally' : 'start fresh locally'}?`;
+
       if (Platform.OS === 'web') {
-        const confirmed = window.confirm(confirmMessage);
+        const confirmed = window.confirm(migrationMessage);
         if (confirmed) {
           await handleModeChange(mode);
         }
       } else {
         Alert.alert(
           t('storage.mode.warning.title'),
-          `${t('storage.mode.warning.message')}\n\nYou'll be able to select your cloud provider next.`,
+          migrationMessage,
           [
             {
               text: t('common.buttons.cancel'),
@@ -111,7 +116,7 @@ export default function StorageModeSelector({
               },
             },
             {
-              text: t('storage.mode.warning.confirm'),
+              text: 'Switch',
               style: 'destructive',
               onPress: () => handleModeChange(mode),
             },
@@ -128,12 +133,14 @@ export default function StorageModeSelector({
     setSelectedMode(mode);
     
     try {
-      // Apply the storage mode change
-      await onSelect(mode);
+      // Apply the storage mode change with migration preference
+      await onSelect(mode, shouldMigrateData);
       
       // If switching to local mode, reload immediately
       if (mode === 'local') {
-        const successMessage = 'Switched to local storage. The app will now reload.';
+        const successMessage = shouldMigrateData 
+          ? 'Switched to local storage and copied your cloud data. The app will now reload.'
+          : 'Switched to local storage. The app will now reload.';
         
         if (Platform.OS === 'web') {
           alert(successMessage);
@@ -184,6 +191,8 @@ export default function StorageModeSelector({
     onClose();
   };
 
+  const showMigrationOption = selectedMode !== currentMode;
+
   return (
     <Modal
       visible={visible}
@@ -218,7 +227,7 @@ export default function StorageModeSelector({
                 selectedMode === 'cloud' && { borderColor: colors.accent, borderWidth: 2 },
                 !isOnline && styles.disabledOption,
               ]}
-              onPress={() => handleSelect('cloud')}
+              onPress={() => setSelectedMode('cloud')}
               disabled={isProcessing || loading || !isOnline}
             >
               <View style={styles.optionHeader}>
@@ -264,7 +273,7 @@ export default function StorageModeSelector({
                 { backgroundColor: colors.backgroundMedium },
                 selectedMode === 'local' && { borderColor: colors.accent, borderWidth: 2 },
               ]}
-              onPress={() => handleSelect('local')}
+              onPress={() => setSelectedMode('local')}
               disabled={isProcessing || loading}
             >
               <View style={styles.optionHeader}>
@@ -293,25 +302,69 @@ export default function StorageModeSelector({
             </TouchableOpacity>
           </View>
 
-          {/* Warning about app reload - only show for local mode */}
-          {selectedMode === 'local' && (
-            <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
-              <AlertTriangle size={16} color={colors.warning} />
-              <Text style={[styles.warningText, { color: colors.textSecondary }]}>
-                Switching to local storage will reload the app to ensure all settings are properly applied.
-              </Text>
+          {/* Data Migration Option */}
+          {showMigrationOption && (
+            <View style={[styles.migrationContainer, { backgroundColor: colors.backgroundLight }]}>
+              <View style={styles.migrationHeader}>
+                <Copy size={20} color={colors.accent} />
+                <Text style={[styles.migrationTitle, { color: colors.textPrimary }]}>
+                  Data Migration
+                </Text>
+              </View>
+              <View style={styles.migrationOption}>
+                <View style={styles.migrationTextContainer}>
+                  <Text style={[styles.migrationLabel, { color: colors.textPrimary }]}>
+                    {selectedMode === 'cloud' 
+                      ? 'Copy local cards to cloud storage'
+                      : 'Copy cloud cards to local storage'
+                    }
+                  </Text>
+                  <Text style={[styles.migrationDescription, { color: colors.textSecondary }]}>
+                    {selectedMode === 'cloud'
+                      ? 'Your existing local cards will be uploaded to the cloud'
+                      : 'Your existing cloud cards will be downloaded locally'
+                    }
+                  </Text>
+                </View>
+                <Switch
+                  value={shouldMigrateData}
+                  onValueChange={setShouldMigrateData}
+                  trackColor={{ false: colors.backgroundMedium, true: colors.accent }}
+                  thumbColor={colors.textPrimary}
+                />
+              </View>
+              {!shouldMigrateData && (
+                <View style={[styles.warningContainer, { backgroundColor: colors.backgroundMedium }]}>
+                  <AlertTriangle size={16} color={colors.warning} />
+                  <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+                    {selectedMode === 'cloud'
+                      ? 'You will start with an empty cloud storage. Your local cards will remain on this device only.'
+                      : 'You will start with empty local storage. Your cloud cards will remain in the cloud only.'
+                    }
+                  </Text>
+                </View>
+              )}
             </View>
           )}
 
-          {/* Info about cloud provider selection */}
-          {selectedMode === 'cloud' && currentMode === 'local' && isOnline && (
-            <View style={[styles.warningContainer, { backgroundColor: colors.backgroundLight }]}>
-              <Cloud size={16} color={colors.accent} />
-              <Text style={[styles.warningText, { color: colors.textSecondary }]}>
-                After switching to cloud storage, you'll be able to select your preferred cloud provider (Apple iCloud or Google Drive).
+          {/* Confirm Button */}
+          <TouchableOpacity
+            style={[
+              styles.confirmButton,
+              { backgroundColor: colors.accent },
+              (isProcessing || loading) && styles.disabledButton
+            ]}
+            onPress={() => handleSelect(selectedMode)}
+            disabled={isProcessing || loading}
+          >
+            {(isProcessing || loading) ? (
+              <ActivityIndicator color={colors.textPrimary} />
+            ) : (
+              <Text style={[styles.confirmButtonText, { color: colors.textPrimary }]}>
+                {showMigrationOption ? 'Switch Storage Mode' : t('common.buttons.confirm')}
               </Text>
-            </View>
-          )}
+            )}
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={[
@@ -322,13 +375,9 @@ export default function StorageModeSelector({
             onPress={handleClose}
             disabled={isProcessing || loading}
           >
-            {(isProcessing || loading) ? (
-              <ActivityIndicator color={colors.textPrimary} />
-            ) : (
-              <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
-                {t('common.buttons.close')}
-              </Text>
-            )}
+            <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
+              {t('common.buttons.close')}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -348,6 +397,7 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     borderRadius: 16,
     padding: 24,
+    maxHeight: '90%',
   },
   title: {
     fontSize: 24,
@@ -424,18 +474,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 16,
   },
+  migrationContainer: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  migrationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  migrationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  migrationOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  migrationTextContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  migrationLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  migrationDescription: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
   warningContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderRadius: 8,
-    marginBottom: 16,
     gap: 8,
   },
   warningText: {
     fontSize: 12,
     flex: 1,
     lineHeight: 16,
+  },
+  confirmButton: {
+    padding: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  confirmButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   closeButton: {
     padding: 16,

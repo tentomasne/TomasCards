@@ -393,16 +393,39 @@ export class StorageManager {
     return false;
   }
 
-  async setStorageMode(mode: StorageMode): Promise<void> {
+  async setStorageMode(mode: StorageMode, shouldMigrateData: boolean = true): Promise<void> {
     const previousMode = this.storageMode;
     this.storageMode = mode;
     await AsyncStorage.setItem(STORAGE_MODE_KEY, mode);
-    logInfo('Storage mode changed', `${previousMode} -> ${mode}`, 'StorageManager');
+    logInfo('Storage mode changed', `${previousMode} -> ${mode}, Migration: ${shouldMigrateData}`, 'StorageManager');
 
-    // If switching from local to cloud, clear local cards
-    if (previousMode === 'local' && mode === 'cloud') {
-      await this.clearLocalCards();
-      logInfo('Local cards cleared due to mode switch', '', 'StorageManager');
+    // Handle data migration based on user preference
+    if (previousMode !== mode) {
+      if (shouldMigrateData) {
+        try {
+          if (previousMode === 'local' && mode === 'cloud') {
+            // Copy local cards to cloud (will be done after provider selection)
+            logInfo('Local to cloud migration will be handled after provider selection', '', 'StorageManager');
+          } else if (previousMode === 'cloud' && mode === 'local') {
+            // Copy cloud cards to local
+            const cloudCards = await this.loadCloudCards();
+            if (cloudCards.length > 0) {
+              await this.saveLocalCards(cloudCards);
+              logInfo('Cloud cards migrated to local storage', `${cloudCards.length} cards`, 'StorageManager');
+            }
+          }
+        } catch (error) {
+          logError('Failed to migrate data during storage mode change', error instanceof Error ? error.message : String(error), 'StorageManager');
+          // Don't throw error - mode change should still succeed
+        }
+      } else {
+        // Clear destination storage if not migrating
+        if (mode === 'local') {
+          await this.clearLocalCards();
+          logInfo('Local cards cleared (no migration requested)', '', 'StorageManager');
+        }
+        // For cloud mode, clearing will happen naturally when switching providers
+      }
     }
   }
 
@@ -414,7 +437,8 @@ export class StorageManager {
     return this.provider;
   }
 
-  async setProvider(provider: CloudStorageProvider): Promise<void> {
+  async setProvider(provider: CloudStorageProvider, shouldMigrateData: boolean = true): Promise<void> {
+    const previousProvider = this.provider;
     this.provider = provider;
     await AsyncStorage.setItem(STORAGE_PROVIDER_KEY, provider);
     
@@ -425,7 +449,57 @@ export class StorageManager {
     );
     
     await this.configureCloudStorage();
-    logInfo('Cloud provider set', provider, 'StorageManager');
+    logInfo('Cloud provider set', `${previousProvider} -> ${provider}, Migration: ${shouldMigrateData}`, 'StorageManager');
+
+    // Handle data migration between cloud providers or from local
+    if (shouldMigrateData && this.storageMode === 'cloud') {
+      try {
+        let cardsToMigrate: LoyaltyCard[] = [];
+
+        // Determine source of cards to migrate
+        if (previousProvider !== provider) {
+          // Migrating between cloud providers - get cards from previous provider
+          const oldCloudStorage = new CloudStorage(
+            previousProvider,
+            previousProvider === CloudStorageProvider.GoogleDrive ? { strictFilenames: true } : undefined
+          );
+          
+          // Configure old provider if needed
+          if (previousProvider === CloudStorageProvider.GoogleDrive && this.accessToken) {
+            oldCloudStorage.setProviderOptions({ 
+              accessToken: this.accessToken,
+              scope: CloudStorageScope.AppData 
+            });
+          } else if (previousProvider === CloudStorageProvider.ICloud) {
+            oldCloudStorage.setProviderOptions({ scope: CloudStorageScope.AppData });
+          }
+
+          try {
+            const exists = await oldCloudStorage.exists(CARDS_FILE);
+            if (exists) {
+              const content = await oldCloudStorage.readFile(CARDS_FILE);
+              cardsToMigrate = JSON.parse(content) as LoyaltyCard[];
+              logInfo('Cards loaded from previous cloud provider for migration', `${cardsToMigrate.length} cards`, 'StorageManager');
+            }
+          } catch (error) {
+            logWarning('Failed to load cards from previous cloud provider', error instanceof Error ? error.message : String(error), 'StorageManager');
+          }
+        } else {
+          // First time setting up cloud - get cards from local storage
+          cardsToMigrate = await this.loadLocalCards();
+          logInfo('Cards loaded from local storage for cloud migration', `${cardsToMigrate.length} cards`, 'StorageManager');
+        }
+
+        // Migrate cards to new provider
+        if (cardsToMigrate.length > 0) {
+          await this.saveCloudCards(cardsToMigrate);
+          logInfo('Cards migrated to new cloud provider', `${cardsToMigrate.length} cards`, 'StorageManager');
+        }
+      } catch (error) {
+        logError('Failed to migrate data during provider change', error instanceof Error ? error.message : String(error), 'StorageManager');
+        // Don't throw error - provider change should still succeed
+      }
+    }
   }
 
   async setAccessToken(token: string, refreshToken?: string, expiresIn?: number): Promise<void> {

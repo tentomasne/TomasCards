@@ -120,7 +120,13 @@
     "added": "Añadido: {{date}}",
     "lastUsed": "Último uso: {{date}}",
     "deleteConfirm": "¿Estás seguro de que quieres eliminar esta tarjeta? Esta acción no se puede deshacer.",
-    "deleteSuccess": "Tarjeta eliminada correctamente"
+    "deleteSuccess": "Tarjeta eliminada correctamente",
+    "deleting": {
+      "title": "Eliminando Tarjeta",
+      "localMessage": "Eliminando tarjeta de tu dispositivo...",
+      "cloudMessage": "Eliminando tarjeta del almacenamiento en la nube...",
+      "pleaseWait": "Por favor espera, esto puede tardar unos segundos."
+    }
   },
   "settings": {
     "title": "Ajustes",
@@ -265,6 +271,10 @@
     "empty": {
       "title": "No se encontraron datos",
       "message": "Tanto el almacenamiento local como el de la nube están vacíos. ¡Añade algunas tarjetas para empezar!"
+    },
+    "error": {
+      "title": "Error de Sincronización",
+      "message": "No se pudo sincronizar con el almacenamiento en la nube. Por favor, comprueba tu conexión e inténtalo de nuevo."
     },
     "error": {
       "title": "Error de sincronización",

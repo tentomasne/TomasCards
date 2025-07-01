@@ -8,11 +8,12 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Switch,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { useTranslation } from 'react-i18next';
-import { Check, Cloud, AlertTriangle } from 'lucide-react-native';
+import { Check, Cloud, TriangleAlert as AlertTriangle, Copy } from 'lucide-react-native';
 import { CloudStorageProvider, CloudStorage } from 'react-native-cloud-storage';
 import { useTheme } from '@/hooks/useTheme';
 import { logError, logInfo, logWarning } from '@/utils/debugManager';
@@ -24,7 +25,7 @@ WebBrowser.maybeCompleteAuthSession();
 interface CloudProviderSelectorProps {
   visible: boolean;
   currentProvider: CloudStorageProvider;
-  onSelect: (provider: CloudStorageProvider) => Promise<void>;
+  onSelect: (provider: CloudStorageProvider, shouldMigrateData?: boolean) => Promise<void>;
   onClose: () => void;
   shouldReloadAfterSelection?: boolean; // New prop to control reload behavior
 }
@@ -44,6 +45,7 @@ export default function CloudProviderSelector({
   const [isProcessing, setIsProcessing] = useState(false);
   const [iCloudAvailable, setICloudAvailable] = useState<boolean | null>(null);
   const [iCloudError, setICloudError] = useState<string | null>(null);
+  const [shouldMigrateData, setShouldMigrateData] = useState(true);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
@@ -77,8 +79,10 @@ export default function CloudProviderSelector({
     if (visible) {
       checkExistingToken();
       checkICloudAvailability();
+      setSelected(currentProvider);
+      setShouldMigrateData(true); // Default to true
     }
-  }, [visible]);
+  }, [visible, currentProvider]);
 
   // Check iCloud availability
   const checkICloudAvailability = async () => {
@@ -313,7 +317,7 @@ export default function CloudProviderSelector({
   };
 
   const handleConfirm = async () => {
-    logInfo('Confirming provider selection', `Provider: ${selected}, Has token: ${!!accessToken}, Should reload: ${shouldReloadAfterSelection}`, 'CloudProviderSelector');
+    logInfo('Confirming provider selection', `Provider: ${selected}, Has token: ${!!accessToken}, Should reload: ${shouldReloadAfterSelection}, Should migrate: ${shouldMigrateData}`, 'CloudProviderSelector');
     
     // Check if Google Drive is selected but not authenticated
     if (selected === CloudStorageProvider.GoogleDrive && !accessToken) {
@@ -346,12 +350,13 @@ export default function CloudProviderSelector({
     setIsProcessing(true);
 
     try {
-      await onSelect(selected);
-      logInfo('Provider selection confirmed successfully', `Provider: ${selected}`, 'CloudProviderSelector');
+      await onSelect(selected, shouldMigrateData);
+      logInfo('Provider selection confirmed successfully', `Provider: ${selected}, Migration: ${shouldMigrateData}`, 'CloudProviderSelector');
       
       // If we should reload after selection (e.g., when switching from local to cloud)
       if (shouldReloadAfterSelection) {
-        const successMessage = `Successfully set up ${selected === CloudStorageProvider.ICloud ? 'iCloud' : 'Google Drive'} storage. The app will now reload.`;
+        const migrationText = shouldMigrateData ? ' and migrated your data' : '';
+        const successMessage = `Successfully set up ${selected === CloudStorageProvider.ICloud ? 'iCloud' : 'Google Drive'} storage${migrationText}. The app will now reload.`;
         
         if (Platform.OS === 'web') {
           alert(successMessage);
@@ -397,6 +402,8 @@ export default function CloudProviderSelector({
       'CloudProviderSelector'
     );
   }, []);
+
+  const showMigrationOption = selected !== currentProvider;
 
   return (
     <Modal
@@ -537,6 +544,42 @@ export default function CloudProviderSelector({
             )}
           </TouchableOpacity>
 
+          {/* Data Migration Option */}
+          {showMigrationOption && (
+            <View style={[styles.migrationContainer, { backgroundColor: colors.backgroundLight }]}>
+              <View style={styles.migrationHeader}>
+                <Copy size={20} color={colors.accent} />
+                <Text style={[styles.migrationTitle, { color: colors.textPrimary }]}>
+                  Data Migration
+                </Text>
+              </View>
+              <View style={styles.migrationOption}>
+                <View style={styles.migrationTextContainer}>
+                  <Text style={[styles.migrationLabel, { color: colors.textPrimary }]}>
+                    {`Copy data from ${currentProvider === CloudStorageProvider.ICloud ? 'iCloud' : 'Google Drive'} to ${selected === CloudStorageProvider.ICloud ? 'iCloud' : 'Google Drive'}`}
+                  </Text>
+                  <Text style={[styles.migrationDescription, { color: colors.textSecondary }]}>
+                    Your existing cards will be transferred to the new cloud provider
+                  </Text>
+                </View>
+                <Switch
+                  value={shouldMigrateData}
+                  onValueChange={setShouldMigrateData}
+                  trackColor={{ false: colors.backgroundMedium, true: colors.accent }}
+                  thumbColor={colors.textPrimary}
+                />
+              </View>
+              {!shouldMigrateData && (
+                <View style={[styles.warningContainer, { backgroundColor: colors.backgroundMedium }]}>
+                  <AlertTriangle size={16} color={colors.warning} />
+                  <Text style={[styles.warningText, { color: colors.textSecondary }]}>
+                    You will start with empty storage on the new provider. Your existing cards will remain on the current provider only.
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
           <TouchableOpacity
             style={[
               styles.closeButton, 
@@ -598,6 +641,7 @@ const styles = StyleSheet.create({
     maxWidth: 500,
     borderRadius: 16,
     padding: 24,
+    maxHeight: '90%',
   },
   title: {
     fontSize: 24,
@@ -685,6 +729,52 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  migrationContainer: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  migrationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  migrationTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  migrationOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  migrationTextContainer: {
+    flex: 1,
+    marginRight: 16,
+  },
+  migrationLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  migrationDescription: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  warningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  warningText: {
+    fontSize: 12,
+    flex: 1,
+    lineHeight: 16,
   },
   closeButton: {
     padding: 16,

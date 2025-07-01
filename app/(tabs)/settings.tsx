@@ -93,10 +93,10 @@ export default function SettingsScreen() {
     await saveSettings(newSettings);
   };
 
-  const handleStorageModeChange = async (mode: 'local' | 'cloud') => {
+  const handleStorageModeChange = async (mode: 'local' | 'cloud', shouldMigrateData?: boolean) => {
     setStorageModeChanging(true);
     try {
-      await storageManager.setStorageMode(mode);
+      await storageManager.setStorageMode(mode, shouldMigrateData);
       setStorageMode(mode);
       setShowStorageSelector(false);
       
@@ -124,9 +124,9 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleProviderSelect = async (prov: CloudStorageProvider) => {
+  const handleProviderSelect = async (prov: CloudStorageProvider, shouldMigrateData?: boolean) => {
     setProvider(prov);
-    await storageManager.setProvider(prov);
+    await storageManager.setProvider(prov, shouldMigrateData);
     
     // Don't close the modal here - let CloudProviderSelector handle it
     // The reload will happen in CloudProviderSelector if shouldReloadAfterProviderSelection is true

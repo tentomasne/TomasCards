@@ -120,7 +120,13 @@
     "added": "Přidáno: {{date}}",
     "lastUsed": "Naposledy použito: {{date}}",
     "deleteConfirm": "Opravdu chcete tuto kartu smazat? Tuto akci nelze vrátit zpět.",
-    "deleteSuccess": "Karta úspěšně smazána"
+    "deleteSuccess": "Karta úspěšně smazána",
+    "deleting": {
+      "title": "Mazání karty",
+      "localMessage": "Odebírání karty z vašeho zařízení...",
+      "cloudMessage": "Odebírání karty z cloudového úložiště...",
+      "pleaseWait": "Počkejte prosím, může to trvat několik sekund."
+    }
   },
   "settings": {
     "title": "Nastavení",
@@ -265,6 +271,10 @@
     "empty": {
       "title": "Nenalezena žádná data",
       "message": "Lokální i cloudové úložiště jsou prázdné. Přidejte karty a začněte!"
+    },
+    "error": {
+      "title": "Synchronizace selhala",
+      "message": "Nepodařilo se synchronizovat s cloudovým úložištěm. Zkontrolujte připojení a zkuste to znovu."
     },
     "error": {
       "title": "Synchronizace selhala",

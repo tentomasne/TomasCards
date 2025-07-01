@@ -119,7 +119,13 @@
     "added": "Pridané: {{date}}",
     "lastUsed": "Naposledy použité: {{date}}",
     "deleteConfirm": "Naozaj chcete túto kartu vymazať? Táto akcia je nevratná.",
-    "deleteSuccess": "Karta bola úspešne vymazaná"
+    "deleteSuccess": "Karta bola úspešne vymazaná",
+    "deleting": {
+      "title": "Mazanie karty",
+      "localMessage": "Odstraňovanie karty z vášho zariadenia...",
+      "cloudMessage": "Odstraňovanie karty z cloudového úložiska...",
+      "pleaseWait": "Prosím čakajte, môže to trvať niekoľko sekúnd."
+    }
   },
   "settings": {
     "title": "Nastavenia",
@@ -269,6 +275,10 @@
     "empty": {
       "title": "Žiadne údaje nenájdené",
       "message": "Lokálne aj cloudové úložisko sú prázdne. Pridajte nejaké karty pre začiatok!"
+    },
+    "error": {
+      "title": "Synchronizácia zlyhala",
+      "message": "Nepodarilo sa synchronizovať s cloudovým úložiskom. Skontrolujte pripojenie a skúste to znova."
     },
     "error": {
       "title": "Synchronizácia zlyhala",
