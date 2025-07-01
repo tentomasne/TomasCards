@@ -27,6 +27,7 @@ import CardForm from '@/components/CardForm';
 import Header from '@/components/Header';
 import OfflineBanner from '@/components/OfflineBanner';
 import { POPULAR_CARDS } from '@/assets/cards';
+import { logError } from '@/utils/debugManager';
 
 export default function CardDetailScreen() {
   const { t } = useTranslation();
@@ -162,23 +163,22 @@ export default function CardDetailScreen() {
     const confirmDelete = async () => {
       if (id) {
         try {
-          // Delete locally first for instant UI feedback
-          const localCards = await storageManager.loadLocalCards();
-          const filteredCards = localCards.filter(c => c.id !== id);
-          await storageManager.saveLocalCards(filteredCards);
-          
-          // Navigate back immediately
-          router.replace('/');
-
-          // Sync deletion to cloud in background
           if (storageMode === 'cloud') {
             try {
               await storageManager.deleteCard(id, isOnline);
             } catch (error) {
               console.error('Failed to sync card deletion to cloud:', error);
-              // Don't show error as local deletion succeeded and user already navigated away
+              logError("Failed to delete a card", String(error), "CardComponent")
+              return
             }
           }
+
+           // Delete locally first for instant UI feedback
+          const localCards = await storageManager.loadLocalCards();
+          const filteredCards = localCards.filter(c => c.id !== id);
+          await storageManager.saveLocalCards(filteredCards);
+
+          router.replace('/');
         } catch (error) {
           console.error('Failed to delete card:', error);
           Alert.alert(

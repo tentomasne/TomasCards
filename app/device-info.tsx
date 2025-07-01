@@ -47,6 +47,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { loadSettings } from '@/utils/storage';
 import { logInfo, logError } from '@/utils/debugManager';
+import * as Updates from 'expo-updates';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -151,9 +152,7 @@ export default function DeviceInfoScreen() {
   const handleTokenReceived = async (token: string, refreshToken?: string, expiresIn?: number) => {
     try {
       setAuthLoading(true);
-      
-      setAccessToken(token);
-      
+            
       // Store the token with enhanced data including refresh token
       await storageManager.setAccessToken(token, refreshToken, expiresIn);
       
@@ -171,7 +170,6 @@ export default function DeviceInfoScreen() {
       logInfo('Google Drive authentication completed successfully', `Refresh token: ${!!refreshToken}, Expires in: ${expiresIn}s`, 'DeviceInfoScreen');
     } catch (error) {
       logError('Failed to handle token', error instanceof Error ? error.message : String(error), 'DeviceInfoScreen');
-      setAccessToken(null);
       
       if (Platform.OS === 'web') {
         alert('Failed to set up Google Drive access. Please try again.');

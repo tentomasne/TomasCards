@@ -1,10 +1,11 @@
 google drive refresh token
 more cards
 same background cards in index cards
-the delete does not works
 sync conflit local to cloud does not work
 ked switchnem local/cloud google/icloud aby sa to spytalo ci prekopirovat taky switch
 more languages - vlajky
+
+the delete does not works - snad fix idk nemam intenret
 
 ------------------------
 UPDATE LATER:

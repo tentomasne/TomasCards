@@ -16,7 +16,6 @@ import type { LoyaltyCard } from "@/utils/types";
 import { useTheme } from "@/hooks/useTheme";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { storageManager, SyncConflictData } from "@/utils/storageManager";
-import { hasCompletedWelcome, markWelcomeCompleted } from "@/utils/storage";
 import LoyaltyCardComponent from "@/components/LoyaltyCard";
 import Header from "@/components/Header";
 import EmptyState from "@/components/EmptyState";
@@ -24,7 +23,6 @@ import SyncStatusIndicator, {
   SyncStatus,
 } from "@/components/SyncStatusIndicator";
 import SyncConflictModal from "@/components/SyncConflictModal";
-import WelcomeScreen from "@/components/WelcomeScreen";
 import OfflineBanner from "@/components/OfflineBanner";
 
 type SortType = "name" | "date" | "lastUsed";
@@ -55,7 +53,6 @@ export default function HomeScreen() {
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [storageMode, setStorageMode] = useState<"local" | "cloud">("local");
   const [conflictResolving, setConflictResolving] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [lastCloudSync, setLastCloudSync] = useState<number>(0);
@@ -81,25 +78,8 @@ export default function HomeScreen() {
         const currentStorageMode = storageManager.getStorageMode();
         setStorageMode(currentStorageMode);
 
-        // Check welcome status
-        const completed = await hasCompletedWelcome();
+        
         if (!isMounted) return;
-
-        if (!completed) {
-          // Only show welcome if user hasn't completed it and has no cards
-          const currentCards = await storageManager.loadLocalCards();
-          if (!isMounted) return;
-
-          if (currentCards.length === 0) {
-            setShowWelcome(true);
-            setLoading(prev => ({ ...prev, initial: false }));
-            setIsInitialized(true);
-            return;
-          } else {
-            // User has cards but hasn't marked welcome as completed (edge case)
-            await markWelcomeCompleted();
-          }
-        }
 
         // Load cards with local-first strategy
         await loadCardsWithLocalFirst();
@@ -365,7 +345,7 @@ export default function HomeScreen() {
   // Focus effect for when returning to screen - only reload if needed
   useFocusEffect(
     useCallback(() => {
-      if (isInitialized && !showWelcome && !loading.initial) {
+      if (isInitialized && !loading.initial) {
         // Only reload if we've been away for more than 30 seconds
         const timeSinceLastSync = Date.now() - lastCloudSync;
         
@@ -373,7 +353,7 @@ export default function HomeScreen() {
           loadCardsWithLocalFirst();
         }
       }
-    }, [loadCardsWithLocalFirst, isInitialized, showWelcome, loading.initial, lastCloudSync])
+    }, [loadCardsWithLocalFirst, isInitialized, loading.initial, lastCloudSync])
   );
 
   const onRefresh = async () => {
@@ -401,18 +381,6 @@ export default function HomeScreen() {
     }
   };
 
-  const handleWelcomeComplete = async (selectedMode?: "local" | "cloud") => {
-    await markWelcomeCompleted();
-    setShowWelcome(false);
-
-    if (selectedMode) {
-      await storageManager.setStorageMode(selectedMode);
-      setStorageMode(selectedMode);
-    }
-
-    // Load cards after welcome is completed
-    await loadCardsWithLocalFirst();
-  };
 
   const sortCards = (cards: LoyaltyCard[]) => {
     switch (sortType) {
@@ -552,10 +520,6 @@ export default function HomeScreen() {
     );
   };
 
-  // Show welcome screen if needed
-  if (showWelcome) {
-    return <WelcomeScreen onComplete={handleWelcomeComplete} />;
-  }
 
   if (loading.initial || !isInitialized) {
     return (
