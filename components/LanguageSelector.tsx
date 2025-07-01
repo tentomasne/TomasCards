@@ -17,6 +17,11 @@ import { lightHaptic } from '@/utils/feedback';
 const LANGUAGES = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'sk', name: 'Slovenčina', nativeName: 'Slovenčina' },
+  { code: 'cs', name: 'Čeština', nativeName: 'Čeština' },
+  { code: 'fr', name: 'Français', nativeName: 'Français' },
+  { code: 'es', name: 'Español', nativeName: 'Español' },
+  { code: 'it', name: 'Italiano', nativeName: 'Italiano' },
+  { code: 'uk', name: 'Українська', nativeName: 'Українська' },
 ];
 
 export default function LanguageSelector() {

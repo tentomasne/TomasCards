@@ -4,6 +4,11 @@ import * as Localization from 'expo-localization';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import en from '@/i18n/locales/en.json';
 import sk from '@/i18n/locales/sk.json';
+import cs from '@/i18n/locales/cs.json';
+import fr from '@/i18n/locales/fr.json';
+import es from '@/i18n/locales/es.json';
+import it from '@/i18n/locales/it.json';
+import uk from '@/i18n/locales/uk.json';
 
 const LANGUAGE_KEY = 'user_language';
 
@@ -32,6 +37,11 @@ i18n
     resources: {
       en: { translation: en },
       sk: { translation: sk },
+      cs: { translation: cs },
+      fr: { translation: fr },
+      es: { translation: es },
+      it: { translation: it },
+      uk: { translation: uk },
     },
     lng: 'en', // Start with English as default
     fallbackLng: 'en',
@@ -60,7 +70,7 @@ export const initializeLanguage = async () => {
     } else {
       // No stored preference, use device language
       const deviceLanguage = Localization.locale.split('-')[0];
-      const supportedLanguages = ['en', 'sk'];
+      const supportedLanguages = ['en', 'sk', 'cs', 'fr', 'es', 'it', 'uk'];
       const languageToUse = supportedLanguages.includes(deviceLanguage) ? deviceLanguage : 'en';
       
       await i18n.changeLanguage(languageToUse);

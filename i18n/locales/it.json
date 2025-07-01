@@ -1,0 +1,311 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Salva",
+      "cancel": "Annulla",
+      "delete": "Elimina",
+      "edit": "Modifica",
+      "close": "Chiudi",
+      "back": "Indietro",
+      "confirm": "Conferma",
+      "logout": "Esci",
+      "ok": "OK",
+      "apply": "Applica"
+    },
+    "labels": {
+      "name": "Nome",
+      "code": "Codice",
+      "notes": "Note",
+      "optional": "Opzionale",
+      "loading": "Caricamento...",
+      "error": "Errore",
+      "success": "Successo"
+    },
+    "validation": {
+      "required": "Questo campo è obbligatorio",
+      "invalid": "Valore non valido"
+    },
+    "offline": {
+      "banner": "Sei offline - Alcune funzionalità sono limitate"
+    }
+  },
+  "welcome": {
+    "title": "Benvenuto in TomasCards",
+    "subtitle": "Il tuo portafoglio digitale di carte fedeltà. Scegli come desideri archiviare le tue carte.",
+    "recommended": "Consigliato",
+    "cloudOption": {
+      "title": "Archiviazione Cloud",
+      "description": "Accedi per sincronizzare le tue carte su tutti i tuoi dispositivi con backup automatico.",
+      "feature1": "Sincronizzazione tra dispositivi",
+      "feature2": "Backup automatico",
+      "feature3": "Archiviazione cloud sicura",
+      "action": "Accedi o crea un account"
+    },
+    "localOption": {
+      "title": "Archiviazione Locale",
+      "description": "Archivia le tue carte solo su questo dispositivo per una privacy completa.",
+      "feature1": "Privacy completa",
+      "feature2": "Funziona offline",
+      "limitation": "Nessuna sincronizzazione tra dispositivi",
+      "action": "Continua senza account"
+    },
+    "localWarning": {
+      "title": "Solo archiviazione locale",
+      "message": "Le tue carte verranno archiviate solo su questo dispositivo e non verranno sincronizzate con altri dispositivi. Puoi sempre passare all'archiviazione cloud in seguito nelle impostazioni.",
+      "continue": "Continua"
+    },
+    "note": "Puoi modificare la tua preferenza di archiviazione in qualsiasi momento nelle impostazioni.",
+    "settingUp": "Configurazione dell'archiviazione..."
+  },
+  "tabs": {
+    "cards": "Carte",
+    "add": "Aggiungi",
+    "settings": "Impostazioni"
+  },
+  "cards": {
+    "title": "Collezione di carte",
+    "empty": "Nessuna carta fedeltà ancora. Tocca il pulsante \"+\" per aggiungere la tua prima carta.",
+    "sections": {
+      "favorites": "Preferiti",
+      "other": "Altre carte",
+      "all": "Tutte le carte"
+    },
+    "sort": {
+      "title": "Ordina per",
+      "name": "Nome",
+      "date": "Data di aggiunta",
+      "lastUsed": "Ultimo utilizzo"
+    }
+  },
+  "addCard": {
+    "title": "Aggiungi carta",
+    "searchPlaceholder": "Cerca negozi...",
+    "popularStores": "Negozi popolari",
+    "otherStores": "Altri negozi",
+    "scan": {
+      "title": "Scansiona carta",
+      "instruction": "Scansiona il codice a barre o il codice QR della tua carta",
+      "manual": "Non riesci a scansionare la tua carta?",
+      "enterManually": "Inserisci manualmente"
+    },
+    "manual": {
+      "title": "Inserisci i dettagli della carta",
+      "cardNumber": "Numero carta",
+      "cardNumberPlaceholder": "Inserisci il numero della carta",
+      "notesPlaceholder": "Aggiungi eventuali informazioni aggiuntive"
+    },
+    "custom": {
+      "title": "Crea carta personalizzata",
+      "createCustom": "Crea carta personalizzata",
+      "createCustomDescription": "Progetta la tua carta fedeltà con nome e colore personalizzati",
+      "preview": "Anteprima",
+      "cardName": "Nome carta",
+      "cardNamePlaceholder": "Inserisci il nome della carta",
+      "cardColor": "Colore carta",
+      "codeType": "Tipo di codice",
+      "cardCode": "Codice carta",
+      "cardCodePlaceholder": "Inserisci il codice della carta o scansiona",
+      "codeRequired": "Il codice della carta è obbligatorio",
+      "scan": "Scansiona",
+      "barcode": "Codice a barre",
+      "qrcode": "Codice QR",
+      "note": "Nota: le immagini non possono essere caricate. La carta visualizzerà la prima lettera del nome in maiuscolo sullo sfondo del colore scelto.",
+      "selectColor": "Seleziona colore",
+      "presetColors": "Colori preimpostati",
+      "customColor": "Colore personalizzato",
+      "colorHelp": "Inserisci un codice colore esadecimale (es. #FF6B6B) o scegli tra i colori preimpostati sopra."
+    }
+  },
+  "cardDetail": {
+    "added": "Aggiunto: {{date}}",
+    "lastUsed": "Ultimo utilizzo: {{date}}",
+    "deleteConfirm": "Sei sicuro di voler eliminare questa carta? Questa azione non può essere annullata.",
+    "deleteSuccess": "Carta eliminata con successo"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "login": "Accedi per sincronizzare le tue carte",
+    "logout": {
+      "description": "Sei attualmente connesso. Esci per interrompere la sincronizzazione delle tue carte. Le tue carte locali rimarranno.",
+      "title": "Esci",
+      "confirm": "Sei sicuro di voler uscire?"
+    },
+    "sections": {
+      "account": "Il mio account",
+      "appearance": "Aspetto",
+      "data": "Gestione dati",
+      "about": "Informazioni"
+    },
+    "language": {
+      "title": "Lingua",
+      "system": "Lingua di sistema",
+      "available": "Lingue disponibili"
+    },
+    "theme": {
+      "title": "Cambia tema",
+      "light": "Modalità chiara",
+      "dark": "Modalità scura",
+      "system": "Sistema",
+      "systemDescription": "Segui l'aspetto del sistema",
+      "available": "Scegli tema",
+      "confirmChange": "Il cambio del tema richiede un riavvio per essere applicato correttamente. Vuoi continuare?"
+    },
+    "haptic": {
+      "title": "Feedback aptico",
+      "description": "Percepisci le vibrazioni per le interazioni"
+    },
+    "csupport": {
+      "title": "Supporto",
+      "contact": "Contatta il supporto",
+      "description": "Se hai domande o hai bisogno di aiuto, contattaci a help@tomascards.eu.",
+      "faq": "FAQ",
+      "privacyPolicy": "Informativa sulla privacy",
+      "termsOfService": "Termini di servizio"
+    },
+    "version": "Versione {{version}}"
+  },
+  "storage": {
+    "mode": {
+      "title": "Modalità di archiviazione",
+      "subtitle": "Scegli come vengono archiviate e sincronizzate le tue carte",
+      "recommended": "Consigliato",
+      "warning": {
+        "title": "Passare all'archiviazione cloud?",
+        "message": "Il passaggio all'archiviazione cloud eliminerà tutte le tue carte locali. Le tue carte verranno sincronizzate dal cloud. Questa azione non può essere annullata.",
+        "confirm": "Passa al cloud"
+      },
+      "local": {
+        "title": "Archiviazione locale",
+        "description": "Archivia le carte solo su questo dispositivo",
+        "feature1": "Funziona offline",
+        "feature2": "Privacy completa",
+        "limitation": "Nessuna sincronizzazione tra dispositivi"
+      },
+      "cloud": {
+        "title": "Archiviazione cloud",
+        "description": "Archivia le carte nel cloud con sincronizzazione tra dispositivi",
+        "feature1": "Sincronizzazione tra dispositivi",
+        "feature2": "Backup automatico",
+        "feature3": "Funziona anche offline"
+      }
+    },
+    "offline": {
+      "title": "Connessione Internet richiesta",
+      "message": "Le funzionalità di archiviazione cloud richiedono una connessione Internet. Connettiti a Internet o passa alla modalità di archiviazione locale.",
+      "operationBlocked": "Questa operazione richiede una connessione Internet quando si utilizza l'archiviazione cloud. Connettiti a Internet e riprova.",
+      "banner": "Connessione Internet richiesta per le funzionalità cloud"
+    },
+    "auth": {
+      "required": {
+        "title": "Autenticazione richiesta",
+        "message": "La tua sessione di archiviazione cloud è scaduta. Accedi di nuovo per continuare a sincronizzare le tue carte.",
+        "reauth": "Accedi di nuovo"
+      }
+    },
+    "provider": {
+      "title": "Provider cloud",
+      "subtitle": "Seleziona dove devono essere archiviati i tuoi dati",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Sincronizza usando il tuo ID Apple"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Sincronizza usando il tuo account Google",
+        "login": "Accedi con Google",
+        "slow_warning": "(Nota: Google Drive può essere lento e potrebbe richiedere 2-3 secondi per il caricamento)"
+      }
+    }
+  },
+  "sync": {
+    "status": {
+      "synced": "Sincronizzato",
+      "syncing": "Sincronizzazione...",
+      "offline": "Offline",
+      "error": "Errore di sincronizzazione",
+      "pending": "{{count}} in sospeso",
+      "tapToRetry": "Tocca per riprovare"
+    },
+    "conflict": {
+      "title": "Conflitto di sincronizzazione",
+      "subtitle": "Abbiamo trovato dati diversi sul tuo dispositivo e nel cloud. Come vuoi risolvere questo problema?",
+      "localData": "Dati locali",
+      "cloudData": "Dati cloud",
+      "cardCount": "{{count}} carte",
+      "replaceWithCloud": "Usa dati cloud",
+      "replaceWithCloudDesc": "Sostituisci le carte locali con i dati cloud",
+      "merge": "Unisci dati",
+      "mergeDesc": "Combina carte locali e cloud",
+      "keepLocal": "Usa dati locali",
+      "keepLocalDesc": "Carica carte locali sul cloud",
+      "resolving": "Risoluzione del conflitto...",
+      "error": "Errore di sincronizzazione",
+      "errorMessage": "Impossibile risolvere il conflitto di sincronizzazione. Riprova.",
+      "recommended": "Consigliato"
+    },
+    "success": {
+      "title": "Sincronizzazione completata",
+      "message": "{{count}} carte sincronizzate con successo dal cloud."
+    },
+    "uploadLocal": {
+      "title": "Caricare carte locali?",
+      "message": "L'archiviazione cloud è vuota ma hai {{count}} carte localmente. Vuoi caricarle sul cloud?",
+      "confirm": "Carica sul cloud"
+    },
+    "upload": {
+      "success": {
+        "title": "Caricamento completato",
+        "message": "Le tue carte locali sono state caricate con successo sul cloud."
+      },
+      "error": {
+        "title": "Caricamento fallito",
+        "message": "Impossibile caricare le carte sul cloud. Riprova."
+      }
+    },
+    "empty": {
+      "title": "Nessun dato trovato",
+      "message": "Sia l'archiviazione locale che quella cloud sono vuote. Aggiungi alcune carte per iniziare!"
+    },
+    "error": {
+      "title": "Sincronizzazione fallita",
+      "message": "Impossibile sincronizzare con l'archiviazione cloud. Controlla la tua connessione e riprova."
+    }
+  },
+  "debug": {
+    "title": "Debug",
+    "mode": {
+      "enabled": "Modalità debug abilitata",
+      "disabled": "Modalità debug disabilitata"
+    },
+    "modal": {
+      "error": "Errore di debug",
+      "warning": "Avviso di debug",
+      "info": "Informazioni di debug",
+      "message": "Messaggio",
+      "details": "Dettagli",
+      "stack": "Stack Trace",
+      "extra": "Dati aggiuntivi",
+      "copyTitle": "Copia informazioni di debug",
+      "copyMessage": "Copiare le informazioni di debug da condividere con il supporto?",
+      "copy": "Copia",
+      "copyDetails": "Copia dettagli"
+    },
+    "logs": {
+      "title": "Log di debug",
+      "description": "{{total}} log totali ({{errors}} errori)",
+      "total": "{{count}} totali",
+      "errors": "{{count}} errori",
+      "warnings": "{{count}} avvisi",
+      "info": "{{count}} informazioni",
+      "all": "Tutti",
+      "errorsOnly": "Solo errori",
+      "warningsOnly": "Solo avvisi",
+      "infoOnly": "Solo informazioni",
+      "empty": "Nessun log di debug trovato",
+      "clearTitle": "Cancella log",
+      "clearConfirm": "Sei sicuro di voler cancellare tutti i log di debug? Questa azione non può essere annullata.",
+      "clear": "Cancella",
+      "copied": "Log copiato"
+    }
+  }
+}

@@ -1,0 +1,311 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Uložit",
+      "cancel": "Zrušit",
+      "delete": "Smazat",
+      "edit": "Upravit",
+      "close": "Zavřít",
+      "back": "Zpět",
+      "confirm": "Potvrdit",
+      "logout": "Odhlásit se",
+      "ok": "OK",
+      "apply": "Použít"
+    },
+    "labels": {
+      "name": "Název",
+      "code": "Kód",
+      "notes": "Poznámky",
+      "optional": "Volitelné",
+      "loading": "Načítání...",
+      "error": "Chyba",
+      "success": "Úspěch"
+    },
+    "validation": {
+      "required": "Toto pole je povinné",
+      "invalid": "Neplatná hodnota"
+    },
+    "offline": {
+      "banner": "Jste offline - Některé funkce jsou omezené"
+    }
+  },
+  "welcome": {
+    "title": "Vítejte v TomasCards",
+    "subtitle": "Vaše digitální peněženka na věrnostní karty. Vyberte si, jak chcete karty ukládat.",
+    "recommended": "Doporučeno",
+    "cloudOption": {
+      "title": "Cloudové úložiště",
+      "description": "Přihlaste se a synchronizujte své karty napříč všemi zařízeními s automatickou zálohou.",
+      "feature1": "Synchronizace napříč zařízeními",
+      "feature2": "Automatická záloha",
+      "feature3": "Zabezpečené cloudové úložiště",
+      "action": "Přihlásit se nebo vytvořit účet"
+    },
+    "localOption": {
+      "title": "Lokální úložiště",
+      "description": "Ukládejte své karty pouze na tomto zařízení pro úplné soukromí.",
+      "feature1": "Úplné soukromí",
+      "feature2": "Funguje offline",
+      "limitation": "Žádná synchronizace napříč zařízeními",
+      "action": "Pokračovat bez účtu"
+    },
+    "localWarning": {
+      "title": "Pouze lokální úložiště",
+      "message": "Vaše karty budou uloženy pouze na tomto zařízení a nebudou se synchronizovat s jinými zařízeními. Kdykoli později můžete přepnout na cloudové úložiště v nastavení.",
+      "continue": "Pokračovat"
+    },
+    "note": "Předvolbu úložiště můžete kdykoli změnit v nastavení.",
+    "settingUp": "Nastavování úložiště..."
+  },
+  "tabs": {
+    "cards": "Karty",
+    "add": "Přidat",
+    "settings": "Nastavení"
+  },
+  "cards": {
+    "title": "Sbírka karet",
+    "empty": "Zatím žádné věrnostní karty. Klepnutím na tlačítko \"+\" přidejte svou první kartu.",
+    "sections": {
+      "favorites": "Oblíbené",
+      "other": "Ostatní karty",
+      "all": "Všechny karty"
+    },
+    "sort": {
+      "title": "Seřadit podle",
+      "name": "Název",
+      "date": "Datum přidání",
+      "lastUsed": "Naposledy použito"
+    }
+  },
+  "addCard": {
+    "title": "Přidat kartu",
+    "searchPlaceholder": "Hledat obchody...",
+    "popularStores": "Oblíbené obchody",
+    "otherStores": "Ostatní obchody",
+    "scan": {
+      "title": "Skenovat kartu",
+      "instruction": "Naskenujte čárový kód nebo QR kód své karty",
+      "manual": "Nemůžete naskenovat kartu?",
+      "enterManually": "Zadat ručně"
+    },
+    "manual": {
+      "title": "Zadat údaje o kartě",
+      "cardNumber": "Číslo karty",
+      "cardNumberPlaceholder": "Zadejte číslo karty",
+      "notesPlaceholder": "Přidejte další informace"
+    },
+    "custom": {
+      "title": "Vytvořit vlastní kartu",
+      "createCustom": "Vytvořit vlastní kartu",
+      "createCustomDescription": "Navrhněte si vlastní věrnostní kartu s vlastním názvem a barvou",
+      "preview": "Náhled",
+      "cardName": "Název karty",
+      "cardNamePlaceholder": "Zadejte název karty",
+      "cardColor": "Barva karty",
+      "codeType": "Typ kódu",
+      "cardCode": "Kód karty",
+      "cardCodePlaceholder": "Zadejte kód karty nebo naskenujte",
+      "codeRequired": "Kód karty je povinný",
+      "scan": "Skenovat",
+      "barcode": "Čárový kód",
+      "qrcode": "QR kód",
+      "note": "Poznámka: Obrázky nelze nahrávat. Karta zobrazí první písmeno názvu velkými písmeny na pozadí zvolené barvy.",
+      "selectColor": "Vybrat barvu",
+      "presetColors": "Přednastavené barvy",
+      "customColor": "Vlastní barva",
+      "colorHelp": "Zadejte hexadecimální kód barvy (např. #FF6B6B) nebo vyberte z výše uvedených přednastavených barev."
+    }
+  },
+  "cardDetail": {
+    "added": "Přidáno: {{date}}",
+    "lastUsed": "Naposledy použito: {{date}}",
+    "deleteConfirm": "Opravdu chcete tuto kartu smazat? Tuto akci nelze vrátit zpět.",
+    "deleteSuccess": "Karta úspěšně smazána"
+  },
+  "settings": {
+    "title": "Nastavení",
+    "login": "Přihlaste se k synchronizaci karet",
+    "logout": {
+      "description": "Jste aktuálně přihlášeni. Odhlaste se, abyste zastavili synchronizaci karet. Vaše lokální karty zůstanou.",
+      "title": "Odhlásit se",
+      "confirm": "Opravdu se chcete odhlásit?"
+    },
+    "sections": {
+      "account": "Můj účet",
+      "appearance": "Vzhled",
+      "data": "Správa dat",
+      "about": "O aplikaci"
+    },
+    "language": {
+      "title": "Jazyk",
+      "system": "Jazyk systému",
+      "available": "Dostupné jazyky"
+    },
+    "theme": {
+      "title": "Změnit téma",
+      "light": "Světlý režim",
+      "dark": "Tmavý režim",
+      "system": "Systém",
+      "systemDescription": "Sledovat vzhled systému",
+      "available": "Vybrat téma",
+      "confirmChange": "Změna tématu vyžaduje restart pro správné použití. Chcete pokračovat?"
+    },
+    "haptic": {
+      "title": "Haptická odezva",
+      "description": "Cítit vibrace při interakcích"
+    },
+    "csupport": {
+      "title": "Podpora",
+      "contact": "Kontaktovat podporu",
+      "description": "Máte-li jakékoli dotazy nebo potřebujete pomoc, kontaktujte nás na help@tomascards.eu.",
+      "faq": "Často kladené otázky",
+      "privacyPolicy": "Zásady ochrany osobních údajů",
+      "termsOfService": "Podmínky služby"
+    },
+    "version": "Verze {{version}}"
+  },
+  "storage": {
+    "mode": {
+      "title": "Režim úložiště",
+      "subtitle": "Vyberte, jak jsou vaše karty uloženy a synchronizovány",
+      "recommended": "Doporučeno",
+      "warning": {
+        "title": "Přepnout na cloudové úložiště?",
+        "message": "Přepnutí na cloudové úložiště smaže všechny vaše lokální karty. Vaše karty budou místo toho synchronizovány z cloudu. Tuto akci nelze vrátit zpět.",
+        "confirm": "Přepnout na cloud"
+      },
+      "local": {
+        "title": "Lokální úložiště",
+        "description": "Ukládat karty pouze na tomto zařízení",
+        "feature1": "Funguje offline",
+        "feature2": "Úplné soukromí",
+        "limitation": "Žádná synchronizace napříč zařízeními"
+      },
+      "cloud": {
+        "title": "Cloudové úložiště",
+        "description": "Ukládat karty v cloudu se synchronizací napříč zařízeními",
+        "feature1": "Synchronizace napříč zařízeními",
+        "feature2": "Automatická záloha",
+        "feature3": "Funguje také offline"
+      }
+    },
+    "offline": {
+      "title": "Vyžadován internet",
+      "message": "Funkce cloudového úložiště vyžadují připojení k internetu. Připojte se k internetu nebo přepněte na režim lokálního úložiště.",
+      "operationBlocked": "Tato operace vyžaduje připojení k internetu při použití cloudového úložiště. Připojte se k internetu a zkuste to znovu.",
+      "banner": "Pro cloudové funkce je vyžadováno připojení k internetu"
+    },
+    "auth": {
+      "required": {
+        "title": "Vyžadováno ověření",
+        "message": "Vaše relace cloudového úložiště vypršela. Přihlaste se prosím znovu, abyste mohli pokračovat v synchronizaci karet.",
+        "reauth": "Znovu se přihlásit"
+      }
+    },
+    "provider": {
+      "title": "Poskytovatel cloudu",
+      "subtitle": "Vyberte, kam se mají ukládat vaše data",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Synchronizovat pomocí vašeho Apple ID"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Synchronizovat pomocí vašeho účtu Google",
+        "login": "Přihlásit se pomocí Google",
+        "slow_warning": "(Poznámka: Google Drive může být pomalý a načítání může trvat 2-3 sekundy)"
+      }
+    }
+  },
+  "sync": {
+    "status": {
+      "synced": "Synchronizováno",
+      "syncing": "Synchronizuji...",
+      "offline": "Offline",
+      "error": "Chyba synchronizace",
+      "pending": "{{count}} čekajících",
+      "tapToRetry": "Klepnutím zkusit znovu"
+    },
+    "conflict": {
+      "title": "Konflikt synchronizace",
+      "subtitle": "Našli jsme rozdílná data na vašem zařízení a v cloudu. Jak chcete tento problém vyřešit?",
+      "localData": "Lokální data",
+      "cloudData": "Cloudová data",
+      "cardCount": "{{count}} karet",
+      "replaceWithCloud": "Použít cloudová data",
+      "replaceWithCloudDesc": "Nahradit lokální karty cloudovými daty",
+      "merge": "Sloučit data",
+      "mergeDesc": "Kombinovat lokální a cloudové karty",
+      "keepLocal": "Použít lokální data",
+      "keepLocalDesc": "Nahrát lokální karty do cloudu",
+      "resolving": "Řešení konfliktu...",
+      "error": "Chyba synchronizace",
+      "errorMessage": "Nepodařilo se vyřešit konflikt synchronizace. Zkuste to prosím znovu.",
+      "recommended": "Doporučeno"
+    },
+    "success": {
+      "title": "Synchronizace dokončena",
+      "message": "Úspěšně synchronizováno {{count}} karet z cloudu."
+    },
+    "uploadLocal": {
+      "title": "Nahrát lokální karty?",
+      "message": "Cloudové úložiště je prázdné, ale máte {{count}} karet lokálně. Chcete je nahrát do cloudu?",
+      "confirm": "Nahrát do cloudu"
+    },
+    "upload": {
+      "success": {
+        "title": "Nahrávání dokončeno",
+        "message": "Vaše lokální karty byly úspěšně nahrány do cloudu."
+      },
+      "error": {
+        "title": "Nahrávání selhalo",
+        "message": "Nahrávání karet do cloudu selhalo. Zkuste to prosím znovu."
+      }
+    },
+    "empty": {
+      "title": "Nenalezena žádná data",
+      "message": "Lokální i cloudové úložiště jsou prázdné. Přidejte karty a začněte!"
+    },
+    "error": {
+      "title": "Synchronizace selhala",
+      "message": "Synchronizace s cloudovým úložištěm selhala. Zkontrolujte připojení a zkuste to znovu."
+    }
+  },
+  "debug": {
+    "title": "Ladění",
+    "mode": {
+      "enabled": "Režim ladění povolen",
+      "disabled": "Režim ladění zakázán"
+    },
+    "modal": {
+      "error": "Chyba ladění",
+      "warning": "Varování ladění",
+      "info": "Informace o ladění",
+      "message": "Zpráva",
+      "details": "Podrobnosti",
+      "stack": "Stopa zásobníku",
+      "extra": "Další data",
+      "copyTitle": "Kopírovat informace o ladění",
+      "copyMessage": "Zkopírovat informace o ladění pro sdílení s podporou?",
+      "copy": "Kopírovat",
+      "copyDetails": "Kopírovat podrobnosti"
+    },
+    "logs": {
+      "title": "Protokoly ladění",
+      "description": "Celkem {{total}} protokolů ({{errors}} chyb)",
+      "total": "Celkem {{count}}",
+      "errors": "{{count}} chyb",
+      "warnings": "{{count}} varování",
+      "info": "{{count}} informací",
+      "all": "Vše",
+      "errorsOnly": "Pouze chyby",
+      "warningsOnly": "Pouze varování",
+      "infoOnly": "Pouze informace",
+      "empty": "Nenalezeny žádné protokoly ladění",
+      "clearTitle": "Vymazat protokoly",
+      "clearConfirm": "Opravdu chcete vymazat všechny protokoly ladění? Tuto akci nelze vrátit zpět.",
+      "clear": "Vymazat",
+      "copied": "Protokol zkopírován"
+    }
+  }
+}

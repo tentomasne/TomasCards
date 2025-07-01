@@ -1,0 +1,311 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Sauvegarder",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "close": "Fermer",
+      "back": "Retour",
+      "confirm": "Confirmer",
+      "logout": "Déconnexion",
+      "ok": "OK",
+      "apply": "Appliquer"
+    },
+    "labels": {
+      "name": "Nom",
+      "code": "Code",
+      "notes": "Notes",
+      "optional": "Facultatif",
+      "loading": "Chargement...",
+      "error": "Erreur",
+      "success": "Succès"
+    },
+    "validation": {
+      "required": "Ce champ est obligatoire",
+      "invalid": "Valeur invalide"
+    },
+    "offline": {
+      "banner": "Vous êtes hors ligne - Certaines fonctionnalités sont limitées"
+    }
+  },
+  "welcome": {
+    "title": "Bienvenue sur TomasCards",
+    "subtitle": "Votre portefeuille de cartes de fidélité numériques. Choisissez comment vous souhaitez stocker vos cartes.",
+    "recommended": "Recommandé",
+    "cloudOption": {
+      "title": "Stockage Cloud",
+      "description": "Connectez-vous pour synchroniser vos cartes sur tous vos appareils avec une sauvegarde automatique.",
+      "feature1": "Synchronisation multi-appareils",
+      "feature2": "Sauvegarde automatique",
+      "feature3": "Stockage cloud sécurisé",
+      "action": "Se connecter ou créer un compte"
+    },
+    "localOption": {
+      "title": "Stockage Local",
+      "description": "Stockez vos cartes uniquement sur cet appareil pour une confidentialité totale.",
+      "feature1": "Confidentialité totale",
+      "feature2": "Fonctionne hors ligne",
+      "limitation": "Pas de synchronisation multi-appareils",
+      "action": "Continuer sans compte"
+    },
+    "localWarning": {
+      "title": "Stockage Local Uniquement",
+      "message": "Vos cartes ne seront stockées que sur cet appareil et ne seront pas synchronisées avec d'autres appareils. Vous pouvez toujours passer au stockage cloud plus tard dans les paramètres.",
+      "continue": "Continuer"
+    },
+    "note": "Vous pouvez modifier votre préférence de stockage à tout moment dans les paramètres.",
+    "settingUp": "Configuration de votre stockage..."
+  },
+  "tabs": {
+    "cards": "Cartes",
+    "add": "Ajouter",
+    "settings": "Paramètres"
+  },
+  "cards": {
+    "title": "Collection de cartes",
+    "empty": "Aucune carte de fidélité pour l'instant. Appuyez sur le bouton \"+\" pour ajouter votre première carte.",
+    "sections": {
+      "favorites": "Favoris",
+      "other": "Autres cartes",
+      "all": "Toutes les cartes"
+    },
+    "sort": {
+      "title": "Trier par",
+      "name": "Nom",
+      "date": "Date d'ajout",
+      "lastUsed": "Dernière utilisation"
+    }
+  },
+  "addCard": {
+    "title": "Ajouter une carte",
+    "searchPlaceholder": "Rechercher des magasins...",
+    "popularStores": "Magasins populaires",
+    "otherStores": "Autres magasins",
+    "scan": {
+      "title": "Scanner la carte",
+      "instruction": "Scannez le code-barres ou le code QR de votre carte",
+      "manual": "Impossible de scanner votre carte ?",
+      "enterManually": "Saisir manuellement"
+    },
+    "manual": {
+      "title": "Saisir les détails de la carte",
+      "cardNumber": "Numéro de carte",
+      "cardNumberPlaceholder": "Saisir le numéro de carte",
+      "notesPlaceholder": "Ajouter des informations supplémentaires"
+    },
+    "custom": {
+      "title": "Créer une carte personnalisée",
+      "createCustom": "Créer une carte personnalisée",
+      "createCustomDescription": "Concevez votre propre carte de fidélité avec un nom et une couleur personnalisés",
+      "preview": "Aperçu",
+      "cardName": "Nom de la carte",
+      "cardNamePlaceholder": "Saisir le nom de la carte",
+      "cardColor": "Couleur de la carte",
+      "codeType": "Type de code",
+      "cardCode": "Code de la carte",
+      "cardCodePlaceholder": "Saisir le code de la carte ou scanner",
+      "codeRequired": "Le code de la carte est obligatoire",
+      "scan": "Scanner",
+      "barcode": "Code-barres",
+      "qrcode": "Code QR",
+      "note": "Remarque : Les images ne peuvent pas être téléchargées. La carte affichera la première lettre du nom en majuscules sur la couleur de fond choisie.",
+      "selectColor": "Sélectionner la couleur",
+      "presetColors": "Couleurs prédéfinies",
+      "customColor": "Couleur personnalisée",
+      "colorHelp": "Saisissez un code couleur hexadécimal (par exemple, #FF6B6B) ou choisissez parmi les couleurs prédéfinies ci-dessus."
+    }
+  },
+  "cardDetail": {
+    "added": "Ajouté : {{date}}",
+    "lastUsed": "Dernière utilisation : {{date}}",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette carte ? Cette action est irréversible.",
+    "deleteSuccess": "Carte supprimée avec succès"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "login": "Connectez-vous pour synchroniser vos cartes",
+    "logout": {
+      "description": "Vous êtes actuellement connecté. Déconnectez-vous pour arrêter la synchronisation de vos cartes. Vos cartes locales resteront.",
+      "title": "Déconnexion",
+      "confirm": "Êtes-vous sûr de vouloir vous déconnecter ?"
+    },
+    "sections": {
+      "account": "Mon compte",
+      "appearance": "Apparence",
+      "data": "Gestion des données",
+      "about": "À propos"
+    },
+    "language": {
+      "title": "Langue",
+      "system": "Langue du système",
+      "available": "Langues disponibles"
+    },
+    "theme": {
+      "title": "Changer de thème",
+      "light": "Mode clair",
+      "dark": "Mode sombre",
+      "system": "Système",
+      "systemDescription": "Suivre l'apparence du système",
+      "available": "Choisir le thème",
+      "confirmChange": "Le changement de thème nécessite un redémarrage pour s'appliquer correctement. Voulez-vous continuer ?"
+    },
+    "haptic": {
+      "title": "Retour haptique",
+      "description": "Ressentir les vibrations pour les interactions"
+    },
+    "csupport": {
+      "title": "Support",
+      "contact": "Contacter le support",
+      "description": "Si vous avez des questions ou avez besoin d'aide, veuillez nous contacter à help@tomascards.eu.",
+      "faq": "FAQ",
+      "privacyPolicy": "Politique de confidentialité",
+      "termsOfService": "Conditions d'utilisation"
+    },
+    "version": "Version {{version}}"
+  },
+  "storage": {
+    "mode": {
+      "title": "Mode de stockage",
+      "subtitle": "Choisissez comment vos cartes sont stockées et synchronisées",
+      "recommended": "Recommandé",
+      "warning": {
+        "title": "Passer au stockage cloud ?",
+        "message": "Le passage au stockage cloud supprimera toutes vos cartes locales. Vos cartes seront synchronisées depuis le cloud à la place. Cette action est irréversible.",
+        "confirm": "Passer au cloud"
+      },
+      "local": {
+        "title": "Stockage local",
+        "description": "Stocker les cartes uniquement sur cet appareil",
+        "feature1": "Fonctionne hors ligne",
+        "feature2": "Confidentialité totale",
+        "limitation": "Pas de synchronisation multi-appareils"
+      },
+      "cloud": {
+        "title": "Stockage cloud",
+        "description": "Stocker les cartes dans le cloud avec synchronisation multi-appareils",
+        "feature1": "Synchronisation multi-appareils",
+        "feature2": "Sauvegarde automatique",
+        "feature3": "Fonctionne également hors ligne"
+      }
+    },
+    "offline": {
+      "title": "Internet requis",
+      "message": "Les fonctionnalités de stockage cloud nécessitent une connexion Internet. Veuillez vous connecter à Internet ou passer en mode de stockage local.",
+      "operationBlocked": "Cette opération nécessite une connexion Internet lors de l'utilisation du stockage cloud. Veuillez vous connecter à Internet et réessayer.",
+      "banner": "Connexion Internet requise pour les fonctionnalités cloud"
+    },
+    "auth": {
+      "required": {
+        "title": "Authentification requise",
+        "message": "Votre session de stockage cloud a expiré. Veuillez vous reconnecter pour continuer à synchroniser vos cartes.",
+        "reauth": "Se reconnecter"
+      }
+    },
+    "provider": {
+      "title": "Fournisseur de cloud",
+      "subtitle": "Sélectionnez où vos données doivent être stockées",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Synchroniser à l'aide de votre identifiant Apple"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Synchroniser à l'aide de votre compte Google",
+        "login": "Se connecter avec Google",
+        "slow_warning": "(Remarque : Google Drive peut être lent et peut prendre 2-3 secondes à charger)"
+      }
+    }
+  },
+  "sync": {
+    "status": {
+      "synced": "Synchronisé",
+      "syncing": "Synchronisation...",
+      "offline": "Hors ligne",
+      "error": "Erreur de synchronisation",
+      "pending": "{{count}} en attente",
+      "tapToRetry": "Appuyez pour réessayer"
+    },
+    "conflict": {
+      "title": "Conflit de synchronisation",
+      "subtitle": "Nous avons trouvé des données différentes sur votre appareil et dans le cloud. Comment souhaitez-vous résoudre ce problème ?",
+      "localData": "Données locales",
+      "cloudData": "Données cloud",
+      "cardCount": "{{count}} cartes",
+      "replaceWithCloud": "Utiliser les données cloud",
+      "replaceWithCloudDesc": "Remplacer les cartes locales par les données cloud",
+      "merge": "Fusionner les données",
+      "mergeDesc": "Combiner les cartes locales et cloud",
+      "keepLocal": "Utiliser les données locales",
+      "keepLocalDesc": "Télécharger les cartes locales vers le cloud",
+      "resolving": "Résolution du conflit...",
+      "error": "Erreur de synchronisation",
+      "errorMessage": "Échec de la résolution du conflit de synchronisation. Veuillez réessayer.",
+      "recommended": "Recommandé"
+    },
+    "success": {
+      "title": "Synchronisation terminée",
+      "message": "{{count}} cartes synchronisées avec succès depuis le cloud."
+    },
+    "uploadLocal": {
+      "title": "Télécharger les cartes locales ?",
+      "message": "Le stockage cloud est vide mais vous avez {{count}} cartes localement. Souhaitez-vous les télécharger vers le cloud ?",
+      "confirm": "Télécharger vers le cloud"
+    },
+    "upload": {
+      "success": {
+        "title": "Téléchargement terminé",
+        "message": "Vos cartes locales ont été téléchargées avec succès vers le cloud."
+      },
+      "error": {
+        "title": "Échec du téléchargement",
+        "message": "Échec du téléchargement des cartes vers le cloud. Veuillez réessayer."
+      }
+    },
+    "empty": {
+      "title": "Aucune donnée trouvée",
+      "message": "Le stockage local et cloud sont vides. Ajoutez des cartes pour commencer !"
+    },
+    "error": {
+      "title": "Échec de la synchronisation",
+      "message": "Échec de la synchronisation avec le stockage cloud. Veuillez vérifier votre connexion et réessayer."
+    }
+  },
+  "debug": {
+    "title": "Débogage",
+    "mode": {
+      "enabled": "Mode débogage activé",
+      "disabled": "Mode débogage désactivé"
+    },
+    "modal": {
+      "error": "Erreur de débogage",
+      "warning": "Avertissement de débogage",
+      "info": "Informations de débogage",
+      "message": "Message",
+      "details": "Détails",
+      "stack": "Trace de la pile",
+      "extra": "Données supplémentaires",
+      "copyTitle": "Copier les informations de débogage",
+      "copyMessage": "Copier les informations de débogage à partager avec le support ?",
+      "copy": "Copier",
+      "copyDetails": "Copier les détails"
+    },
+    "logs": {
+      "title": "Journaux de débogage",
+      "description": "{{total}} journaux au total ({{errors}} erreurs)",
+      "total": "{{count}} au total",
+      "errors": "{{count}} erreurs",
+      "warnings": "{{count}} avertissements",
+      "info": "{{count}} infos",
+      "all": "Tout",
+      "errorsOnly": "Erreurs",
+      "warningsOnly": "Avertissements",
+      "infoOnly": "Infos",
+      "empty": "Aucun journal de débogage trouvé",
+      "clearTitle": "Effacer les journaux",
+      "clearConfirm": "Êtes-vous sûr de vouloir effacer tous les journaux de débogage ? Cette action est irréversible.",
+      "clear": "Effacer",
+      "copied": "Journal copié"
+    }
+  }
+}

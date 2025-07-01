@@ -1,0 +1,311 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "close": "Cerrar",
+      "back": "Atrás",
+      "confirm": "Confirmar",
+      "logout": "Cerrar sesión",
+      "ok": "OK",
+      "apply": "Aplicar"
+    },
+    "labels": {
+      "name": "Nombre",
+      "code": "Código",
+      "notes": "Notas",
+      "optional": "Opcional",
+      "loading": "Cargando...",
+      "error": "Error",
+      "success": "Éxito"
+    },
+    "validation": {
+      "required": "Este campo es obligatorio",
+      "invalid": "Valor inválido"
+    },
+    "offline": {
+      "banner": "Estás sin conexión - Algunas funciones están limitadas"
+    }
+  },
+  "welcome": {
+    "title": "Bienvenido a TomasCards",
+    "subtitle": "Tu billetera digital de tarjetas de fidelidad. Elige cómo quieres almacenar tus tarjetas.",
+    "recommended": "Recomendado",
+    "cloudOption": {
+      "title": "Almacenamiento en la nube",
+      "description": "Inicia sesión para sincronizar tus tarjetas en todos tus dispositivos con copia de seguridad automática.",
+      "feature1": "Sincronización entre dispositivos",
+      "feature2": "Copia de seguridad automática",
+      "feature3": "Almacenamiento seguro en la nube",
+      "action": "Iniciar sesión o crear cuenta"
+    },
+    "localOption": {
+      "title": "Almacenamiento local",
+      "description": "Guarda tus tarjetas solo en este dispositivo para una privacidad total.",
+      "feature1": "Privacidad total",
+      "feature2": "Funciona sin conexión",
+      "limitation": "No se sincroniza entre dispositivos",
+      "action": "Continuar sin cuenta"
+    },
+    "localWarning": {
+      "title": "Solo almacenamiento local",
+      "message": "Tus tarjetas solo se guardarán en este dispositivo y no se sincronizarán con otros dispositivos. Siempre puedes cambiar al almacenamiento en la nube más tarde en la configuración.",
+      "continue": "Continuar"
+    },
+    "note": "Puedes cambiar tu preferencia de almacenamiento en cualquier momento en la configuración.",
+    "settingUp": "Configurando tu almacenamiento..."
+  },
+  "tabs": {
+    "cards": "Tarjetas",
+    "add": "Añadir",
+    "settings": "Ajustes"
+  },
+  "cards": {
+    "title": "Colección de tarjetas",
+    "empty": "Aún no hay tarjetas de fidelidad. Toca el botón \"+\" para añadir tu primera tarjeta.",
+    "sections": {
+      "favorites": "Favoritas",
+      "other": "Otras tarjetas",
+      "all": "Todas las tarjetas"
+    },
+    "sort": {
+      "title": "Ordenar por",
+      "name": "Nombre",
+      "date": "Fecha de adición",
+      "lastUsed": "Último uso"
+    }
+  },
+  "addCard": {
+    "title": "Añadir tarjeta",
+    "searchPlaceholder": "Buscar tiendas...",
+    "popularStores": "Tiendas populares",
+    "otherStores": "Otras tiendas",
+    "scan": {
+      "title": "Escanear tarjeta",
+      "instruction": "Escanea el código de barras o QR de tu tarjeta",
+      "manual": "¿No puedes escanear tu tarjeta?",
+      "enterManually": "Introducir manualmente"
+    },
+    "manual": {
+      "title": "Introducir detalles de la tarjeta",
+      "cardNumber": "Número de tarjeta",
+      "cardNumberPlaceholder": "Introduce el número de tarjeta",
+      "notesPlaceholder": "Añade cualquier información adicional"
+    },
+    "custom": {
+      "title": "Crear tarjeta personalizada",
+      "createCustom": "Crear tarjeta personalizada",
+      "createCustomDescription": "Diseña tu propia tarjeta de fidelidad con nombre y color personalizados",
+      "preview": "Vista previa",
+      "cardName": "Nombre de la tarjeta",
+      "cardNamePlaceholder": "Introduce el nombre de la tarjeta",
+      "cardColor": "Color de la tarjeta",
+      "codeType": "Tipo de código",
+      "cardCode": "Código de la tarjeta",
+      "cardCodePlaceholder": "Introduce el código de la tarjeta o escanea",
+      "codeRequired": "El código de la tarjeta es obligatorio",
+      "scan": "Escanear",
+      "barcode": "Código de barras",
+      "qrcode": "Código QR",
+      "note": "Nota: No se pueden subir imágenes. La tarjeta mostrará la primera letra del nombre en mayúsculas sobre el color de fondo elegido.",
+      "selectColor": "Seleccionar color",
+      "presetColors": "Colores preestablecidos",
+      "customColor": "Color personalizado",
+      "colorHelp": "Introduce un código de color hexadecimal (por ejemplo, #FF6B6B) o elige entre los colores preestablecidos anteriores."
+    }
+  },
+  "cardDetail": {
+    "added": "Añadido: {{date}}",
+    "lastUsed": "Último uso: {{date}}",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar esta tarjeta? Esta acción no se puede deshacer.",
+    "deleteSuccess": "Tarjeta eliminada correctamente"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "login": "Inicia sesión para sincronizar tus tarjetas",
+    "logout": {
+      "description": "Actualmente has iniciado sesión. Cierra sesión para dejar de sincronizar tus tarjetas. Tus tarjetas locales permanecerán.",
+      "title": "Cerrar sesión",
+      "confirm": "¿Estás seguro de que quieres cerrar sesión?"
+    },
+    "sections": {
+      "account": "Mi cuenta",
+      "appearance": "Apariencia",
+      "data": "Gestión de datos",
+      "about": "Acerca de"
+    },
+    "language": {
+      "title": "Idioma",
+      "system": "Idioma del sistema",
+      "available": "Idiomas disponibles"
+    },
+    "theme": {
+      "title": "Cambiar tema",
+      "light": "Modo claro",
+      "dark": "Modo oscuro",
+      "system": "Sistema",
+      "systemDescription": "Seguir la apariencia del sistema",
+      "available": "Elegir tema",
+      "confirmChange": "Cambiar el tema requiere un reinicio para aplicarse correctamente. ¿Quieres continuar?"
+    },
+    "haptic": {
+      "title": "Respuesta háptica",
+      "description": "Sentir vibraciones en las interacciones"
+    },
+    "csupport": {
+      "title": "Soporte",
+      "contact": "Contactar con soporte",
+      "description": "Si tienes alguna pregunta o necesitas ayuda, contáctanos en help@tomascards.eu.",
+      "faq": "Preguntas frecuentes",
+      "privacyPolicy": "Política de privacidad",
+      "termsOfService": "Términos de servicio"
+    },
+    "version": "Versión {{version}}"
+  },
+  "storage": {
+    "mode": {
+      "title": "Modo de almacenamiento",
+      "subtitle": "Elige cómo se almacenan y sincronizan tus tarjetas",
+      "recommended": "Recomendado",
+      "warning": {
+        "title": "¿Cambiar a almacenamiento en la nube?",
+        "message": "Cambiar al almacenamiento en la nube eliminará todas tus tarjetas locales. Tus tarjetas se sincronizarán desde la nube. Esta acción no se puede deshacer.",
+        "confirm": "Cambiar a la nube"
+      },
+      "local": {
+        "title": "Almacenamiento local",
+        "description": "Guardar tarjetas solo en este dispositivo",
+        "feature1": "Funciona sin conexión",
+        "feature2": "Privacidad total",
+        "limitation": "No se sincroniza entre dispositivos"
+      },
+      "cloud": {
+        "title": "Almacenamiento en la nube",
+        "description": "Guardar tarjetas en la nube con sincronización entre dispositivos",
+        "feature1": "Sincronización entre dispositivos",
+        "feature2": "Copia de seguridad automática",
+        "feature3": "También funciona sin conexión"
+      }
+    },
+    "offline": {
+      "title": "Se requiere Internet",
+      "message": "Las funciones de almacenamiento en la nube requieren una conexión a Internet. Conéctate a Internet o cambia al modo de almacenamiento local.",
+      "operationBlocked": "Esta operación requiere una conexión a Internet cuando se utiliza el almacenamiento en la nube. Conéctate a Internet e inténtalo de nuevo.",
+      "banner": "Se requiere conexión a Internet para las funciones en la nube"
+    },
+    "auth": {
+      "required": {
+        "title": "Autenticación requerida",
+        "message": "Tu sesión de almacenamiento en la nube ha caducado. Inicia sesión de nuevo para seguir sincronizando tus tarjetas.",
+        "reauth": "Iniciar sesión de nuevo"
+      }
+    },
+    "provider": {
+      "title": "Proveedor de la nube",
+      "subtitle": "Selecciona dónde se deben almacenar tus datos",
+      "icloud": {
+        "title": "Apple iCloud",
+        "description": "Sincronizar usando tu ID de Apple"
+      },
+      "googledrive": {
+        "title": "Google Drive",
+        "description": "Sincronizar usando tu cuenta de Google",
+        "login": "Iniciar sesión con Google",
+        "slow_warning": "(Nota: Google Drive puede ser lento y puede tardar 2-3 segundos en cargar)"
+      }
+    }
+  },
+  "sync": {
+    "status": {
+      "synced": "Sincronizado",
+      "syncing": "Sincronizando...",
+      "offline": "Sin conexión",
+      "error": "Error de sincronización",
+      "pending": "{{count}} pendientes",
+      "tapToRetry": "Toca para reintentar"
+    },
+    "conflict": {
+      "title": "Conflicto de sincronización",
+      "subtitle": "Encontramos datos diferentes en tu dispositivo y en la nube. ¿Cómo quieres resolver esto?",
+      "localData": "Datos locales",
+      "cloudData": "Datos en la nube",
+      "cardCount": "{{count}} tarjetas",
+      "replaceWithCloud": "Usar datos de la nube",
+      "replaceWithCloudDesc": "Reemplazar tarjetas locales con datos de la nube",
+      "merge": "Fusionar datos",
+      "mergeDesc": "Combinar tarjetas locales y de la nube",
+      "keepLocal": "Usar datos locales",
+      "keepLocalDesc": "Subir tarjetas locales a la nube",
+      "resolving": "Resolviendo conflicto...",
+      "error": "Error de sincronización",
+      "errorMessage": "No se pudo resolver el conflicto de sincronización. Inténtalo de nuevo.",
+      "recommended": "Recomendado"
+    },
+    "success": {
+      "title": "Sincronización completa",
+      "message": "{{count}} tarjetas sincronizadas correctamente desde la nube."
+    },
+    "uploadLocal": {
+      "title": "¿Subir tarjetas locales?",
+      "message": "El almacenamiento en la nube está vacío pero tienes {{count}} tarjetas localmente. ¿Te gustaría subirlas a la nube?",
+      "confirm": "Subir a la nube"
+    },
+    "upload": {
+      "success": {
+        "title": "Carga completa",
+        "message": "Tus tarjetas locales se han subido correctamente a la nube."
+      },
+      "error": {
+        "title": "Error de carga",
+        "message": "No se pudieron subir las tarjetas a la nube. Inténtalo de nuevo."
+      }
+    },
+    "empty": {
+      "title": "No se encontraron datos",
+      "message": "Tanto el almacenamiento local como el de la nube están vacíos. ¡Añade algunas tarjetas para empezar!"
+    },
+    "error": {
+      "title": "Error de sincronización",
+      "message": "No se pudo sincronizar con el almacenamiento en la nube. Comprueba tu conexión e inténtalo de nuevo."
+    }
+  },
+  "debug": {
+    "title": "Depurar",
+    "mode": {
+      "enabled": "Modo de depuración habilitado",
+      "disabled": "Modo de depuración deshabilitado"
+    },
+    "modal": {
+      "error": "Error de depuración",
+      "warning": "Advertencia de depuración",
+      "info": "Información de depuración",
+      "message": "Mensaje",
+      "details": "Detalles",
+      "stack": "Rastreo de pila",
+      "extra": "Datos adicionales",
+      "copyTitle": "Copiar información de depuración",
+      "copyMessage": "¿Copiar información de depuración para compartir con soporte?",
+      "copy": "Copiar",
+      "copyDetails": "Copiar detalles"
+    },
+    "logs": {
+      "title": "Registros de depuración",
+      "description": "{{total}} registros totales ({{errors}} errores)",
+      "total": "{{count}} total",
+      "errors": "{{count}} errores",
+      "warnings": "{{count}} advertencias",
+      "info": "{{count}} información",
+      "all": "Todo",
+      "errorsOnly": "Errores",
+      "warningsOnly": "Advertencias",
+      "infoOnly": "Información",
+      "empty": "No se encontraron registros de depuración",
+      "clearTitle": "Borrar registros",
+      "clearConfirm": "¿Estás seguro de que quieres borrar todos los registros de depuración? Esta acción no se puede deshacer.",
+      "clear": "Borrar",
+      "copied": "Registro copiado"
+    }
+  }
+}
