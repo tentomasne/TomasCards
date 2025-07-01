@@ -110,8 +110,10 @@ export class StorageManager {
       const tokenDataStr = await AsyncStorage.getItem(GOOGLE_TOKEN_DATA_KEY);
       if (tokenDataStr) {
         this.tokenData = JSON.parse(tokenDataStr);
-        this.accessToken = this.tokenData.accessToken;
-        logInfo('Google Drive token data loaded', `Expires: ${this.tokenData.expiresAt ? new Date(this.tokenData.expiresAt).toISOString() : 'unknown'}`, 'StorageManager');
+        if (this.tokenData) {
+          this.accessToken = this.tokenData.accessToken;
+        }
+        logInfo('Google Drive token data loaded', `Expires: ${this.tokenData?.expiresAt ? new Date(this.tokenData.expiresAt).toISOString() : 'unknown'}`, 'StorageManager');
       } else {
         // Fallback to old token format
         const token = await AsyncStorage.getItem(GOOGLE_TOKEN_KEY);
@@ -310,7 +312,12 @@ export class StorageManager {
         await AsyncStorage.setItem(GOOGLE_TOKEN_DATA_KEY, JSON.stringify(this.tokenData));
         
         // Update legacy token storage for backward compatibility
-        await AsyncStorage.setItem(GOOGLE_TOKEN_KEY, this.accessToken);
+        if (this.accessToken) {
+          await AsyncStorage.setItem(GOOGLE_TOKEN_KEY, this.accessToken);
+        } else {
+          await AsyncStorage.removeItem(GOOGLE_TOKEN_KEY);
+          logWarning('Access token cleared from legacy storage', '', 'StorageManager');
+        } 
 
         // Reconfigure cloud storage with new token
         await this.configureCloudStorage();
@@ -884,9 +891,9 @@ export class StorageManager {
       const localCards = await this.loadLocalCards();
       const cloudCards = await this.loadCloudCards();
 
-      if (localCards.length === 0) {
-        logInfo('No sync conflicts - no local data', '', 'StorageManager');
-        return null; // No conflict if no local data
+      if (localCards.length === 0 && cloudCards.length === 0) {
+        logInfo('No sync conflicts - both storages empty', '', 'StorageManager');
+        return null;
       }
 
       // Check if there are meaningful differences
@@ -924,44 +931,82 @@ export class StorageManager {
   async resolveSyncConflict(action: SyncAction, conflictData: SyncConflictData): Promise<void> {
     logInfo('Resolving sync conflict', `Action: ${action}`, 'StorageManager');
     
-    switch (action) {
-      case 'replace_with_cloud':
-        await this.saveLocalCards(conflictData.cloudCards);
-        logInfo('Sync conflict resolved - replaced with cloud data', '', 'StorageManager');
-        break;
-      
-      case 'merge':
-        const mergedCards = this.mergeCards(conflictData.localCards, conflictData.cloudCards);
-        await this.saveLocalCards(mergedCards);
-        // Upload merged cards to cloud
-        await this.saveCloudCards(mergedCards);
-        logInfo('Sync conflict resolved - data merged', `${mergedCards.length} total cards`, 'StorageManager');
-        break;
-      
-      case 'keep_local':
-        // Upload all local cards to cloud
-        await this.saveCloudCards(conflictData.localCards);
-        logInfo('Sync conflict resolved - kept local data', '', 'StorageManager');
-        break;
-    }
+    try {
+      switch (action) {
+        case 'replace_with_cloud':
+          // Replace local data with cloud data
+          await this.saveLocalCards(conflictData.cloudCards);
+          logInfo('Sync conflict resolved - replaced local with cloud data', `${conflictData.cloudCards.length} cards`, 'StorageManager');
+          break;
+        
+        case 'merge':
+          // Merge local and cloud data
+          const mergedCards = this.mergeCards(conflictData.localCards, conflictData.cloudCards);
+          
+          // Save merged data locally
+          await this.saveLocalCards(mergedCards);
+          
+          // Upload merged data to cloud
+          await this.saveCloudCards(mergedCards);
+          
+          logInfo('Sync conflict resolved - data merged', `${mergedCards.length} total cards`, 'StorageManager');
+          break;
+        
+        case 'keep_local':
+          // Upload local data to cloud (overwrite cloud)
+          await this.saveCloudCards(conflictData.localCards);
+          logInfo('Sync conflict resolved - uploaded local data to cloud', `${conflictData.localCards.length} cards`, 'StorageManager');
+          break;
+        
+        default:
+          throw new Error(`Unknown sync action: ${action}`);
+      }
 
-    await AsyncStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+      // Update last sync timestamp
+      await AsyncStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+      
+      // Clear any queued operations since we just did a full sync
+      await this.clearQueue();
+      
+      logInfo('Sync conflict resolution completed successfully', `Action: ${action}`, 'StorageManager');
+    } catch (error) {
+      console.error('Failed to resolve sync conflict:', error);
+      logError('Failed to resolve sync conflict', error instanceof Error ? error.message : String(error), 'StorageManager');
+      throw error;
+    }
   }
 
   private mergeCards(localCards: LoyaltyCard[], cloudCards: LoyaltyCard[]): LoyaltyCard[] {
-    const merged = [...cloudCards];
+    logInfo('Merging cards', `Local: ${localCards.length}, Cloud: ${cloudCards.length}`, 'StorageManager');
     
+    // Create a map to track cards by their unique identifiers
+    const cardMap = new Map<string, LoyaltyCard>();
+    
+    // First, add all cloud cards (they take precedence for existing cards)
+    for (const cloudCard of cloudCards) {
+      cardMap.set(cloudCard.id, cloudCard);
+    }
+    
+    // Then, add local cards that don't exist in cloud
     for (const localCard of localCards) {
-      const existsInCloud = cloudCards.some(cloudCard => 
-        cloudCard.code === localCard.code || cloudCard.id === localCard.id
-      );
-      
-      if (!existsInCloud) {
-        merged.push(localCard);
+      if (!cardMap.has(localCard.id)) {
+        // Check if there's a card with the same code (potential duplicate)
+        const existingCardWithSameCode = Array.from(cardMap.values()).find(
+          card => card.code === localCard.code && card.name === localCard.name
+        );
+        
+        if (!existingCardWithSameCode) {
+          cardMap.set(localCard.id, localCard);
+        } else {
+          logInfo('Skipping duplicate card during merge', `Local ID: ${localCard.id}, Existing ID: ${existingCardWithSameCode.id}`, 'StorageManager');
+        }
       }
     }
     
-    return merged;
+    const mergedCards = Array.from(cardMap.values());
+    logInfo('Cards merged successfully', `Result: ${mergedCards.length} cards`, 'StorageManager');
+    
+    return mergedCards;
   }
 
   getQueuedOperationsCount(): number {
