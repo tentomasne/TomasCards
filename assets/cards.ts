@@ -4,6 +4,7 @@ export interface Card {
     popular?: boolean
     logo: any 
     type: 'barcode' | 'qrcode'
+    country?: Array<string>
     color: string
   }
   

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "TomasCards",
-    "slug": "tomascards",
+    "slug": "tomascards-ozwldgzvc7no70voybcs",
     "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,7 +14,8 @@
       "usesNonExemptEncryption": false,
       "infoPlist": {
         "NSCameraUsageDescription": "This app needs camera access to scan barcodes and QR codes.",
-        "NSLocationWhenInUseUsageDescription": "We need your location for the internal React Native libraries, even if we don't use it directly."
+        "NSLocationWhenInUseUsageDescription": "We need your location for the internal React Native libraries, even if we don't use it directly.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.tentomasne.tomas-cards"
     },
@@ -65,7 +66,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "2f98ca16-1cd1-44d2-8e4b-fa63d3e71a4f"
+        "projectId": "91d19843-5513-474f-bc2a-c91477445138"
       }
     },
     "owner": "tomasovucet"

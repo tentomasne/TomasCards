@@ -27,7 +27,8 @@ interface CloudProviderSelectorProps {
   currentProvider: CloudStorageProvider;
   onSelect: (provider: CloudStorageProvider, shouldMigrateData?: boolean) => Promise<void>;
   onClose: () => void;
-  shouldReloadAfterSelection?: boolean; // New prop to control reload behavior
+  isInitialSetup?: boolean; // New prop to indicate initial setup
+  shouldReloadAfterSelection?: boolean;
 }
 
 export default function CloudProviderSelector({
@@ -35,7 +36,8 @@ export default function CloudProviderSelector({
   currentProvider,
   onSelect,
   onClose,
-  shouldReloadAfterSelection = false, // Default to false for backward compatibility
+  isInitialSetup = false, // Default to false
+  shouldReloadAfterSelection = false,
 }: CloudProviderSelectorProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -616,11 +618,24 @@ export default function CloudProviderSelector({
           
           <TouchableOpacity
             style={[styles.closeButton, { backgroundColor: colors.backgroundMedium }]}
-            onPress={onClose}
+            onPress={async () => {
+              if (isInitialSetup) {
+                // During initial setup, default to local storage if the user closes the modal
+                await storageManager.setStorageMode('local', false);
+                await storageManager.setProvider(CloudStorageProvider.Local, false);
+                Alert.alert(
+                  'Setup Incomplete',
+                  'You can change your storage preference in settings later.',
+                  [{ text: 'OK', onPress: onClose }]
+                );
+              } else {
+                onClose();
+              }
+            }}
             disabled={isAuthenticating || isProcessing}
           >
             <Text style={[styles.closeButtonText, { color: colors.textPrimary }]}>
-              {t('common.buttons.close')}
+              {isInitialSetup ? t('common.buttons.cancel') : t('common.buttons.close')}
             </Text>
           </TouchableOpacity>
         </View>

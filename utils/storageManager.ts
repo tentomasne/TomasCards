@@ -127,12 +127,44 @@ export class StorageManager {
       // Configure cloud storage if we have the necessary credentials
       await this.configureCloudStorage();
 
+      // Check if iCloud is selected but unavailable
+      if (this.storageMode === 'cloud' && this.provider === CloudStorageProvider.ICloud) {
+        const isICloudAvailable = await this.isICloudAvailable();
+        if (!isICloudAvailable) {
+          logWarning('iCloud is selected but not available, switching to local storage', '', 'StorageManager');
+          await this.setStorageMode('local', false);
+        }
+      } else if (this.storageMode === 'cloud' && this.provider === CloudStorageProvider.GoogleDrive) {
+        // Check Google Drive authentication status
+        const isValid = this.isAuthenticationValid();
+        if (!isValid) {
+          logWarning('Google Drive is selected but authentication is invalid, switching to local storage', '', 'StorageManager');
+          this.triggerAuthenticationRequired(); // Notify UI to prompt re-authentication
+          await this.setStorageMode('local', false);
+        }
+      }
+
       this.isInitialized = true;
       logInfo('Storage manager initialized successfully', '', 'StorageManager');
     } catch (error) {
       console.error('Failed to initialize storage manager:', error);
       logError('Failed to initialize storage manager', error instanceof Error ? error.message : String(error), 'StorageManager');
       this.isInitialized = true;
+    }
+  }
+
+
+  async isICloudAvailable(): Promise<boolean> {
+    if (Platform.OS !== 'ios') {
+      return false;
+    }
+    try {
+      // Use a temporary instance to check availability without affecting the main instance
+      const testCloudStorage = new CloudStorage(CloudStorageProvider.ICloud);
+      await testCloudStorage.exists('test-availability-check.txt');
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 

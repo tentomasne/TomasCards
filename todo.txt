@@ -1,6 +1,8 @@
 more cards
 same background cards in index cards
 cloud provider defaultne da icloud aj ked je unavailable a ked dam close the cloud provider nech to da spat local storage
+dark mode nefunguje barcode
+can you fix that when choosing. o cloud storage default is ios provider and if ios is unavailable it still can be choosen can you fix that? It cannot be closed until someone choose it and if someone close the app it will choose local storage, because. Check if ios is choosen and if is unavailable it will choose local on startup of the app also
 
 ------------------------
 UPDATE LATER:
