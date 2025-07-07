@@ -1,69 +1,245 @@
 export interface Card {
-    id: string
-    name: string
-    popular?: boolean
-    logo: any 
-    type: 'barcode' | 'qrcode'
-    country?: Array<string>
-    color: string
-  }
+  id: string
+  name: string
+  popular?: boolean
+  logo: any
+  type: 'barcode' | 'qrcode'
+  country?: Array<string>
+  color: string
+}
+
+export const POPULAR_CARDS: Card[] = [
+  {
+    id: 'kaufland',
+    name: 'Kaufland',
+    type: 'barcode',
+    color: '#E4002B',
+    popular: true,
+    logo: require('./logos/kaufland.png'),
+  },
+  {
+    id: 'tesco',
+    name: 'Tesco',
+    type: 'barcode',
+    color: '#00539F',
+    popular: true,
+    logo: require('./logos/tesco.png'),
+  },
+  {
+    id: 'billa',
+    name: 'Billa',
+    type: 'barcode',
+    color: '#FFD700',
+    popular: true,
+    logo: require('./logos/billa.png'),
+  },
+  {
+    id: 'albert',
+    name: 'Albert',
+    type: 'qrcode',
+    color: '#0078D7',
+    popular: false,
+    logo: require('./logos/albert.png'),
+  },
+  {
+    id: 'lidl',
+    name: 'Lidl',
+    type: 'qrcode',
+    color: '#00509E',
+    popular: true,
+    logo: require('./logos/lidl.png'),
+  },
+  {
+    id: 'penny',
+    name: 'Penny Market',
+    type: 'barcode',
+    color: '#E30613',
+    popular: false,
+    logo: require('./logos/penny.png'),
+  },
+  {
+    id: 'coopjednota',
+    name: 'Coop Jednota',
+    type: 'barcode',
+    color: '#009245',
+    popular: true,
+    logo: require('./logos/coopjednota.png'),
+  },
+  {
+    id: 'teta',
+    name: 'TETA',
+    type: 'barcode',
+    color: '#FFDD00',
+    popular: false,
+    logo: require('./logos/teta.png'),
+  },
+  {
+    id: 'dracik',
+    name: 'Dráčik',
+    type: 'barcode',
+    color: '#ED1C24',
+    popular: false,
+    logo: require('./logos/dracik.png'),
+  },
+  {
+    id: 'kik',
+    name: 'KiK',
+    type: 'qrcode',
+    color: '#E2001A',
+    popular: false,
+    logo: require('./logos/kik.png'),
+  },
+  {
+    id: 'sportisimo',
+    name: 'Sportisimo',
+    type: 'barcode',
+    color: '#8CC63F',
+    popular: false,
+    logo: require('./logos/sportisimo.png'),
+  },
+  {
+    id: 'nay',
+    name: 'NAY',
+    type: 'barcode',
+    color: '#E6001A',
+    popular: false,
+    logo: require('./logos/nay.png'),
+  },
+  {
+    id: 'metro',
+    name: 'METRO',
+    type: 'qrcode',
+    color: '#003876',
+    popular: false,
+    logo: require('./logos/metro.png'),
+  },
+  {
+    id: 'decathlon',
+    name: 'Decathlon',
+    type: 'barcode',
+    color: '#0082C3',
+    popular: false,
+    logo: require('./logos/decathlon.png'),
+  },
+  {
+    id: 'slovnaft',
+    name: 'Slovnaft',
+    type: 'barcode',
+    color: '#F39200',
+    popular: false,
+    logo: require('./logos/slovnaft.png'),
+  },
+  {
+    id: 'albi',
+    name: 'ALBI',
+    type: 'barcode',
+    color: '#D41E28',
+    popular: false,
+    logo: require('./logos/albi.png'),
+  },
+  {
+    id: 'alltoys',
+    name: 'ALLTOYS',
+    type: 'barcode',
+    color: '#EE3439',
+    popular: false,
+    logo: require('./logos/alltoys.png'),
+  },
+  {
+    id: 'aupark',
+    name: 'Aupark',
+    type: 'qrcode',
+    color: '#8BC53F',
+    popular: false,
+    logo: require('./logos/aupark.png'),
+  },
+  {
+    id: 'bata',
+    name: 'Baťa',
+    type: 'barcode',
+    color: '#D62129',
+    popular: false,
+    logo: require('./logos/bata.png'),
+  },
+  {
+    id: 'benu',
+    name: 'BENU',
+    type: 'barcode',
+    color: '#00A69C',
+    popular: false,
+    logo: require('./logos/benu.png'),
+  },
+  {
+    id: 'gopass',
+    name: 'Gopass',
+    type: 'qrcode',
+    color: '#231F20',
+    popular: false,
+    logo: require('./logos/gopass.png'),
+  },
+  {
+    id: 'ikea',
+    name: 'IKEA Family',
+    type: 'barcode',
+    color: '#0058A3',
+    popular: false,
+    logo: require('./logos/ikea.png'),
+  },
+  {
+    id: 'istores',
+    name: 'iStores',
+    type: 'barcode',
+    color: '#666666',
+    popular: false,
+    logo: require('./logos/istores.png'),
+  },
+  {
+    id: 'martinus',
+    name: 'Martinus',
+    type: 'qrcode',
+    color: '#F58220',
+    popular: false,
+    logo: require('./logos/martinus.png'),
+  },
+  {
+    id: 'mcdonalds',
+    name: 'McDonald´s',
+    type: 'qrcode',
+    color: '#DB0007',
+    popular: false,
+    logo: require('./logos/mcdonalds.png'),
+  },
+  {
+    id: 'mobelix',
+    name: 'Möbelix',
+    type: 'barcode',
+    color: '#E30613',
+    popular: false,
+    logo: require('./logos/mobelix.png'),
+  },
+  {
+    id: 'obi',
+    name: 'OBI',
+    type: 'barcode',
+    color: '#F68A1E',
+    popular: false,
+    logo: require('./logos/obi.png'),
+  },
+  {
+    id: 'omv',
+    name: 'OMV',
+    type: 'barcode',
+    color: '#0079C2',
+    popular: false,
+    logo: require('./logos/omv.png'),
+  },
+  {
+    id: 'pantarhei',
+    name: 'Panta Rhei',
+    type: 'barcode',
+    color: '#8D1B3D',
+    popular: false,
+    logo: require('./logos/pantarhei.png'),
+  },
   
-  export const POPULAR_CARDS: Card[] = [
-    {
-      id: 'kaufland',
-      name: 'Kaufland',
-      type: 'barcode',
-      color: '#E4002B',
-      popular: true,
-      logo: require('./logos/kaufland.png'),
-    },
-    {
-      id: 'tesco',
-      name: 'Tesco',
-      type: 'barcode',
-      color: '#00539F',
-      popular: true,
-      logo: require('./logos/tesco.png'),
-    },
-    {
-      id: 'billa',
-      name: 'Billa',
-      type: 'barcode',
-      color: '#FFD700',
-      popular: true,
-      logo: require('./logos/billa.png'),
-    },
-    {
-      id: 'albert',
-      name: 'Albert',
-      type: 'qrcode',
-      color: '#0078D7',
-      popular: false,
-      logo: require('./logos/albert.png'),
-    },
-    {
-      id: 'lidl',
-      name: 'Lidl',
-      type: 'qrcode',
-      color: '#00509E',
-      popular: true,
-      logo: require('./logos/lidl.png'),
-    },
-    {
-      id: 'penny',
-      name: 'Penny Market',
-      type: 'barcode',
-      color: '#E30613',
-      popular: false,
-      logo: require('./logos/penny.png'),
-    },
-    {
-      id: 'coopjednota',
-      name: 'Coop Jednota',
-      type: 'barcode',
-      color: '#009245',
-      popular: true,
-      logo: require('./logos/coopjednota.png'),
-    }
-  ]
-  
+];

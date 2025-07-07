@@ -1,5 +1,4 @@
 more cards from api fetching
-same background cards in index cards
 dark mode nefunguje barcode
 
 ------------------------
