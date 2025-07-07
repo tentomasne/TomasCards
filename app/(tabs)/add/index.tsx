@@ -105,7 +105,9 @@ export default function AddCardScreen() {
             onPress={() => handleSelect(item.data.id)}
             activeOpacity={0.7}
           >
-            <Image source={item.data.logo} style={styles.logo} />
+            <View style={[styles.logoContainer, { backgroundColor: item.data.color }]}>
+              <Image source={item.data.logo} style={styles.logo} />
+            </View>
             <Text style={[styles.itemText, { color: colors.textPrimary }]}>
               {item.data.name}
             </Text>
@@ -237,11 +239,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
   },
+  logoContainer: {
+    width: 56,
+    height: 40,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   logo: {
     width: 40,
     height: 24,
     resizeMode: 'contain',
-    marginRight: 16,
   },
   itemText: {
     fontSize: 16,
