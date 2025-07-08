@@ -1,5 +1,4 @@
 more cards from api fetching
-dark mode nefunguje barcode
 
 ------------------------
 UPDATE LATER:
