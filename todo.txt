@@ -1,4 +1,5 @@
 more cards from api fetching
+better design for custom cards 
 
 ------------------------
 UPDATE LATER:

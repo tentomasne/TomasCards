@@ -218,14 +218,6 @@ export const POPULAR_CARDS: Card[] = [
     logo: require('./logos/obi.png'),
   },
   {
-    id: 'omv',
-    name: 'OMV',
-    type: 'barcode',
-    color: '#0079C2',
-    popular: false,
-    logo: require('./logos/omv.png'),
-  },
-  {
     id: 'pantarhei',
     name: 'Panta Rhei',
     type: 'barcode',
