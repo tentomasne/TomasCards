@@ -186,14 +186,6 @@ export const POPULAR_CARDS: Card[] = [
     logo: require('./logos/ikea.png'),
   },
   {
-    id: 'istores',
-    name: 'iStores',
-    type: 'barcode',
-    color: '#666666',
-    popular: false,
-    logo: require('./logos/istores.png'),
-  },
-  {
     id: 'martinus',
     name: 'Martinus',
     type: 'qrcode',
