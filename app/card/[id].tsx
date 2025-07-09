@@ -28,6 +28,7 @@ import Header from '@/components/Header';
 import OfflineBanner from '@/components/OfflineBanner';
 import { POPULAR_CARDS } from '@/assets/cards';
 import { logError } from '@/utils/debugManager';
+import AuthRequiredModal from '@/components/AuthRequiredModal';
 
 export default function CardDetailScreen() {
   const { t } = useTranslation();
@@ -40,6 +41,7 @@ export default function CardDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
 
   const matchedCard = card ? POPULAR_CARDS.find(
     (item) => item.id?.toLowerCase() === card.brand?.toLowerCase()
@@ -48,6 +50,12 @@ export default function CardDetailScreen() {
   useEffect(() => {
     const initializeStorageMode = async () => {
       await storageManager.initialize();
+      
+      // Set up authentication required callback
+      storageManager.setAuthenticationRequiredCallback(() => {
+        setShowAuthRequired(true);
+      });
+      
       setStorageMode(storageManager.getStorageMode());
     };
     initializeStorageMode();
@@ -78,18 +86,7 @@ export default function CardDetailScreen() {
             
             // Sync to cloud in background if needed
             if (storageMode === 'cloud' && isOnline) {
-              try {
-                await storageManager.updateCard(updatedCard, isOnline);
-              } catch (error) {
-                console.error('Failed to sync last used update to cloud:', error);
-                // Don't show error to user as local update succeeded
-              }
-            } else if (storageMode === 'cloud' && !isOnline) {
-              // Queue for later sync when online
-              await storageManager.queueOperation({ 
-                type: 'update', 
-                card: updatedCard 
-              });
+              setShowAuthRequired(true);
             }
           }
         } else {
@@ -104,6 +101,12 @@ export default function CardDetailScreen() {
     
     loadCardData();
   }, [id, isEditing, storageMode, isOnline]);
+
+  // Handle successful authentication
+  const handleAuthSuccess = async () => {
+    setShowAuthRequired(false);
+    // Optionally reload card data after authentication
+  };
 
   const handleUpdateCard = async (updatedCard: LoyaltyCard) => {
     // Check if user is offline and using cloud storage
@@ -460,6 +463,11 @@ export default function CardDetailScreen() {
           <CardForm existingCard={card} onSave={handleUpdateCard} />
         </View>
       </Modal>
+
+      <AuthRequiredModal
+        visible={showAuthRequired}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </View>
   );
 }

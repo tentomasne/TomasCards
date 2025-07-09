@@ -27,6 +27,7 @@ import SyncStatusIndicator, {
 } from "@/components/SyncStatusIndicator";
 import SyncConflictModal from "@/components/SyncConflictModal";
 import OfflineBanner from "@/components/OfflineBanner";
+import AuthRequiredModal from "@/components/AuthRequiredModal";
 
 type SortType = "name" | "date" | "lastUsed";
 
@@ -201,35 +202,12 @@ export default function HomeScreen() {
     return aIds.size === bIds.size && [...aIds].every(id => bIds.has(id));
   };
 
-  // Handle authentication required
-  const handleAuthRequired = () => {
+  // Handle successful authentication
+  const handleAuthSuccess = async () => {
     setShowAuthRequired(false);
-    
-    Alert.alert(
-      t("storage.auth.required.title"),
-      t("storage.auth.required.message"),
-      [
-        { 
-          text: t("common.buttons.cancel"), 
-          style: "cancel" 
-        },
-        {
-          text: t("storage.auth.required.reauth"),
-          onPress: () => {
-            // Navigate to settings to re-authenticate
-            router.push('/settings');
-          }
-        }
-      ]
-    );
+    // Reload cards after successful authentication
+    await loadCardsWithLocalFirst();
   };
-
-  // Show auth required alert when needed
-  useEffect(() => {
-    if (showAuthRequired) {
-      handleAuthRequired();
-    }
-  }, [showAuthRequired]);
 
   // Manual cloud sync function
   const handleManualCloudSync = useCallback(async () => {
@@ -661,6 +639,11 @@ export default function HomeScreen() {
         conflictData={syncConflictData}
         onResolve={handleSyncConflictResolve}
         loading={conflictResolving}
+      />
+
+      <AuthRequiredModal
+        visible={showAuthRequired}
+        onAuthSuccess={handleAuthSuccess}
       />
     </View>
   );

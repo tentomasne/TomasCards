@@ -40,6 +40,7 @@ import { storageManager } from '@/utils/storageManager';
 import { CloudStorageProvider } from 'react-native-cloud-storage';
 import Header from '@/components/Header';
 import CloudProviderSelector from '@/components/CloudProviderSelector';
+import AuthRequiredModal from '@/components/AuthRequiredModal';
 import * as Device from 'expo-device';
 import * as Application from 'expo-application';
 import Constants from 'expo-constants';
@@ -75,6 +76,7 @@ export default function DeviceInfoScreen() {
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [showProviderSelector, setShowProviderSelector] = useState(false);
   const [provider, setProvider] = useState<CloudStorageProvider>(CloudStorageProvider.ICloud);
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID_ANDROID,
@@ -120,6 +122,13 @@ export default function DeviceInfoScreen() {
     }
   }, [response]);
 
+  useEffect(() => {
+    // Set up authentication required callback
+    storageManager.setAuthenticationRequiredCallback(() => {
+      setShowAuthRequired(true);
+    });
+  }, []);
+
   const reloadApp = async () => {
     try {
       if (Platform.OS === 'web') {
@@ -147,6 +156,12 @@ export default function DeviceInfoScreen() {
         [{ text: 'OK' }]
       );
     }
+  };
+
+  // Handle successful authentication
+  const handleAuthSuccess = async () => {
+    setShowAuthRequired(false);
+    await loadDeviceInfo(); // Refresh device info after authentication
   };
 
   const handleTokenReceived = async (token: string, refreshToken?: string, expiresIn?: number) => {
@@ -787,6 +802,11 @@ export default function DeviceInfoScreen() {
         currentProvider={provider}
         onSelect={handleProviderSelect}
         onClose={() => setShowProviderSelector(false)}
+      />
+
+      <AuthRequiredModal
+        visible={showAuthRequired}
+        onAuthSuccess={handleAuthSuccess}
       />
     </View>
   );

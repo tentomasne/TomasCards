@@ -60,6 +60,7 @@ export class StorageManager {
   private isRefreshingToken = false;
   private authenticationRequiredCallback?: () => void;
   private refreshPromise: Promise<boolean> | null = null;
+  private hasTriggeredAuthCallback = false;
 
   static getInstance(): StorageManager {
     if (!StorageManager.instance) {
@@ -378,13 +379,16 @@ export class StorageManager {
   private async clearTokenData(): Promise<void> {
     this.accessToken = null;
     this.tokenData = null;
+    this.hasTriggeredAuthCallback = false; // Reset flag when clearing tokens
     await AsyncStorage.removeItem(GOOGLE_TOKEN_KEY);
     await AsyncStorage.removeItem(GOOGLE_TOKEN_DATA_KEY);
     logInfo('Token data cleared', '', 'StorageManager');
   }
 
   private triggerAuthenticationRequired(): void {
-    if (this.authenticationRequiredCallback) {
+    // Only trigger once per session to avoid multiple modals
+    if (this.authenticationRequiredCallback && !this.hasTriggeredAuthCallback) {
+      this.hasTriggeredAuthCallback = true;
       logInfo('Triggering authentication required callback', '', 'StorageManager');
       this.authenticationRequiredCallback();
     }
@@ -536,6 +540,9 @@ export class StorageManager {
 
   async setAccessToken(token: string, refreshToken?: string, expiresIn?: number): Promise<void> {
     this.accessToken = token;
+    
+    // Reset the auth callback trigger flag when new token is set
+    this.hasTriggeredAuthCallback = false;
     
     // Create enhanced token data
     this.tokenData = {
