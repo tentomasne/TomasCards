@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import { Save, Camera, Palette } from 'lucide-react-native';
+import { Save, Camera, Palette, ChartBar as BarChart3, QrCode, Info } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import type { LoyaltyCard } from '@/utils/types';
 import Header from '@/components/Header';
@@ -20,23 +20,21 @@ import { useTheme } from '@/hooks/useTheme';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { lightHaptic } from '@/utils/feedback';
 import { storageManager } from '@/utils/storageManager';
-import ColorPicker from '@/components/ColorPicker';
-import CodeTypeSelector from '@/components/CodeTypeSelector';
 import { logError } from '@/utils/debugManager';
 
 const PRESET_COLORS = [
-  '#4F6BFF', // Default blue
-  '#FF6B6B', // Red
-  '#4ECDC4', // Teal
-  '#45B7D1', // Light blue
-  '#96CEB4', // Green
-  '#FFEAA7', // Yellow
-  '#DDA0DD', // Plum
-  '#98D8C8', // Mint
-  '#F7DC6F', // Light yellow
-  '#BB8FCE', // Light purple
-  '#85C1E9', // Sky blue
-  '#F8C471', // Orange
+  { color: '#FF6B6B', name: 'Coral' },
+  { color: '#4ECDC4', name: 'Teal' },
+  { color: '#45B7D1', name: 'Blue' },
+  { color: '#96CEB4', name: 'Mint' },
+  { color: '#FFEAA7', name: 'Yellow' },
+  { color: '#DDA0DD', name: 'Plum' },
+  { color: '#FF7A00', name: 'Orange' },
+  { color: '#9B59B6', name: 'Purple' },
+  { color: '#E74C3C', name: 'Red' },
+  { color: '#2ECC71', name: 'Green' },
+  { color: '#3498DB', name: 'Sky' },
+  { color: '#F39C12', name: 'Amber' },
 ];
 
 export default function CustomCardScreen() {
@@ -50,12 +48,12 @@ export default function CustomCardScreen() {
   }>();
   
   const [cardName, setCardName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
+  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0].color);
   const [codeType, setCodeType] = useState<'barcode' | 'qrcode'>('barcode');
   const [code, setCode] = useState('');
-  const [showColorPicker, setShowColorPicker] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showColorInfo, setShowColorInfo] = useState(false);
 
   // Handle scanned code from scan screen
   useEffect(() => {
@@ -66,6 +64,21 @@ export default function CustomCardScreen() {
       }
     }
   }, [scannedCode, scannedType]);
+
+  // Auto-detect code type based on content
+  useEffect(() => {
+    if (code.trim()) {
+      // Simple heuristics for code type detection
+      const isNumeric = /^\d+$/.test(code.trim());
+      const isShort = code.trim().length <= 20;
+      
+      if (isNumeric && isShort) {
+        setCodeType('barcode');
+      } else if (code.includes('http') || code.includes('://') || code.length > 20) {
+        setCodeType('qrcode');
+      }
+    }
+  }, [code]);
 
   const handleScanCode = () => {
     router.push({
@@ -133,6 +146,8 @@ export default function CustomCardScreen() {
     return cardName.trim().charAt(0).toUpperCase() || '?';
   };
 
+  const selectedColorName = PRESET_COLORS.find(c => c.color === selectedColor)?.name || 'Custom';
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.backgroundDark }]}>
       <Header
@@ -147,27 +162,38 @@ export default function CustomCardScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <View style={styles.content}>
-            {/* Card Preview */}
-            <View style={[styles.cardPreview, { backgroundColor: colors.backgroundMedium }]}>
-              <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>
-                {t('addCard.custom.preview')}
-              </Text>
-              <View style={[styles.cardDisplay, { backgroundColor: selectedColor }]}>
+          {/* Card Preview */}
+          <View style={[styles.previewSection, { backgroundColor: colors.backgroundMedium }]}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              Preview
+            </Text>
+            <View style={styles.cardPreviewContainer}>
+              <View style={[styles.cardPreview, { backgroundColor: selectedColor }]}>
                 <Text style={[styles.cardLetter, { color: colors.textPrimary }]}>
                   {getFirstLetter()}
                 </Text>
               </View>
-              <Text style={[styles.cardNamePreview, { color: colors.textPrimary }]}>
-                {cardName.trim() || t('addCard.custom.cardNamePlaceholder')}
-              </Text>
+              <View style={styles.previewInfo}>
+                <Text style={[styles.previewName, { color: colors.textPrimary }]}>
+                  {cardName.trim() || 'Card Name'}
+                </Text>
+                <Text style={[styles.previewColor, { color: colors.textSecondary }]}>
+                  {selectedColorName}
+                </Text>
+              </View>
             </View>
+          </View>
 
-            {/* Card Name Input */}
-            <View style={styles.inputContainer}>
+          {/* Card Name */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              Card Details
+            </Text>
+            <View style={styles.inputGroup}>
               <Text style={[styles.label, { color: colors.textSecondary }]}>
-                {t('addCard.custom.cardName')} *
+                Card Name *
               </Text>
               <TextInput
                 style={[
@@ -175,7 +201,7 @@ export default function CustomCardScreen() {
                   { 
                     backgroundColor: colors.backgroundLight,
                     color: colors.textPrimary,
-                    borderColor: error && !cardName.trim() ? colors.error : colors.backgroundLight 
+                    borderColor: error && !cardName.trim() ? colors.error : 'transparent'
                   }
                 ]}
                 value={cardName}
@@ -183,126 +209,198 @@ export default function CustomCardScreen() {
                   setCardName(text);
                   setError('');
                 }}
-                placeholder={t('addCard.custom.cardNamePlaceholder')}
+                placeholder="Enter your card name"
                 placeholderTextColor={colors.textHint}
                 autoCapitalize="words"
                 autoCorrect={false}
                 maxLength={50}
               />
             </View>
+          </View>
 
-            {/* Color Selection */}
-            <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>
-                {t('addCard.custom.cardColor')}
+          {/* Color Selection */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+                Card Color
               </Text>
-              <View style={styles.colorSection}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.colorScroll}>
-                  {PRESET_COLORS.map((color, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[
-                        styles.colorOption,
-                        { backgroundColor: color },
-                        selectedColor === color && styles.selectedColor
-                      ]}
-                      onPress={() => setSelectedColor(color)}
-                    />
-                  ))}
-                  <TouchableOpacity
-                    style={[styles.customColorButton, { backgroundColor: colors.backgroundLight }]}
-                    onPress={() => setShowColorPicker(true)}
-                  >
-                    <Palette size={20} color={colors.textSecondary} />
-                  </TouchableOpacity>
-                </ScrollView>
-              </View>
+              <TouchableOpacity
+                onPress={() => setShowColorInfo(!showColorInfo)}
+                style={styles.infoButton}
+              >
+                <Info size={16} color={colors.textSecondary} />
+              </TouchableOpacity>
             </View>
-
-            {/* Code Type Selection */}
-            <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>
-                {t('addCard.custom.codeType')}
+            
+            {showColorInfo && (
+              <Text style={[styles.infoText, { color: colors.textHint }]}>
+                Choose a color that represents your brand or makes your card easy to identify.
               </Text>
-              <CodeTypeSelector
-                selectedType={codeType}
-                onSelect={setCodeType}
-              />
-            </View>
-
-            {/* Code Input */}
-            <View style={styles.inputContainer}>
-              <Text style={[styles.label, { color: colors.textSecondary }]}>
-                {t('addCard.custom.cardCode')} *
-              </Text>
-              <View style={styles.codeInputSection}>
-                <TextInput
-                  style={[
-                    styles.codeInput,
-                    { 
-                      backgroundColor: colors.backgroundLight,
-                      color: colors.textPrimary,
-                      borderColor: error && !code.trim() ? colors.error : colors.backgroundLight 
-                    }
-                  ]}
-                  value={code}
-                  onChangeText={(text) => {
-                    setCode(text);
-                    setError('');
-                  }}
-                  placeholder={t('addCard.custom.cardCodePlaceholder')}
-                  placeholderTextColor={colors.textHint}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
+            )}
+            
+            <View style={styles.colorGrid}>
+              {PRESET_COLORS.map((colorItem, index) => (
                 <TouchableOpacity
-                  style={[styles.scanButton, { backgroundColor: colors.accent }]}
-                  onPress={handleScanCode}
+                  key={index}
+                  style={[
+                    styles.colorOption,
+                    { backgroundColor: colorItem.color },
+                    selectedColor === colorItem.color && [
+                      styles.selectedColor,
+                      { borderColor: colors.textPrimary }
+                    ]
+                  ]}
+                  onPress={() => setSelectedColor(colorItem.color)}
+                  activeOpacity={0.8}
                 >
-                  <Camera size={20} color={colors.textPrimary} />
-                  <Text style={[styles.scanButtonText, { color: colors.textPrimary }]}>
-                    {t('addCard.custom.scan')}
-                  </Text>
+                  {selectedColor === colorItem.color && (
+                    <View style={styles.colorCheckmark}>
+                      <Text style={styles.checkmark}>✓</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
-              </View>
+              ))}
             </View>
+          </View>
 
-            {error ? (
+          {/* Code Type Selection */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              Code Type
+            </Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+              We'll auto-detect the type, but you can change it if needed
+            </Text>
+            
+            <View style={styles.codeTypeContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.codeTypeOption,
+                  { backgroundColor: colors.backgroundLight },
+                  codeType === 'barcode' && { 
+                    backgroundColor: colors.accent,
+                    borderColor: colors.accent 
+                  }
+                ]}
+                onPress={() => setCodeType('barcode')}
+              >
+                <BarChart3 
+                  size={24} 
+                  color={codeType === 'barcode' ? colors.textPrimary : colors.textSecondary} 
+                />
+                <View style={styles.codeTypeText}>
+                  <Text style={[
+                    styles.codeTypeTitle,
+                    { color: codeType === 'barcode' ? colors.textPrimary : colors.textPrimary }
+                  ]}>
+                    Barcode
+                  </Text>
+                  <Text style={[
+                    styles.codeTypeDescription,
+                    { color: codeType === 'barcode' ? 'rgba(255,255,255,0.8)' : colors.textSecondary }
+                  ]}>
+                    Numbers only • Traditional store cards
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.codeTypeOption,
+                  { backgroundColor: colors.backgroundLight },
+                  codeType === 'qrcode' && { 
+                    backgroundColor: colors.accent,
+                    borderColor: colors.accent 
+                  }
+                ]}
+                onPress={() => setCodeType('qrcode')}
+              >
+                <QrCode 
+                  size={24} 
+                  color={codeType === 'qrcode' ? colors.textPrimary : colors.textSecondary} 
+                />
+                <View style={styles.codeTypeText}>
+                  <Text style={[
+                    styles.codeTypeTitle,
+                    { color: codeType === 'qrcode' ? colors.textPrimary : colors.textPrimary }
+                  ]}>
+                    QR Code
+                  </Text>
+                  <Text style={[
+                    styles.codeTypeDescription,
+                    { color: codeType === 'qrcode' ? 'rgba(255,255,255,0.8)' : colors.textSecondary }
+                  ]}>
+                    Text & links • Modern digital cards
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Code Input */}
+          <View style={styles.section}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+              Card Code *
+            </Text>
+            <View style={styles.codeInputContainer}>
+              <TextInput
+                style={[
+                  styles.codeInput,
+                  { 
+                    backgroundColor: colors.backgroundLight,
+                    color: colors.textPrimary,
+                    borderColor: error && !code.trim() ? colors.error : 'transparent'
+                  }
+                ]}
+                value={code}
+                onChangeText={(text) => {
+                  setCode(text);
+                  setError('');
+                }}
+                placeholder={"Enter your card code"}
+                placeholderTextColor={colors.textHint}
+                autoCapitalize="none"
+                autoCorrect={false}
+                multiline={codeType === 'qrcode'}
+                numberOfLines={codeType === 'qrcode' ? 3 : 1}
+              />
+              <TouchableOpacity
+                style={[styles.scanButton, { backgroundColor: colors.accent }]}
+                onPress={handleScanCode}
+              >
+                <Camera size={20} color={colors.textPrimary} />
+                <Text style={[styles.scanButtonText, { color: colors.textPrimary }]}>
+                  Scan
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {error ? (
+            <View style={styles.errorContainer}>
               <Text style={[styles.errorText, { color: colors.error }]}>
                 {error}
               </Text>
-            ) : null}
+            </View>
+          ) : null}
 
-            {/* Save Button */}
-            <TouchableOpacity
-              style={[
-                styles.saveButton,
-                { backgroundColor: colors.accent },
-                (!cardName.trim() || !code.trim() || loading) && styles.saveButtonDisabled
-              ]}
-              onPress={handleSave}
-              disabled={!cardName.trim() || !code.trim() || loading}
-            >
-              <Save size={20} color={colors.textPrimary} />
-              <Text style={[styles.saveButtonText, { color: colors.textPrimary }]}>
-                {loading ? t('common.labels.loading') : t('common.buttons.save')}
-              </Text>
-            </TouchableOpacity>
-
-            {/* Info Note */}
-            <Text style={[styles.infoNote, { color: colors.textHint }]}>
-              {t('addCard.custom.note')}
+          {/* Save Button */}
+          <TouchableOpacity
+            style={[
+              styles.saveButton,
+              { backgroundColor: colors.accent },
+              (!cardName.trim() || !code.trim() || loading) && styles.saveButtonDisabled
+            ]}
+            onPress={handleSave}
+            disabled={!cardName.trim() || !code.trim() || loading}
+          >
+            <Save size={20} color={colors.textPrimary} />
+            <Text style={[styles.saveButtonText, { color: colors.textPrimary }]}>
+              {loading ? t('common.labels.loading') : 'Create Card'}
             </Text>
-          </View>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <ColorPicker
-        visible={showColorPicker}
-        currentColor={selectedColor}
-        onColorSelect={setSelectedColor}
-        onClose={() => setShowColorPicker(false)}
-      />
     </SafeAreaView>
   );
 }
@@ -315,45 +413,81 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    flexGrow: 1,
+    padding: 20,
+    paddingBottom: 40,
   },
-  content: {
-    flex: 1,
-    padding: 16,
+  section: {
+    marginBottom: 32,
   },
-  cardPreview: {
+  previewSection: {
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
   },
-  previewLabel: {
-    fontSize: 14,
-    marginBottom: 16,
-  },
-  cardDisplay: {
-    width: 80,
-    height: 80,
-    borderRadius: 16,
-    justifyContent: 'center',
+  sectionHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  infoButton: {
+    padding: 4,
+  },
+  infoText: {
+    fontSize: 12,
+    lineHeight: 16,
+    marginBottom: 16,
+    fontStyle: 'italic',
+  },
+  cardPreviewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cardPreview: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   cardLetter: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '700',
   },
-  cardNamePreview: {
+  previewInfo: {
+    flex: 1,
+  },
+  previewName: {
     fontSize: 18,
     fontWeight: '600',
+    marginBottom: 4,
   },
-  inputContainer: {
-    marginBottom: 20,
+  previewColor: {
+    fontSize: 14,
+  },
+  inputGroup: {
+    marginBottom: 16,
   },
   label: {
     fontSize: 14,
+    fontWeight: '600',
     marginBottom: 8,
-    fontWeight: '500',
   },
   input: {
     height: 48,
@@ -362,63 +496,101 @@ const styles = StyleSheet.create({
     fontSize: 16,
     borderWidth: 2,
   },
-  colorSection: {
-    marginTop: 8,
-  },
-  colorScroll: {
+  colorGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
   },
   colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 3,
     borderColor: 'transparent',
-  },
-  selectedColor: {
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  customColorButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  codeInputSection: {
+  selectedColor: {
+    borderWidth: 3,
+    transform: [{ scale: 1.1 }],
+  },
+  colorCheckmark: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  codeTypeContainer: {
+    gap: 12,
+  },
+  codeTypeOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  codeTypeText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  codeTypeTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  codeTypeDescription: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  codeInputContainer: {
     flexDirection: 'row',
     gap: 12,
+    alignItems: 'flex-start',
   },
   codeInput: {
     flex: 1,
-    height: 48,
+    minHeight: 48,
     borderRadius: 12,
     paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 16,
     borderWidth: 2,
+    textAlignVertical: 'top',
   },
   scanButton: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     gap: 8,
+    minHeight: 48,
   },
   scanButtonText: {
     fontSize: 14,
     fontWeight: '600',
   },
+  errorContainer: {
+    marginBottom: 20,
+  },
   errorText: {
     fontSize: 14,
-    marginBottom: 16,
     textAlign: 'center',
+    fontWeight: '500',
   },
   saveButton: {
     flexDirection: 'row',
@@ -427,7 +599,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     gap: 8,
-    marginBottom: 16,
+    marginTop: 8,
   },
   saveButtonDisabled: {
     opacity: 0.6,
@@ -435,10 +607,5 @@ const styles = StyleSheet.create({
   saveButtonText: {
     fontSize: 16,
     fontWeight: '600',
-  },
-  infoNote: {
-    fontSize: 12,
-    textAlign: 'center',
-    lineHeight: 18,
   },
 });
