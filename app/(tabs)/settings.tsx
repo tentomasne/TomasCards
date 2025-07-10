@@ -25,6 +25,7 @@ import CloudProviderSelector from '@/components/CloudProviderSelector';
 import { CloudStorageProvider } from 'react-native-cloud-storage';
 import { storageManager } from '@/utils/storageManager';
 import { debugManager } from '@/utils/debugManager';
+import ImportCardsModal from '@/components/ImportCardsModal';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -43,6 +44,7 @@ export default function SettingsScreen() {
   const [isDebugEnabled, setIsDebugEnabled] = useState(false);
   const [versionTapCount, setVersionTapCount] = useState(0);
   const [shouldReloadAfterProviderSelection, setShouldReloadAfterProviderSelection] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     sortOption: 'alphabetical',
     hapticFeedback: true,
@@ -147,6 +149,10 @@ export default function SettingsScreen() {
 
   const handleDesignDemo = () => {
     router.push('/design-demo' as any);
+  };
+
+  const handleImportCards = () => {
+    setShowImportModal(true);
   };
 
   const handleVersionTap = async () => {
@@ -329,6 +335,23 @@ export default function SettingsScreen() {
 
           <TouchableOpacity
             style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
+            onPress={handleImportCards}
+          >
+            <View style={styles.settingLeft}>
+              <Database size={24} color={colors.textSecondary} />
+              <View style={styles.settingTextContainer}>
+                <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                  Import Cards
+                </Text>
+                <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                  Import cards from a JSON URL
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.settingRow, { backgroundColor: colors.backgroundMedium }]}
             onPress={handleDeviceInfo}
           >
             <View style={styles.settingLeft}>
@@ -413,6 +436,11 @@ export default function SettingsScreen() {
           shouldReloadAfterSelection={shouldReloadAfterProviderSelection}
         />
       )}
+
+      <ImportCardsModal
+        visible={showImportModal}
+        onClose={() => setShowImportModal(false)}
+      />
     </ScrollView>
   );
 }
