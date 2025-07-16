@@ -7,11 +7,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
-  Image,
   Alert,
   Modal,
   TouchableWithoutFeedback,
-  ImageSourcePropType,
 } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { Pencil, Star, Trash2, X } from 'lucide-react-native';
@@ -26,7 +24,6 @@ import BarcodeRenderer from '@/components/BarcodeRenderer';
 import CardForm from '@/components/CardForm';
 import Header from '@/components/Header';
 import OfflineBanner from '@/components/OfflineBanner';
-import { POPULAR_CARDS } from '@/assets/cards';
 import { logError } from '@/utils/debugManager';
 import AuthRequiredModal from '@/components/AuthRequiredModal';
 
@@ -43,9 +40,6 @@ export default function CardDetailScreen() {
   const [storageMode, setStorageMode] = useState<'local' | 'cloud'>('local');
   const [showAuthRequired, setShowAuthRequired] = useState(false);
 
-  const matchedCard = card ? POPULAR_CARDS.find(
-    (item) => item.id?.toLowerCase() === card.brand?.toLowerCase()
-  ) : undefined;
 
   useEffect(() => {
     const initializeStorageMode = async () => {
@@ -294,9 +288,6 @@ export default function CardDetailScreen() {
     );
   }
 
-  const logoSource: ImageSourcePropType | null = matchedCard
-    ? (matchedCard.logo as ImageSourcePropType)
-    : null;
 
   return (
     <View style={[styles.mainContainer, { backgroundColor: colors.backgroundDark }]}>
@@ -327,17 +318,9 @@ export default function CardDetailScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
         <View style={styles.cardHeader}>
           <View style={[styles.logoPlaceholder, { backgroundColor: card.color }]}>
-            {logoSource ? (
-              <Image
-                source={logoSource}
-                style={styles.logo}
-                resizeMode="contain"
-              />
-            ) : (
-              <Text style={[styles.logoPlaceholderText, { color: colors.textPrimary }]}>
-                {card.name.charAt(0)}
-              </Text>
-            )}
+            <Text style={[styles.logoPlaceholderText, { color: '#FFFFFF' }]}>
+              {card.name.charAt(0).toUpperCase()}
+            </Text>
           </View>
           <Text style={[styles.cardName, { color: colors.textPrimary }]}>{card.name}</Text>
         </View>
@@ -666,9 +649,5 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
-  },
-  logo: {
-    width: 56,
-    height: 56,
   },
 });

@@ -94,7 +94,7 @@ export default function ManualEntryScreen() {
             <View style={[styles.card, { backgroundColor: colors.backgroundMedium }]}>
               <View style={styles.logoContainer}>
                 <View style={[styles.logoPlaceholder, { backgroundColor: color }]}>
-                  <Text style={[styles.logoText, { color: colors.textPrimary }]}>
+                  <Text style={[styles.logoText, { color: '#FFFFFF' }]}>
                     {name.charAt(0).toUpperCase()}
                   </Text>
                 </View>

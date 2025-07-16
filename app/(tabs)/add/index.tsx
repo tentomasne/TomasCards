@@ -6,7 +6,6 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
-  Image,
   SafeAreaView,
   Platform,
 } from 'react-native';
@@ -106,7 +105,9 @@ export default function AddCardScreen() {
             activeOpacity={0.7}
           >
             <View style={[styles.logoContainer, { backgroundColor: item.data.color }]}>
-              <Image source={item.data.logo} style={styles.logo} />
+              <Text style={[styles.logoText, { color: '#FFFFFF' }]}>
+                {item.data.name.charAt(0).toUpperCase()}
+              </Text>
             </View>
             <Text style={[styles.itemText, { color: colors.textPrimary }]}>
               {item.data.name}
@@ -252,10 +253,9 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  logo: {
-    width: 40,
-    height: 24,
-    resizeMode: 'contain',
+  logoText: {
+    fontSize: 20,
+    fontWeight: '700',
   },
   itemText: {
     fontSize: 16,

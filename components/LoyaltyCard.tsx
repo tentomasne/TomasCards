@@ -1,13 +1,10 @@
 import {
   TouchableOpacity,
   Text,
-  Image,
   StyleSheet,
-  ImageSourcePropType,
 } from 'react-native';
 import type { LoyaltyCard } from '@/utils/types';
 import { useTheme } from '@/hooks/useTheme';
-import { POPULAR_CARDS } from '@/assets/cards';
 
 type Props = {
   card: LoyaltyCard;
@@ -16,18 +13,9 @@ type Props = {
 
 export default function LoyaltyCardComponent({ card, onPress }: Props) {
   const { colors } = useTheme();
-  
-  const matchedCard = POPULAR_CARDS.find(
-    (item) => item.id?.toLowerCase() === card.brand?.toLowerCase()
-  );
-
-  const logoSource: ImageSourcePropType | null = matchedCard
-    ? (matchedCard.logo as ImageSourcePropType)
-    : null;
 
   // Ensure card name exists and has at least one character
   const cardName = card.name || 'Unknown Card';
-  const firstLetter = cardName.charAt(0).toUpperCase() || '?';
 
   return (
     <TouchableOpacity
@@ -35,17 +23,9 @@ export default function LoyaltyCardComponent({ card, onPress }: Props) {
       onPress={onPress}
       activeOpacity={0.8}
     >
-      {logoSource ? (
-        <Image
-          source={logoSource}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      ) : (
-        <Text style={[styles.letter, { color: colors.textPrimary }]}>
-          {firstLetter}
-        </Text>
-      )}
+      <Text style={[styles.cardName, { color: '#FFFFFF' }]} numberOfLines={2}>
+        {cardName}
+      </Text>
     </TouchableOpacity>
   );
 }
@@ -58,13 +38,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 12,
   },
-  logo: {
-    width: 64,
-    height: 64,
-  },
-  letter: {
-    fontSize: 32,
+  cardName: {
+    fontSize: 16,
     fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
