@@ -1,5 +1,7 @@
-more cards from api fetching
+more cards
 better design for custom cards 
+re auth not working
+android not working google sign in
 
 ------------------------
 UPDATE LATER:
