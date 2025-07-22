@@ -6,5 +6,6 @@ android not working google sign in
 UPDATE LATER:
 widget
 apple watch
+apple wallet support / google wallet
 export import
 app review after 5th open
