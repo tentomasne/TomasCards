@@ -1,6 +1,7 @@
-more cards
+cards from API
 re auth not working
 android not working google sign in
+error in cards
 
 ------------------------
 UPDATE LATER:
