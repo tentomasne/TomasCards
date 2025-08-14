@@ -1,11 +1,12 @@
-cards from API
 re auth not working
 android not working google sign in
 error in cards
 
 ------------------------
 UPDATE LATER:
+cards from API
 widget
+native ui
 apple watch
 apple wallet support / google wallet
 export import

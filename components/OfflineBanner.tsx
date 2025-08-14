@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
